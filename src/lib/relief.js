@@ -1,0 +1,19 @@
+import * as THREE from 'three'; import { noiseAt } from './terrain';
+// Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué.
+const base = v => (v < 0.22 ? (0.22 - 0.34) * 1.6 - (0.22 - v) * 5.5 : (v - 0.34) * 1.6 + Math.max(0, v - 0.58) ** 2 * 34);
+export const WATER_Y = base(0.22);
+const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+const micro = (x, y) => (noiseAt(x * 2.7 + 50, y * 2.7 + 50) - 0.5) * 0.09 + (noiseAt(x * 6.3 + 9, y * 6.3 + 9) - 0.5) * 0.04;
+const ridge = (x, y) => 1 - Math.abs(noiseAt(x * 1.9 + 7, y * 1.9 + 3) * 2 - 1);
+/** Hauteur continue : mêmes valeurs que le terrain logique aux cases entières, crêtes rocheuses sur les massifs. */
+export const heightAt = (x, y) => { const v = noiseAt(x, y); return base(v) + micro(x, y) * (v > 0.22 ? 1 : 0.3) + ridge(x, y) * 0.55 * ss(0.7, 0.86, v); };
+const C = (r, g, b) => new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace);
+const DEEP = C(.03, .09, .18), SHALLOW = C(.2, .5, .55), SAND = C(.74, .66, .45), GRASS = C(.25, .43, .15), GRASS2 = C(.37, .5, .18), FOREST = C(.1, .24, .09), ROCK = C(.42, .4, .39), ROCK2 = C(.3, .29, .3), SNOW = C(.93, .95, .98);
+const g2 = new THREE.Color();
+/** Couleur de sol : eau profonde → eau peu profonde → sable → herbe → forêt → roche → neige. */
+export function groundColor(x, y, h, out) {
+  const v = noiseAt(x, y), m = micro(x, y);
+  out.copy(DEEP); out.lerp(SHALLOW, ss(0.1, 0.16, v)); out.lerp(SAND, ss(0.2, 0.225, v)); out.lerp(g2.copy(GRASS).lerp(GRASS2, ss(-0.05, 0.07, m)), ss(0.235, 0.27, v));
+  out.lerp(FOREST, ss(0.56, 0.62, v)); out.lerp(g2.copy(ROCK).lerp(ROCK2, ss(0.4, 0.75, ridge(x, y))), ss(0.72, 0.78, v)); out.lerp(SNOW, ss(2.4, 3.2, h)); out.multiplyScalar(0.9 + m * 1.2); return out;
+}
+export const hash = (x, y) => { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return n - Math.floor(n); };

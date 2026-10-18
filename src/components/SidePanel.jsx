@@ -1,26 +1,40 @@
-import { useEffect, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { api } from '../lib/api'; import { A } from '../store'; import { useRefreshMe } from './GameCanvas';
-const DEFAULT = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="#333"/><circle cx="48" cy="38" r="18" fill="#888"/><rect x="20" y="62" width="56" height="30" rx="14" fill="#888"/></svg>');
-const STAR = { head: [44, 2, 'Tête'], amulet: [44, 18, 'Collier'], chest: [44, 34, 'Plastron'], foot: [44, 78, 'Pieds'], weapon_main: [6, 30, 'Arme'], ring_l: [6, 48, 'Bague G'], bracelet_l: [6, 66, 'Bracelet G'],
-  weapon_off: [82, 30, 'Bouclier'], ring_r: [82, 48, 'Bague D'], bracelet_r: [82, 66, 'Bracelet D'], bow: [44, 52, 'Arc/flèches'] };
-function History({ id, close }) { const [h, set] = useState([]); useEffect(() => { api(`/characters/${id}/history`).then(set); }, []);
-  return <div className="modal" onClick={close}><div className="scroll" onClick={e => e.stopPropagation()}><h3>📜 100 dernières actions</h3>{h.map((x, i) => <div key={i}><small>{new Date(x.created_at).toLocaleTimeString()}</small> {x.action}</div>)}</div></div>; }
+import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Backpack, ScrollText, Lock, TrendingUp, Package, Dices } from 'lucide-react';
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas';
+const DEFAULT = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="#2b2842"/><circle cx="48" cy="38" r="18" fill="#8a85a8"/><rect x="20" y="62" width="56" height="30" rx="14" fill="#8a85a8"/></svg>');
+const STAR = { head: [44, 2, 'Tête'], amulet: [44, 18, 'Collier'], chest: [44, 34, 'Plastron'], bow: [44, 52, 'Arc / flèches'], foot: [44, 78, 'Pieds'], weapon_main: [6, 30, 'Arme (main G.)'], ring_l: [6, 48, 'Bague G.'], bracelet_l: [6, 66, 'Bracelet G.'], weapon_off: [82, 30, 'Bouclier / 2ᵉ arme'], ring_r: [82, 48, 'Bague D.'], bracelet_r: [82, 66, 'Bracelet D.'] };
+const LABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération (Vie, Énergie & Énergie divine /h)', see: 'Vision (cases)', agility: 'Agilité (toucher / esquive)', strength: 'Force' };
+const RACES = { human: 'Humain', demon: 'Démon', angel: 'Ange' };
+const kindOf = a => (/PV|Attaque|Attaqué|ratée/.test(a) ? 'combat' : /Déplacement|Franchit|approche/.test(a) ? 'move' : 'other'), FILTERS = [['all', 'Tout'], ['combat', 'Combats & attaques'], ['move', 'Déplacements'], ['other', 'Pactes, sorts & bâtiments']];
+function History({ id, close }) {
+  const [h] = useData(`/characters/${id}/history`), [f, setF] = useState('all'), list = (h ?? []).filter(x => f === 'all' || kindOf(x.action) === f);
+  return <Modal onClose={close} className="scroll" label="Historique"><h3><ScrollText size={18} /> Parchemin d'historique</h3><small>Journal des <b>{h?.length ?? 0} / 100</b> dernières actions réalisées ou attaques subies</small>
+    <div className="seg filters">{FILTERS.map(([k, l]) => <button key={k} className={f === k ? 'on' : ''} onClick={() => setF(k)}>{l}</button>)}</div>
+    <div className="log">{list.map((x, i) => <div key={i} className={'k-' + kindOf(x.action)}><small>{new Date(x.created_at).toLocaleTimeString()}</small> {x.action}</div>)}</div></Modal>;
+}
 function Inventory({ close }) {
-  const { me } = useSelector(s => s.game), refresh = useRefreshMe(), d = useDispatch(), [inv, setInv] = useState(null), [sel, setSel] = useState(null); const load = () => api(`/inventory/${me.id}`).then(setInv); useEffect(() => { load(); }, []);
-  const act = async f => { try { await f(); await load(); await refresh(); } catch (e) { d(A.toast(e.message)); } };
-  const eq = s => inv?.items.find(i => i.equipped_slot === s); const bag = inv?.items.filter(i => !i.equipped_slot) ?? [];
+  const { me } = useSelector(s => s.game), refresh = useRefreshMe(), run = useDo(), [inv, load] = useData(`/inventory/${me.id}`), [up, loadUp] = useData(`/characters/${me.id}/upgrades`, [me.xp]), [sel, setSel] = useState(null), [tab, setTab] = useState('equip'), st = me.stats;
+  const act = f => run(f, () => { load(); loadUp(); refresh(); }), eq = s => inv?.items.find(i => i.equipped_slot === s), bag = inv?.items.filter(i => !i.equipped_slot) ?? [];
   const click = s => act(async () => { const e = eq(s); if (e) await api('/inventory/equip', { characterId: me.id, itemId: e.id, slot: null }); else if (sel) { await api('/inventory/equip', { characterId: me.id, itemId: sel, slot: s }); setSel(null); } });
   const Sq = ({ s, label }) => <div className={'sq' + (eq(s) ? ' full' : '')} title={label} onClick={() => click(s)}>{eq(s)?.name ?? ''}</div>;
-  const up = st => act(() => api(`/characters/${me.id}/upgrade/${st}`, undefined, 'POST'));
-  return <div className="modal" onClick={close}><div className="inv" onClick={e => e.stopPropagation()}>
-    <div className="sum">{['hp_max', 'energy_max', 'divine_energy_max', 'recovery', 'see', 'strength', 'agility'].map(k => <span key={k}>{k} <b>{me[k]}</b> <button onClick={() => up(k)}>+</button></span>)} <span>XP <b>{me.xp}</b></span> <span>{JSON.stringify(me.resources)}</span></div>
-    <div className="invbody"><div><div className="star">{Object.entries(STAR).map(([s, [x, y, l]]) => <div key={s} style={{ left: x + '%', top: y + '%' }} className="slot"><Sq s={s} label={l} /></div>)}</div>
-      <div className="specials">{Array.from({ length: inv?.specialSlots ?? 4 }, (_, i) => <Sq key={i} s={`special_${i + 1}`} label={`Spécial ${i + 1}`} />)}</div></div>
-      <div className="bag">{Array.from({ length: 20 }, (_, i) => { const it = bag[i]; return <div key={i} className={'sq' + (it?.id === sel ? ' sel' : '')} onClick={() => it && setSel(it.id)} title={it?.slot}>{it?.name ?? ''}</div>; })}</div></div></div></div>;
+  const Sum = ({ l, v, c }) => <div className="sumc" style={{ '--c': c }}><small>{l}</small><b>{v}</b></div>;
+  return <Modal onClose={close} className="inv" label="Inventaire">
+    <div className="seg tabs4"><button className={tab === 'equip' ? 'on' : ''} onClick={() => setTab('equip')}><Package size={15} /> 1. Équipement & sac</button><button className={tab === 'up' ? 'on' : ''} onClick={() => setTab('up')}><TrendingUp size={15} /> 2. Amélioration ({me.xp} XP)</button></div>
+    <div className="sumgrid"><Sum l="Vie" v={`${me.hp_current}/${me.hp_max}`} c="var(--hp)" /><Sum l="Énergie" v={`${me.energy_current}/${me.energy_max}`} c="var(--en)" />{me.hasDivine && <Sum l="Én. divine" v={`${me.divine_energy_current}/${me.divine_energy_max}`} c="var(--div)" />}<Sum l="Régénération" v={`+${me.recovery}/h`} c="#b6dd6a" /><Sum l="Vision" v={me.see_eff} c="#7fe0ff" /><Sum l="Agilité" v={st.agility} c="var(--ok)" /><Sum l={`Force (req. ${st.reqStrength})`} v={st.strength} c="#ff9a5a" /><Sum l="Dégâts" v={st.damage} c="var(--hp)" /><Sum l="Armure" v={st.armor} c="#8fc2ff" /></div>
+    {tab === 'equip' && <><p className="formula">Dégâts = {st.weaponName ? `arme « ${st.weaponName} »` : 'mains nues (1 de base)'}{st.weaponName && <> × (Force {st.strength} − Force req. {st.reqStrength}) = <b>{st.damage}</b></>} · Limite d'invocations : <b>{me.maxSummons}</b></p>
+      <div className="invbody"><div><div className="star">{Object.entries(STAR).map(([s, [x, y, l]]) => <div key={s} style={{ left: x + '%', top: y + '%' }} className="slot"><Sq s={s} label={l} /></div>)}</div>
+        <div className="specials">{Array.from({ length: inv?.specialSlots ?? 4 }, (_, i) => <Sq key={i} s={`special_${i + 1}`} label={`Objet spécial ${i + 1}`} />)}</div><small>Cliquer un objet du sac puis un emplacement ; cliquer un emplacement pour déséquiper.</small></div>
+        <div><b>Sac à dos</b> <small>{bag.length}/20</small><div className="bag">{Array.from({ length: 20 }, (_, i) => { const it = bag[i]; return <div key={i} className={'sq' + (it && it.id === sel ? ' sel' : '')} onClick={() => it && setSel(it.id)} title={it?.slot}>{it?.name ?? ''}</div>; })}</div></div></div></>}
+    {tab === 'up' && <div className="upgrades"><small>Le coût en XP suit les paliers de la table (×1, ×2, ×3). Chaque amélioration donne +1.</small>
+      {up?.filter(u => !u.needsDivine || me.hasDivine).map(u => <div key={u.stat} className="item row2"><div><b>{LABEL[u.stat]}</b> <span className="pill">{u.value}</span> <span className="pill">Palier ×{u.tier}</span><br /><small>{u.untilNextTier} amélioration(s) avant le palier suivant · {u.count} effectuée(s)</small></div>
+        <button className="primary" disabled={me.xp < u.nextCost} onClick={() => act(() => api(`/characters/${me.id}/upgrade/${u.stat}`, undefined, 'POST'))}>+1 ({u.nextCost} XP)</button></div>)}</div>}</Modal>;
 }
 export default function SidePanel() {
-  const { me } = useSelector(s => s.game), refresh = useRefreshMe(), [modal, setModal] = useState(null); if (!me) return null;
+  const { me } = useSelector(s => s.game), d = useDispatch(), refresh = useRefreshMe(), [modal, setModal] = useState(null), [chars] = useData('/characters', [me?.id]), [hist] = useData(`/characters/${me?.id}/history`, [me?.xp, me?.energy_current]); if (!me) return null;
   const pick = e => { const f = e.target.files[0]; if (!f) return; const img = new Image(); img.onload = async () => { const c = document.createElement('canvas'); c.width = c.height = 128; c.getContext('2d').drawImage(img, 0, 0, 128, 128); await api(`/characters/${me.id}/portrait`, { data: c.toDataURL('image/jpeg', .8) }); refresh(); }; img.src = URL.createObjectURL(f); };
-  return <aside><img src={me.portrait ?? DEFAULT} onClick={() => setModal('inv')} /><label className="chg">changer<input type="file" accept="image/*" hidden onChange={pick} /></label>
-    <div className="pseudo" onClick={() => setModal('inv')}>{me.pseudo}</div><button className="ico" title="Historique" onClick={() => setModal('hist')}>📜</button>
+  return <aside className={`glass portrait race-${me.race}`}><button className="ring" aria-label="Ouvrir l'inventaire" onClick={() => setModal('inv')}><img alt="" src={me.portrait ?? DEFAULT} /></button>
+    <label className="chg">Changer l'image (2 Mo max)<input type="file" accept="image/*" hidden onChange={pick} /></label>
+    <div className="pseudo" title="Le pseudo ne peut pas être modifié">{me.pseudo} <Lock size={12} /></div><div className="rank">{RACES[me.race]} · {me.rank.rank_name}</div><small>{me.actor.kind === 'summon' ? `Contrôle : ${me.actor.name}` : 'Héros principal'}</small>
+    <div className="tools"><button className="ico sm" title="Inventaire en étoile" onClick={() => setModal('inv')}><Backpack size={18} /></button><button className="ico sm histbtn" title="Parchemin d'historique" onClick={() => setModal('hist')}><ScrollText size={18} /><i className="badge">{hist?.length ?? 0}</i></button></div>
+    <div className="chars-mini"><small>Personnages ({chars?.length ?? 0}/3)</small>{chars?.map(c => <button key={c.id} className={c.id === me.id ? 'on' : ''} onClick={() => { d(A.setMe(null)); d(A.setChar(c.id)); }}><span>{c.pseudo}</span><small>({c.x},{c.y})</small></button>)}</div>
     {modal === 'hist' && <History id={me.id} close={() => setModal(null)} />}{modal === 'inv' && <Inventory close={() => setModal(null)} />}</aside>;
 }
