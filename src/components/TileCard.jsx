@@ -6,14 +6,14 @@ function Entity({ e }) {   // joueur : pseudo, race, guilde (jamais PV ni armure
   if (!e) return <span>Case libre</span>;
   if (e.kind === 'character') return <div className="ent"><b>{e.name}</b> <small>{e.race} · {e.rank_name}</small><br /><small>Guilde : {e.guild ?? 'Aucune guilde'}</small></div>;
   if (e.kind === 'summon') return <div className="ent"><b>🔮 {e.name}</b> <small>Invocation</small><br /><small>Invoquée par : {e.owner}</small></div>;
-  if (e.kind === 'monster') return <div className="ent"><b>{e.name}</b> <small>Monstre</small><br /><small>PV : {e.mhp}/{e.mhpmax} · Armure : {e.marmor}</small></div>;
+  if (e.kind === 'monster') return <div className="ent"><b>{e.name}</b> <small>Monstre</small><br /><small>PV : {e.mhp}/{e.mhpmax} · Armure : {e.marmor}/{e.mmarmor ?? 0}</small></div>;
   return <div className="ent"><b>{e.name}</b> <small>Structure</small></div>;
 }
 function InfoModal({ cell, close }) {
   const e = cell.entity; return <Modal onClose={close} className="inv small" label=""><h3>Case ({cell.x}, {cell.y}) — {KIND[cell.terrain.kind]}</h3>
     {e?.kind === 'character' ? <><p><b>{e.name}</b> · {e.race} · {e.rank_name}<br />Guilde : {e.guild ?? 'Aucune guilde'}</p><p>État de forme : <b style={{ color: HEALTH[e.health] }}>{e.health}</b></p>
       <h4>Équipements visibles</h4><div className="gear">{(e.visibleGear?.length ? e.visibleGear : ['Aucun équipement visible']).map(g => <span key={g} className="pill">{g}</span>)}</div></>
-      : e ? <p><b>{e.name}</b>{e.kind === 'monster' && <><br />PV : {e.mhp}/{e.mhpmax} · Armure : {e.marmor}</>}</p> : <p>Case libre. Ressource : {cell.terrain.resource ?? 'aucune'}.</p>}</Modal>;
+      : e ? <p><b>{e.name}</b>{e.kind === 'monster' && <><br />PV : {e.mhp}/{e.mhpmax} · Armure : {e.marmor}/{e.mmarmor ?? 0}</>}</p> : <p>Case libre. Ressource : {cell.terrain.resource ?? 'aucune'}.</p>}</Modal>;
 }
 export default function TileCard() {
   const { hover, selected, me } = useSelector(s => s.game), d = useDispatch(), refresh = useRefreshMe(), mapId = me?.actor.pos.map_id;
