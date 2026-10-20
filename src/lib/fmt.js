@@ -13,8 +13,18 @@ export const fmt = t => (t ?? '')
 export const wrapSel = (value, s, e, before, after = before) => {
   const sel = value.slice(s, e), text = value.slice(0, s) + before + sel + after + value.slice(e);
   return { text, cursor: s + before.length + sel.length + after.length }; };
-/** Couleur : insère le code `#rrggbb` à la suite de la sélection (fmt.js l'affiche dans sa
- *  couleur) ; sélection vide → insertion du simple code à la position du curseur. */
+/** Couleur : insère le code `#rrggbb` à la suite de la sélection. Garantit TOUJOURS un espace
+ *  ASCII AVANT le code (c'est ce dont `fmt` a besoin pour le colorer dans l'aperçu) ; si le
+ *  curseur est juste après un code existant → le REMPLACE (changement de couleur) ; clic
+ *  idempotent sur le même code = aucun changement. */
 export const colorSel = (value, s, e, hex) => {
-  const sel = value.slice(s, e), glue = sel ? ' ' : '', code = sel ? `${glue}${hex}` : hex;
-  return { text: value.slice(0, s) + sel + code + value.slice(e), cursor: s + sel.length + code.length }; };
+  if (s === e && /#[0-9a-fA-F]{6}$/.test(value.slice(0, s))) {
+    const start = s - 7;
+    return { text: value.slice(0, start) + hex + value.slice(s), cursor: start + hex.length };
+  }
+  const sel = value.slice(s, e);
+  const last = sel ? sel.slice(-1) : value[s - 1];
+  const pre = last !== undefined && !/\s/.test(last) ? ' ' : '';
+  const text = value.slice(0, s) + sel + pre + hex + value.slice(e);
+  return { text, cursor: s + sel.length + pre.length + hex.length };
+};

@@ -17,7 +17,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 
 ## Features (8)
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
-- **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage sécurisé B/I/#, droits d'édition, en-têtes, factorisation AddCard/DndList — UX pass over the forum v2 (`guild-forum-v2`): (1) a compact **secure formatting toolbar** (Gras / Italique / Nuancier) on edit fields — it only inserts the text markers `fmt` supports (`**x**`, `*x*`, — files: src/components/Guild.jsx, src/lib/fmt.js, src/lib/guild.js, src/styles.css
+- **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage sécurisé B/I/#, droits d'édition, en-têtes, factorisation AddCard/DndList — UX pass over the forum v2 (`guild-forum-v2`): (1) a compact **secure formatting toolbar** (Gras / Italique / Nuancier) on edit fields — it only inserts the text markers `fmt` supports (`**x**`, `*x*`, — files: src/components/Guild.jsx, src/components/fmtbar.jsx, src/components/InlineField.jsx, src/lib/fmt.js (+2)
 - **guild-forum-ui** [done] (.kb/cards/guild-forum-ui.md) Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage — The "Forum" tab of the guild modal is a three-level drilldown (categories → topics → messages), with a back icon at each level. — files: src/components/Guild.jsx, src/lib/fmt.js, src/styles.css
 - **guild-forum-v2** [done] (.kb/cards/guild-forum-v2.md) Guilde (UI) : forum v2 — typo centrée, cartes d'ajout + toggle, drag & drop, droits par rang, non-lus, carte de message — Front half of the forum revamp: centered larger section/category/topic titles (`.rhead`), a description line under each category/topic title (inline-editable, no reload), standardized "add" cards (big — files: src/components/Guild.jsx, src/lib/guild.js, src/lib/drag.js, src/styles.css
 - **guild-ranks-insert-dnd** [done] (.kb/cards/guild-ranks-insert-dnd.md) Guilde (UI) : toggle d'insertion + drag & drop des rangs (Gestion) — Evolution of the "Rangs & privilèges" manage section: (1) a **toggle switch on the add-rank card** chooses whether a newly created rank is inserted **above** the add card (default) or **below** it, wi — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
@@ -35,8 +35,9 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/Capital.jsx` — (header), CAP, Capital
 - `src/components/ChatDock.jsx` — (header), TABS, ChatDock
 - `src/components/GameCanvas.jsx` — (header), useRefreshMe, GameCanvas
-- `src/components/Guild.jsx` — Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite. — (header), PERMS, RankPick, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, PermsPanel, FmtBar, FPrev
+- `src/components/Guild.jsx` — Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite. — (header), PERMS, RankPick, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, PermsPanel, AddCard
 - `src/components/Info.jsx` — Petite icône « i » : l'infobulle s'affiche au survol (ou au focus / clic sur mobile). Rendue dans <body> pour  — Info
+- `src/components/InlineField.jsx` — Champ éditable **en place** (composant générique, réutilisable dans tout composant) : — InlineField
 - `src/components/Location.jsx` — (header), WORLDS, Location
 - `src/components/Login.jsx` — (header), Logo, Login, RACES, CharSelect
 - `src/components/Modal.jsx` — Fenêtre modale rendue dans <body> : indépendante des parents (un ancêtre avec backdrop-filter/transform devien — Modal
@@ -44,6 +45,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/SidePanel.jsx` — Silhouette en étoile (bras tendus, jambes écartées) : coordonnées dans un repère 120 × 100. Chaque emplacement — (header), DEFAULT, LABEL, RACES, kindOf, History, SLOTS, LEADERS, GROUP, TYPE, statLine, fmtLock, Inventory, SidePanel
 - `src/components/TileCard.jsx` — (header), cache, useCell, Entity, InfoModal, TileCard
 - `src/components/TopBar.jsx` — (header), DIRS, Wheel, Gauge, Chip, TopBar
+- `src/components/fmtbar.jsx` — Barre d'outils de formatage compacte (Gras / Italique / Nuancier) : agit sur la sélection du — FmtBar, FPrev, useFmt
 - `src/lib/api.js` — token, setToken, hasToken, api
 - `src/lib/drag.js` — Drag & drop des lignes d'affichage (appui + glissement, seuil 8 px pour préserver les clics). — useDrag
 - `src/lib/energy.js` — Énergie d'un trajet (8 directions) jusqu'à stopAt cases de la cible. Miroir de game/movement.ts : — (header), water, pathEnergy, COLORS

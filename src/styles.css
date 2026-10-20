@@ -159,9 +159,15 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .pp{display:flex;align-items:center;gap:6px;font-size:.82rem}
 .pp b{flex:1}
 .pp small{opacity:.6}
-.edrow{display:flex;gap:8px;margin-top:8px;align-items:flex-start}
-.edrow input,.edrow textarea{flex:1}
-.edbox{margin-top:8px}
+/* Champ en place (composant InlineField) : la balise d'affichage se transforme en input —
+ *  aucun nouveau champ n'est créé. */
+.infield{display:inline-flex;align-items:baseline;gap:5px;min-width:0;flex:1}
+.infield .itool{opacity:.55;flex:none}
+.infield .itool:hover{opacity:1}
+.infield.edit{display:flex;flex-direction:column;align-items:center;gap:4px}
+.infield input,.infield textarea{width:100%;max-width:440px;background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:8px;padding:7px 10px;color:inherit;font-size:.95rem;font-family:inherit}
+.infield .ihint{font-size:.66rem;opacity:.45}
+.row2 .infield{justify-content:flex-start}
 /* Carte de message : auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite */
 .post{display:flex;flex-direction:column;align-items:center;gap:6px}
 .pauthor{display:flex;flex-direction:column;align-items:center;gap:3px}

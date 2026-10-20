@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, Fragment } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt, wrapSel, colorSel } from '../lib/fmt';
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt } from '../lib/fmt'; import { FmtBar, FPrev, useFmt } from './fmtbar'; import InlineField from './InlineField';
 const PERMS = [['accept_applicants', 'Accepter des postulants'], ['send_invites', 'Envoyer des invitations'], ['create_topics', 'Créer catégories et sujets'], ['assign_ranks', 'Attribuer des rangs']], words = t => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.map(r => <button type="button" key={r.id} className={'pill' + (value.includes(r.name) ? ' on' : '')} onClick={() => onChange(value.includes(r.name) ? value.filter(x => x !== r.name) : [...value, r.name])}>{r.name}</button>)}</div>;
 function Pres({ g, me, run, load, leave }) {
@@ -68,39 +68,9 @@ function PermsPanel({ kind, g, target, me, run, onDone }) {
     <div className="row"><button className="primary" onClick={save}>Enregistrer les droits</button><small>Le Chef dépasse toujours ces droits ; écrire est limité à « voir ».</small></div>
   </div>;
 }
-// ---- Facteurs communs (Rangs / Catégories / Sujets) : formatage, carte d'ajout, réorganisation ----
-/** Barre d'outils de formatage compacte (Gras / Italique / Nuancier) : agit sur la sélection du
- *  dernier champ focalisé ; n'insère que des balises texte supportées par `fmt` (le rendu reste
- *  assaini par fmt.js — jamais de HTML brut). La couleur s'applique au COMMIT du sélecteur
- *  natif (onChange) : un click sur la pastille ouvre un dialog natif où aucun mouseup ne se
- *  déclenche sur l'élément — d'où l'application sur l'événement d'engagement uniquement. */
-function FmtBar({ onFmt, onColor }) {
-  const [hex, setHex] = useState('#c8a24a');
-  return <span className="fmtbar">
-    <button type="button" title="Gras : entoure la sélection de **" onClick={() => onFmt('**')}><b>B</b></button>
-    <button type="button" title="Italique : entoure la sélection de *" onClick={() => onFmt('*')}><i>I</i></button>
-    <label title="Couleur : insère le code #rrggbb à la suite de la sélection">
-      <input type="color" value={hex} onChange={e => { setHex(e.target.value); onColor(e.target.value); }} /></label>
-  </span>;
-}
-/** Aperçu live du rendu `fmt` (gras / italique / couleur) sous un champ de saisie : l'utilisateur
- *  voit le RÉSULTAT, pas seulement les balises. Sûr : le texte passe par `fmt` (échappement
- *  HTML d'abord) ; jamais de HTML brut. */
-function FPrev({ text }) {
-  return (text ?? '').trim() ? <div className="fprev"><small>Aperçu</small><div dangerouslySetInnerHTML={{ __html: fmt(text) }} /></div> : null;
-}
-/** `bind(setter)` se répand sur le <input>/<textarea> cible : `onFocus` retient le champ pour
- *  la barre d'outils, `onChange` garde le champ éditable (un champ contrôlé SANS onChange est
- *  gelé par React — c'était le bug « impossible d'ajouter/effacer du texte »). Les balises ne
- *  sont insérées QUE par `fmt`/`color` sur la sélection du dernier champ focalisé
- *  (wrapSel/colorSel pures, unitaires dans test/fmt.test.js). */
-const useFmt = () => {
-  const f = useRef(null);
-  const bind = set => ({ onFocus: e => { f.current = { el: e.target, set }; }, onChange: e => set(e.target.value) });
-  const apply = make => { const x = f.current; if (!x) return;
-    const s = x.el.selectionStart ?? 0, e = x.el.selectionEnd ?? 0, r = make(x.el.value, s, e);
-    x.set(r.text); requestAnimationFrame(() => x.el.setSelectionRange?.(r.cursor, r.cursor)); };
-  return { bind, fmt: m => apply((v, s, e) => wrapSel(v, s, e, m)), color: h => apply((v, s, e) => colorSel(v, s, e, h)) }; };
+// ---- Facteurs communs (Rangs / Catégories / Sujets) : carte d'ajout, réorganisation (le
+// formatage B/I/# et l'aperçu sont dans src/components/fmtbar.jsx ; l'édition en place dans
+// src/components/InlineField.jsx) ----
 /** Carte d'ajout standardisée (Rangs / Catégories / Sujets) : fond discret, croix + dans un
  *  cercle bordé ; le toggle d'insertion (au-dessus par défaut) est sur la même ligne, à côté des
  *  boutons d'action, conformément au layout de la section Rangs. */
@@ -124,19 +94,6 @@ function DndList({ rows, onReorder, renderRow, className = 'dlist' }) {
   return <div className={className} ref={ref}>
     {dnd.drag && <div className="inl" style={{ top: dnd.lineY + 'px' }} />}
     {rows.map((row, i) => <Fragment key={row.add ? 'add' : row.id}>{renderRow(row, i, dnd)}</Fragment>)}
-  </div>;
-}
-/** Éditeur inline titre + description (avec FmtBar) : l'enregistrement passe par l'API dédiée
- *  (sans rechargement) — `save(v, done)` est appelé par le parent ; le crayon n'est proposé que
- *  si le back l'autorise (catégorie : create_topics ; sujet : auteur / create_topics / écriture catégorie). */
-function InlineEdit({ label, title, desc, save, onDone }) {
-  const [v, setV] = useState({ title, desc }), fm = useFmt();
-  return <div className="edbox"><FmtBar onFmt={fm.fmt} onColor={fm.color} />
-    <div className="edrow">
-      <input {...fm.bind(x => setV(p => ({ ...p, title: x })))} value={v.title} placeholder={label} />
-      <textarea rows={2} {...fm.bind(x => setV(p => ({ ...p, desc: x })))} placeholder="Description…" value={v.desc} />
-      <button className="primary" onClick={() => save(v, onDone)}>Enregistrer</button></div>
-    <FPrev text={v.desc} />
   </div>;
 }
 function Forum({ g, me, run, load }) {
@@ -166,23 +123,31 @@ function Forum({ g, me, run, load }) {
     if (target.join() !== fl.topics.map(x => x.id).join()) return api('/guilds/reorder', { characterId: me.id, kind: 'topics', folderId: fid, ids: target }).then(load).catch(load);
     return load(); }).catch(() => load());
   const unread = g.unread ?? { topics: {}, folders: {} };
-  const folderEdit = f => <InlineEdit key={f.id} label="Titre de la catégorie…" title={f.name} desc={f.description ?? ''}
-    save={(v, done) => run(() => api(`/guilds/folders/${f.id}/edit`, { characterId: me.id, name: v.title, description: v.desc }), () => { done(); load(); })} onDone={() => setFEd(null)} />;
-  const topicEdit = x => <InlineEdit key={x.id} label="Titre du sujet…" title={x.title} desc={x.description ?? ''}
-    save={(v, done) => run(() => api(`/guilds/topics/${x.id}/edit`, { characterId: me.id, title: v.title, description: v.desc }), () => { done(); load(); })} onDone={() => setTEd(null)} />;
+  /** Édition inline (composant générique InlineField) : la balise d'affichage se transforme en
+   *  input — aucun nouveau champ. La Promise reste PENDING en cas d'erreur (toast par `run`) →
+   *  le champ reste ouvert ; succès → load() + le champ se referme. */
+  const saveFold = (f, field, v) => new Promise(resolve => {
+    run(() => api(`/guilds/folders/${f.id}/edit`, { characterId: me.id, [field]: field === 'name' ? v.trim() : v }), () => { load(); resolve(); });
+  });
+  const saveTopic = (t, field, v) => new Promise(resolve => {
+    run(() => api(`/guilds/topics/${t.id}/edit`, { characterId: me.id, [field]: field === 'title' ? v.trim() : v }), () => { load(); resolve(); });
+  });
   return <div className="forum">
     {!folder && <div className="fview">
       <div className="row2 fhead2"><span /><h4 className="rhead">Catégories</h4><span /></div>
       <DndList rows={fRows} onReorder={(from, to) => persistF(dropRankRow(fIds, fAdd, from, to))} renderRow={(row, i, dnd) => {
         if (row.add) return <AddCard i={i} len={fRows.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />;
-        const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0;
+        const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0, editing = fEd === f.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
-          <div className="row2 sel"><button className="selitem" onClick={() => { setFid(f.id); setTid(null); setFpOpen(null); }}><span><b dangerouslySetInnerHTML={{ __html: fmt(f.name) }} />{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></button>
-            <span className="row">{can && <button title="Éditer" onClick={() => { setFEd(f.id); setFpOpen(null); }}><Pencil size={13} /></button>}
+          <div className="row2 sel">{editing
+            ? <InlineField value={f.name} pencil={false} placeholder="Nom de la catégorie…" onSave={v => saveFold(f, 'name', v)} />
+            : <button className="selitem" onClick={() => { setFid(f.id); setTid(null); setFpOpen(null); }}><span><b dangerouslySetInnerHTML={{ __html: fmt(f.name) }} />{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></button>}
+            <span className="row">{can && <button title="Éditer" onClick={() => { setFEd(fEd === f.id ? null : f.id); setFpOpen(null); }}><Pencil size={13} /></button>}
               {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}</span></div>
-          {f.description && <div className="fsep">-----</div>}
-          {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}
-          {fEd === f.id && folderEdit(f)}
+          {editing
+            ? <InlineField value={f.description ?? ''} pencil={false} multiline fmt placeholder="Description…" onSave={v => saveFold(f, 'description', v)} />
+            : <>{f.description && <div className="fsep">-----</div>}
+              {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}</>}
           {lead && <div className="prow"><button className="btnlike" onClick={() => setFpOpen(fpOpen === f.id ? null : f.id)}>{fpOpen === f.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
             {fpOpen === f.id && <PermsPanel kind="folders" g={g} target={f} me={me} run={run} onDone={() => { setFpOpen(null); load(); }} />}</div>}
         </div>;
@@ -196,14 +161,17 @@ function Forum({ g, me, run, load }) {
       {folder.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(folder.description) }} />}
       <DndList rows={tRows} onReorder={(from, to) => persistT(dropRankRow(tIds, tAdd, from, to))} renderRow={(row, i, dnd) => {
         if (row.add) return <AddCard i={i} len={tRows.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />;
-        const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id);
+        const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id), editing = tEd === x.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
-          <div className="row2 sel"><button className="selitem" onClick={() => open(x)}><span><b dangerouslySetInnerHTML={{ __html: fmt(x.title) }} />{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></button>
-            <span className="row">{editable && <button title="Éditer" onClick={() => { setTEd(x.id); setTpOpen(null); }}><Pencil size={13} /></button>}
+          <div className="row2 sel">{editing
+            ? <InlineField value={x.title} pencil={false} placeholder="Titre du sujet…" onSave={v => saveTopic(x, 'title', v)} />
+            : <button className="selitem" onClick={() => open(x)}><span><b dangerouslySetInnerHTML={{ __html: fmt(x.title) }} />{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></button>}
+            <span className="row">{editable && <button title="Éditer" onClick={() => { setTEd(tEd === x.id ? null : x.id); setTpOpen(null); }}><Pencil size={13} /></button>}
               {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}</span></div>
-          {x.description && <div className="fsep">-----</div>}
-          {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}
-          {tEd === x.id && topicEdit(x)}
+          {editing
+            ? <InlineField value={x.description ?? ''} pencil={false} multiline fmt placeholder="Description…" onSave={v => saveTopic(x, 'description', v)} />
+            : <>{x.description && <div className="fsep">-----</div>}
+              {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}</>}
           {lead && <div className="prow"><button className="btnlike" onClick={() => setTpOpen(tpOpen === x.id ? null : x.id)}>{tpOpen === x.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
             {tpOpen === x.id && <PermsPanel kind="topics" g={g} target={x} me={me} run={run} onDone={() => { setTpOpen(null); load(); }} />}</div>}
         </div>;
@@ -212,11 +180,14 @@ function Forum({ g, me, run, load }) {
     </div>}
     {topic && <div className="fview">
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux sujets"><ArrowLeft size={15} /> Sujets</button>
-        <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(topic.title) }} />
-        {canEditTopic(topic, folder, g.me, me.id) && <button className="btnlike" title="Éditer le sujet" onClick={() => setTEd(topic.id)}><Pencil size={13} /></button>}</div>
-      {topic.description && <div className="fsep">-----</div>}
-      {topic.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(topic.description) }} />}
-      {tEd === topic.id && topicEdit(topic)}
+        {tEd === topic.id
+          ? <InlineField value={topic.title} pencil={false} placeholder="Titre du sujet…" onSave={v => saveTopic(topic, 'title', v)} />
+          : <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(topic.title) }} />}
+        {canEditTopic(topic, folder, g.me, me.id) && <button className="btnlike" title="Éditer le sujet" onClick={() => setTEd(tEd === topic.id ? null : topic.id)}><Pencil size={13} /></button>}</div>
+      {tEd === topic.id
+        ? <InlineField value={topic.description ?? ''} pencil={false} multiline fmt placeholder="Description…" onSave={v => saveTopic(topic, 'description', v)} />
+        : <>{topic.description && <div className="fsep">-----</div>}
+          {topic.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(topic.description) }} />}</>}
       <div className="posts">{posts.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
       {lead || effWrite(topic, folder).includes(g.me.rank)
         ? <div className="replywrap"><FmtBar onFmt={fmRep.fmt} onColor={fmRep.color} />

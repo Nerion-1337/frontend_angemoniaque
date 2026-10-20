@@ -44,7 +44,17 @@ test('<DndList> est toujours utilisé avec la prop renderRow (3 sites, jamais d�
 // Garde anti-régression « impossible d’ajouter/effacer du texte » : le spread de `bind` doit
 // toujours porter un onChange (un champ contrôlé sans onChange est gelé par React — c'était le
 // bug de l'éditeur inline). Toute saisie de champ reste editable.
-test('bind() fournit un onChange (champ contrôlé éditable)', () => {
+// Garde anti-régression « nouveau champ créé pour éditer » : l'édition passe par le
+// composant générique InlineField (la balise d'affichage se transforme elle-même en input) ;
+// l'ancienne boîte d'édition (InlineEdit / .edbox) doit rester supprimée.
+test('édition inline : InlineField utilisé, InlineEdit/.edbox absents', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  expect(src).toContain('InlineField');
+  expect(src).not.toContain('InlineEdit');
+  expect(src).not.toContain('edbox');
+});
+
+test('bind() fournit un onChange (champ contrôlé éditable)', () => {
+  const src = readFileSync(new URL('../src/components/fmtbar.jsx', import.meta.url), 'utf8');
   expect(src).toMatch(/const bind = set => \(\{[\s\S]{0,120}onChange: e => set\(e\.target\.value\)/);
 });
