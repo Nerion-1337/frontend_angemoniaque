@@ -175,6 +175,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fview{position:relative}
 .dlist{position:relative}
 .fcard{touch-action:none;cursor:grab}
+.fcard:hover{background:rgba(255,255,255,.085);border-color:rgba(240,210,138,.4)}
 .fcard:active{cursor:grabbing}
 /* Barre de formatage compacte (B / I / nuancier) au-dessus des champs d'édition du forum */
 .fmtbar{display:inline-flex;align-items:center;gap:6px;margin:0 0 6px;justify-content:center;width:100%}
@@ -218,11 +219,12 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fcard .row button{transform:scale(.8);transform-origin:center}
 .fcard .ord{position:absolute;top:50%;right:10px;transform:translateY(-50%);z-index:2}
 .fcard .selitem small{position:absolute;bottom:5px;right:50px;z-index:2}
+/* Vue liste des sujets : les cartes de sujets sont centrées (en-tête épuré : ni description ni séparation) */
+.fcol .dlist{width:min(720px,100%);margin:0 auto}
 /* Groupe d'icônes inactif (aperçu affiché : la sélection serait perdue) */
 .fmtbar.dis{opacity:.4;pointer-events:none}
 /* Annulation : croix empillée juste au-dessus du crayon (plus de bouton texte en bas) */
 .vstack{display:inline-flex;flex-direction:row;align-items:center;gap:0}
-.vstack .xbtn,.row .xbtn{min-width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);cursor:pointer;opacity:.85}
 .xbtn:hover{opacity:1;color:#d98f7f}
 /* Panneau de droits : case à cocher d'héritage + entête de matrice */
 .ppanel .pprow{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 6px}

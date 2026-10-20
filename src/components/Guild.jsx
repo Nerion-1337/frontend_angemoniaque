@@ -24,13 +24,14 @@ const Avatar = ({ p }) => <span className="avatar" style={{ background: AV[[...p
 const Post = ({ p }) => <div className="post"><div className="pauthor"><Avatar p={p.pseudo} />{p.rank && <span className="prank">{p.rank}</span>}<b>{p.pseudo}</b></div>
   <div className="postbody" dangerouslySetInnerHTML={{ __html: fmt(p.body) }} /><small className="ptime">{new Date(p.created_at).toLocaleString('fr-FR')}</small></div>;
 function NewFolderModal({ g, me, run, load, onClose, onCreated }) {
-  const [name, setName] = useState(''), [desc, setDesc] = useState(''), [fr, setFr] = useState(g.ranks.map(r => r.name)), [wr, setWr] = useState(g.ranks.map(r => r.name));
+  const noChef = g.ranks.filter(r => !r.is_leader); // le Chef a toujours tous les droits : aucune case pour lui
+  const [name, setName] = useState(''), [desc, setDesc] = useState(''), [fr, setFr] = useState(noChef.map(r => r.name)), [wr, setWr] = useState(noChef.map(r => r.name));
   const fm = useFmt(); // le SEUL groupe d'icônes de la modale, partagé par les deux champs
   return <Modal onClose={onClose} className="inv guild" label="Nouvelle catégorie"><div className="form"><h4><Plus size={14} /> Nouvelle catégorie</h4>
     <FmtField value={name} onChange={setName} fm={fm} placeholder="Titre…" />
     <FmtField value={desc} onChange={setDesc} fm={fm} bar={false} multiline placeholder="Description (facultative) (formattable : [g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])…" />
-    <small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={fr} onChange={setFr} />
-    <small>Qui peut ÉCRIRE (créer des sujets) :</small><RankPick ranks={g.ranks} value={wr} onChange={setWr} />
+    <small>Qui peut VOIR :</small><RankPick ranks={noChef} value={fr} onChange={setFr} />
+    <small>Qui peut ÉCRIRE (créer des sujets) :</small><RankPick ranks={noChef} value={wr} onChange={setWr} />
     <button className="primary" disabled={!name.trim()} onClick={() => run(() => api('/guilds/folders', { characterId: me.id, name: name.trim(), description: desc.trim() || undefined, visibleRanks: fr, writeRanks: wr }), () => { onClose(); (onCreated ?? load)(); })}>Créer la catégorie</button></div></Modal>;
 }
 function NewTopicModal({ g, folder, me, run, load, onClose, onCreated }) {
@@ -42,9 +43,9 @@ function NewTopicModal({ g, folder, me, run, load, onClose, onCreated }) {
     <FmtField value={t.body} onChange={set('body')} fm={fm} bar={false} multiline rows={4} placeholder="Contenu… ([g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])" />
     <FmtField value={t.description} onChange={set('description')} fm={fm} bar={false} multiline placeholder="Description (facultative, formattable)…" />
     <label className="chk"><input type="checkbox" checked={inhR} onChange={e => setInhR(e.target.checked)} /> Lecture héritée de la catégorie</label>
-    {!inhR && <><small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={tr} onChange={setTr} /></>}
+    {!inhR && <><small>Qui peut VOIR :</small><RankPick ranks={g.ranks.filter(r => !r.is_leader)} value={tr} onChange={setTr} /></>}
     <label className="chk"><input type="checkbox" checked={inhW} onChange={e => setInhW(e.target.checked)} /> Écriture héritée de la catégorie</label>
-    {!inhW && <><small>Qui peut ÉCRIRE :</small><RankPick ranks={g.ranks} value={tw} onChange={setTw} /></>}
+    {!inhW && <><small>Qui peut ÉCRIRE :</small><RankPick ranks={g.ranks.filter(r => !r.is_leader)} value={tw} onChange={setTw} /></>}
     <button className="primary" disabled={!t.title.trim() || !t.body.trim()} onClick={() => run(() => api('/guilds/topics', { characterId: me.id, folderId: folder.id, title: t.title.trim(), body: t.body, description: t.description.trim() || undefined, visibleRanks: inhR ? [] : tr, writeRanks: inhW ? undefined : tw }), () => { onClose(); (onCreated ?? load)(); })}>Publier le sujet</button></div></Modal>;
 }
 function Perks({ g, kind, value, onChange }) {
@@ -59,10 +60,10 @@ function Perks({ g, kind, value, onChange }) {
       {kind === 'topics' && <label className="chk"><input type="checkbox" checked={value.iR} onChange={e => onChange({ ...value, iR: e.target.checked })} /> Lecture héritée de la catégorie</label>}
       <label className="chk"><input type="checkbox" checked={value.iW} onChange={e => onChange({ ...value, iW: e.target.checked })} /> Écriture héritée de la lecture</label></div>
     <div className="pgrid"><div className="pp ph"><label>Voir</label><label>Écrire</label><b>Rang</b></div>
-      {g.ranks.map(r => <div key={r.id} className="pp">
+      {g.ranks.filter(r => !r.is_leader).map(r => <div key={r.id} className="pp">
         <input type="checkbox" disabled={value.iR} checked={value.read.includes(r.name)} onChange={e => setR(r.name, e.target.checked)} />
         <input type="checkbox" disabled={value.iW} checked={value.write.includes(r.name)} onChange={e => setW(r.name, e.target.checked)} />
-        <b>{r.name}</b>{r.is_leader && <small> (tous droits)</small>}</div>)}</div>
+        <b>{r.name}</b></div>)}</div>
     <small>Le Chef dépasse toujours ces droits ; écrire est limité à « voir ». Tout est enregistré avec le titre et la description.</small>
   </div>;
 }
@@ -196,13 +197,13 @@ function Forum({ g, me, run, load }) {
       <DndList rows={fRows} onReorder={(from, to) => persistF(dropRankRow(fIds, fAdd, from, to))} renderRow={(row, i, dnd) => {
         if (row.add) return <AddCard i={i} len={fRows.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />;
         const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0, editing = ed?.id === f.id;
-        return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
+        return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} onClick={e => { if (editing || dnd.justDrag.current || e.target.closest('button,select,input,textarea,label,a')) return; setFid(f.id); setTid(null); }} {...dnd.rowProps(i)}>
           {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
           <div className={'row2 sel' + (editing ? ' edit' : '')}>{editing
             ? <FmtField fm={fmEd} bar={false} inrow value={draft.title} onChange={v => setD({ title: v })} placeholder="Nom de la catégorie…" />
-            : <button className="selitem" onClick={() => { setFid(f.id); setTid(null); }}><span><b dangerouslySetInnerHTML={{ __html: fmt(f.name) }} />{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></button>}
+            : <div className="selitem"><span><b dangerouslySetInnerHTML={{ __html: fmt(f.name) }} />{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></div>}
             <span className="row">{can && <span className="vstack">
-              {editing && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
+              {editing && <button title="Annuler les changements" onClick={closeEdit}><X size={13} /></button>}
               <button title={editing ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('f', f.id, f)}><Pencil size={13} /></button></span>}
               {lead && <button title="Supprimer la catégorie" className="delb" onClick={() => setCDel({ kind: 'f', id: f.id, name: f.name })}><Trash2 size={13} /></button>}</span></div>
           {editing
@@ -215,21 +216,19 @@ function Forum({ g, me, run, load }) {
       }} />
       {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
     </div>}
-    {folder && tid === null && <div className="fview">
+    {folder && tid === null && <div className="fview fcol">
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button>
         <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(folder.name) }} /><span /></div>
-      {folder.description && <div className="fsep">-----</div>}
-      {folder.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(folder.description) }} />}
       <DndList rows={tRows} onReorder={(from, to) => persistT(dropRankRow(tIds, tAdd, from, to))} renderRow={(row, i, dnd) => {
         if (row.add) return <AddCard i={i} len={tRows.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />;
         const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id), editing = ed?.id === x.id;
-        return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
+        return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} onClick={e => { if (editing || dnd.justDrag.current || e.target.closest('button,select,input,textarea,label,a')) return; open(x); }} {...dnd.rowProps(i)}>
           {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
           <div className={'row2 sel' + (editing ? ' edit' : '')}>{editing
             ? <FmtField fm={fmEd} bar={false} inrow value={draft.title} onChange={v => setD({ title: v })} placeholder="Titre du sujet…" />
-            : <button className="selitem" onClick={() => open(x)}><span><b dangerouslySetInnerHTML={{ __html: fmt(x.title) }} />{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></button>}
+            : <div className="selitem"><span><b dangerouslySetInnerHTML={{ __html: fmt(x.title) }} />{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></div>}
             <span className="row">{editable && <span className="vstack">
-              {editing && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
+              {editing && <button title="Annuler les changements" onClick={closeEdit}><X size={13} /></button>}
               <button title={editing ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('t', x.id, x, folder)}><Pencil size={13} /></button></span>}
               {can && <button title="Transférer vers une autre catégorie" onClick={() => setMove({ id: x.id, name: x.title, from: folder.id, to: null })}><MoveRight size={13} /></button>}
               {lead && <button title="Supprimer le sujet" className="delb" onClick={() => setCDel({ kind: 't', id: x.id, name: x.title })}><Trash2 size={13} /></button>}</span></div>
@@ -248,7 +247,7 @@ function Forum({ g, me, run, load }) {
           ? <FmtField fm={fmEd} bar={false} value={draft.title} onChange={v => setD({ title: v })} placeholder="Titre du sujet…" />
           : <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(topic.title) }} />}
         {canEditTopic(topic, folder, g.me, me.id) && <span className="vstack">
-          {ed?.id === topic.id && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
+          {ed?.id === topic.id && <button title="Annuler les changements" onClick={closeEdit}><X size={13} /></button>}
           <button className="btnlike" title={ed?.id === topic.id ? 'Sauvegarder les modifications' : 'Éditer'} onClick={() => pencil('t', topic.id, topic, folder)}><Pencil size={13} /></button></span>}</div>
       {ed?.id === topic.id
         ? TopicEditBlock()

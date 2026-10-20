@@ -90,11 +90,23 @@ test('Confirm.jsx : écran contrôlé (clic extérieur = annuler)', () => {
 
 // Annulation : le bouton texte « Annuler » en bas est retiré ; une croix (Close) est
 // empilée juste au-dessus du crayon pour abandonner le brouillon en cours.
-test('annulation : croix empilée au-dessus du crayon (edrow2 retirée)', () => {
+test('cartes forum : clic/hover toute la carte, croix sans xbtn, Chef sans option, liste centrée', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
   expect(src).not.toContain('edrow2');
   expect(src).toContain('vstack');
-  expect(src).toContain('xbtn');
+  // Croix d'annulation SANS classe xbtn (même dimension que les autres boutons) — la classe ne doit pas revenir
+  expect(src).not.toContain('className="xbtn"');
+  expect(css).not.toContain('.row .xbtn');
+  // Clic étendu à toute la carte (boutons/entrées exclus + garde justDrag) ; le titre n'est plus un <button>
+  expect(src).toContain("closest('button,select,input,textarea,label,a')");
+  expect(src).toContain('<div className="selitem">');
+  expect(css).toContain('.fcard:hover{');
+  // Le Chef (is_leader) n'offre aucune option (modales de création + matrice d'édition)
+  expect(src.split('!r.is_leader').length - 1).toBeGreaterThanOrEqual(5);
+  // Vue liste des sujets : liste de cartes centrée (.fcol) et en-tête sans fsep/fdesc
+  expect(src).toContain('fview fcol');
+  expect(css).toContain('.fcol .dlist{width:min(720px,100%);margin:0 auto}');
 });
 
 // Régression « la sauvegarde échoue » : le schéma back attend `name` pour une catégorie et
