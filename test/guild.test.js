@@ -4,3 +4,9 @@ const g = (leader, members) => ({ me: { leader, rank: leader ? 'Chef' : 'Membre'
 test('le seul porteur du rang Chef est le dernier Chef', () => expect(lastChef(g(true, [{ id: 1, rank_id: 1 }, { id: 2, rank_id: 3 }]))).toBe(true));
 test('un second porteur du rang Chef le libère', () => expect(lastChef(g(true, [{ id: 1, rank_id: 1 }, { id: 2, rank_id: 1 }]))).toBe(false));
 test('un non-Chef n\'est jamais le dernier Chef', () => expect(lastChef(g(false, [{ id: 1, rank_id: 1 }, { id: 2, rank_id: 3 }]))).toBe(false));
+import { displayRanks, moveRankRow } from '../src/lib/guild';
+test('affichage : la carte d’ajout est en dernier par défaut', () => expect(displayRanks([1, 2, 3])).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }, { add: true }]));
+test('affichage : addPos insère la carte à la position demandée', () => expect(displayRanks([1, 2, 3], 1)).toEqual([{ id: 1 }, { add: true }, { id: 2 }, { id: 3 }]));
+test('déplacement d’un rang : l’ordre persistable change, la carte d’ajout suit', () => expect(moveRankRow([1, 2, 3], 3, 0, 1)).toEqual({ ids: [2, 1, 3], addPos: 3 }));
+test('déplacement de la carte d’ajout : l’ordre des rangs est inchangé (état local)', () => expect(moveRankRow([1, 2, 3], 3, 3, -1)).toEqual({ ids: [1, 2, 3], addPos: 2 }));
+test('bords : premier en haut / dernier en bas = rien ne bouge', () => { expect(moveRankRow([1, 2], 2, 0, -1)).toEqual({ ids: [1, 2], addPos: 2 }); expect(moveRankRow([1, 2], 0, 2, 1)).toEqual({ ids: [1, 2], addPos: 0 }); });

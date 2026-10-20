@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef } from '../lib/guild'; import { fmt } from '../lib/fmt';
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow } from '../lib/guild'; import { fmt } from '../lib/fmt';
 const PERMS = [['accept_applicants', 'Accepter des postulants'], ['send_invites', 'Envoyer des invitations'], ['create_topics', 'Créer catégories et sujets'], ['assign_ranks', 'Attribuer des rangs']], words = t => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.map(r => <button type="button" key={r.id} className={'pill' + (value.includes(r.name) ? ' on' : '')} onClick={() => onChange(value.includes(r.name) ? value.filter(x => x !== r.name) : [...value, r.name])}>{r.name}</button>)}</div>;
 function Pres({ g, me, run, load, leave }) {
@@ -62,14 +62,28 @@ function NewRankModal({ me, run, load, onClose }) {
     {PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" checked={!!perms[k]} onChange={e => setPerms({ ...perms, [k]: e.target.checked })} /> {l}</label>)}
     <button className="primary" disabled={name.trim().length < 2} onClick={() => run(() => api('/guilds/ranks', { characterId: me.id, name: name.trim(), permissions: perms }), () => { onClose(); load(); })}>Créer le rang</button></div></Modal>;
 }
+function Arrows({ i, len, onMove }) {
+  return <span className="ord"><button title="Monter" disabled={i === 0} onClick={e => { e.stopPropagation(); onMove(i, -1); }}><ChevronUp size={14} /></button><button title="Descendre" disabled={i === len - 1} onClick={e => { e.stopPropagation(); onMove(i, 1); }}><ChevronDown size={14} /></button></span>;
+}
 function Manage({ g, me, run, load }) {
-  const [open, setOpen] = useState(false), [ren, setRen] = useState(null), [rname, setRname] = useState('');
+  const [open, setOpen] = useState(false), [ren, setRen] = useState(null), [rname, setRname] = useState(''), [addPos, setAddPos] = useState(null);
+  const ids = g.ranks.map(r => r.id), rows = displayRanks(ids, addPos);
+  const moveRow = (i, dir) => { const n = moveRankRow(ids, addPos, i, dir); setAddPos(n.addPos);
+    if (n.ids.join() !== ids.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'ranks', ids: n.ids }), load); };
   const saveRename = r => run(() => api(`/guilds/ranks/${r.id}/rename`, { characterId: me.id, name: rname }), () => { setRen(null); load(); });
-  return <div className="form"><div className="row2"><h4>Rangs & privilèges</h4><button className="btnlike" title="Créer un rang" aria-label="Créer un rang" onClick={() => setOpen(true)}><Plus size={14} /></button></div>
-    {g.ranks.map(r => <div key={r.id} className="item"><div className="head"><b>{r.name}</b>
-      {ren === r.id ? <span className="row"><input value={rname} onChange={e => setRname(e.target.value)} /><button className="primary" onClick={() => saveRename(r)}>Renommer</button></span>
-        : <span className="row">{r.is_leader ? <span className="pill">Chef — tous les droits</span> : <button title={`Renommer « ${r.name} »`} onClick={() => { setRen(r.id); setRname(r.name); }}><Pencil size={13} /></button>}</span>}</div>
-      <div className="grid2">{PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" disabled={r.is_leader} checked={r.is_leader || !!r.permissions[k]} onChange={e => run(() => api(`/guilds/ranks/${r.id}/permission`, { characterId: me.id, permission: k, value: e.target.checked }), load)} /> {l}</label>)}</div></div>)}
+  return <div className="form ranks"><h4 className="rhead">Rangs & privilèges</h4>
+    {rows.map((row, i) => {
+      if (row.add) return <div key="add" className="item radd" title="Ajouter un rang" onClick={() => setOpen(true)}>
+        <span /><button className="plus" aria-label="Ajouter un rang" onClick={() => setOpen(true)}><Plus size={26} strokeWidth={2.5} /></button>
+        <Arrows i={i} len={rows.length} onMove={moveRow} /></div>;
+      const r = g.ranks.find(x => x.id === row.id);
+      return <div key={r.id} className="item rcard"><div className="head"><b>{r.name}</b>
+        <span className="row">{r.is_leader && <span className="pill">Chef — tous les droits</span>}
+          {ren === r.id ? <span className="row"><input value={rname} onChange={e => setRname(e.target.value)} /><button className="primary" onClick={() => saveRename(r)}>Renommer</button></span>
+            : <button title={`Renommer « ${r.name} »`} onClick={() => { setRen(r.id); setRname(r.name); }}><Pencil size={13} /></button>}
+          <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>
+        <div className="grid2">{PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" disabled={r.is_leader} checked={r.is_leader || !!r.permissions[k]} onChange={e => run(() => api(`/guilds/ranks/${r.id}/permission`, { characterId: me.id, permission: k, value: e.target.checked }), load)} /> {l}</label>)}</div></div>;
+    })}
     {open && <NewRankModal me={me} run={run} load={load} onClose={() => setOpen(false)} />}
   </div>;
 }
