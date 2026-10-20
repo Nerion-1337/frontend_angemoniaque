@@ -151,8 +151,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Ligne de séparation titre/description : les tirets « ----- » sont MASQUÉS (font-size:0,
    hauteur 0) ; la ligne visuelle vient du border-bottom — MÊME épaisseur (2px) et MÊME
    couleur (var(--plus-line)) que la bordure du bouton « ajouter » (.radd .plus). */
-.fsep{height:0;margin:8px 0;padding:0;color:transparent;font-size:0;line-height:0;letter-spacing:0;user-select:none;border-bottom:2px solid var(--plus-line)}
-.fdesc{font-size:.9rem;opacity:.8;text-align:center;margin:0 0 8px}
+.fsep{width:25%;height:0;margin:8px 0;padding:0;color:transparent;font-size:0;line-height:0;letter-spacing:0;user-select:none;border-bottom:2px solid var(--plus-line)}
+.fdesc{font-size:1.125rem;opacity:.8;text-align:center;margin:0 0 8px}
 .fcard{min-height:88px}
 .unread{display:inline-block;min-width:20px;margin-left:8px;padding:0 7px;border-radius:10px;background:var(--halo);color:#241b05;font-size:.72rem;font-weight:700;text-align:center;vertical-align:middle}
 .prow{margin-top:8px}
@@ -212,11 +212,12 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
    (choix de personnage, cartes de rangs .rcard, .radd) et n'y sont pas touchés. */
 .fcard{position:relative}
 .fcard .row2.sel{background:transparent;border:none;padding:0;margin:0}
-.fcard .selitem{justify-content:center}
-.fcard .row{position:absolute;top:5px;right:10px;z-index:2}
+.fcard .selitem{justify-content:flex-end}
+.fcard .selitem b{font-size:1.5rem}
+.fcard .row{position:absolute;top:5px;right:50px;z-index:2;gap:0}
 .fcard .row button{transform:scale(.8);transform-origin:center}
 .fcard .ord{position:absolute;top:50%;right:10px;transform:translateY(-50%);z-index:2}
-.fcard .selitem small{position:absolute;bottom:5px;right:10px;z-index:2}
+.fcard .selitem small{position:absolute;bottom:5px;right:50px;z-index:2}
 /* Groupe d'icônes inactif (aperçu affiché : la sélection serait perdue) */
 .fmtbar.dis{opacity:.4;pointer-events:none}
 /* Annulation : croix empillée juste au-dessus du crayon (plus de bouton texte en bas) */

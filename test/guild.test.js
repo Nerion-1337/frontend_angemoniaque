@@ -127,11 +127,16 @@ test('groupe d' + 'icônes : un seul par bloc édité + bascule aperçu dans le 
 test('cartes forum : positionnement flottant scoppé à .fcard (CSS)', () => {
   const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
   expect(css).toContain('.fcard{position:relative}');
-  expect(css).toContain('.fcard .row{position:absolute;top:5px;right:10px');
+  expect(css).toContain('.fcard .row{position:absolute;top:5px;right:50px;z-index:2;gap:0}');
   expect(css).toContain('transform:scale(.8)');
   expect(css).toContain('.fcard .ord{position:absolute;top:50%;right:10px;transform:translateY(-50%)');
-  expect(css).toContain('.fcard .selitem small{position:absolute;bottom:5px;right:10px');
+  expect(css).toContain('.fcard .selitem small{position:absolute;bottom:5px;right:50px');
   expect(css).toContain('.fcard .row2.sel{background:transparent;border:none');
+  // Titre à DROITE (plus centré) et ×1.5 ; description ×1.25 ; .fsep à 25 % depuis la gauche
+  expect(css).toContain('.fcard .selitem{justify-content:flex-end}');
+  expect(css).toContain('.fcard .selitem b{font-size:1.5rem}');
+  expect(css).toContain('.fdesc{font-size:1.125rem');
+  expect(css).toContain('.fsep{width:25%;height:0;')
   expect(css).toContain('--plus-line:var(--halo)');
   expect(css).toContain('border-bottom:2px solid var(--plus-line)');
   expect(css).toContain('.radd .plus{width:58px;height:58px;padding:0;border:2px solid var(--plus-line)');
