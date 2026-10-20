@@ -114,10 +114,11 @@ function Manage({ g, me, run, load }) {
     {drag && <div className="inl" style={{ top: lineY + 'px' }} />}
     {rows.map((row, i) => {
       if (row.add) return <div key="add" className={'item radd' + (drag?.from === i ? ' rkdr' : '')} title="Ajouter un rang" onClick={() => { if (justDrag.current) return; setOpen(true); }} {...rowProps(i)}>
-        <label className="tgl" title="Position d'insertion du nouveau rang"><span>{below ? 'insertion en dessous' : 'insertion au-dessus'}</span>
-          <span className="trk"><input type="checkbox" checked={below} onChange={e => setBelow(e.target.checked)} /><span className="knob" /></span></label>
+        <span />
         <button className="plus" aria-label="Ajouter un rang" onClick={() => setOpen(true)}><Plus size={26} strokeWidth={2.5} /></button>
-        <Arrows i={i} len={rows.length} onMove={moveRow} /></div>;
+        <span className="aacts"><label className="tgl" title="Position d'insertion du nouveau rang — le clic ne doit pas ouvrir la modale" onClick={e => e.stopPropagation()}><span>{below ? 'insertion en dessous' : 'insertion au-dessus'}</span>
+          <span className="trk"><input type="checkbox" checked={below} onChange={e => setBelow(e.target.checked)} /><span className="knob" /></span></label>
+          <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>;
       const r = g.ranks.find(x => x.id === row.id);
       return <div key={r.id} className={'item rcard' + (drag?.from === i ? ' rkdr' : '')} {...rowProps(i)}><div className="head"><b>{r.name}</b>
         <span className="row">{r.is_leader && <span className="pill">Chef — tous les droits</span>}
