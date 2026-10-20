@@ -133,8 +133,10 @@ test('cartes forum : positionnement flottant scoppé à .fcard (CSS)', () => {
   expect(css).toContain('.fcard .selitem small{position:absolute;bottom:5px;right:50px');
   expect(css).toContain('.fcard .row2.sel{background:transparent;border:none');
   // Titre à DROITE (plus centré) et ×1.5 ; description ×1.25 ; .fsep à 25 % depuis la gauche
-  expect(css).toContain('.fcard .selitem{justify-content:flex-end}');
+  expect(css).toContain('.fcard .selitem{justify-content:flex-start}');
   expect(css).toContain('.fcard .selitem b{font-size:1.5rem}');
+  // Croix d'annulation : à GAUCHE du crayon, sans gap (plus de pile verticale)
+  expect(css).toContain('.vstack{display:inline-flex;flex-direction:row;align-items:center;gap:0}');
   expect(css).toContain('.fdesc{font-size:1.125rem');
   expect(css).toContain('.fsep{width:25%;height:0;')
   expect(css).toContain('--plus-line:var(--halo)');

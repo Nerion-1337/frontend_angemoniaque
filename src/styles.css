@@ -212,7 +212,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
    (choix de personnage, cartes de rangs .rcard, .radd) et n'y sont pas touchés. */
 .fcard{position:relative}
 .fcard .row2.sel{background:transparent;border:none;padding:0;margin:0}
-.fcard .selitem{justify-content:flex-end}
+.fcard .selitem{justify-content:flex-start}
 .fcard .selitem b{font-size:1.5rem}
 .fcard .row{position:absolute;top:5px;right:50px;z-index:2;gap:0}
 .fcard .row button{transform:scale(.8);transform-origin:center}
@@ -221,7 +221,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Groupe d'icônes inactif (aperçu affiché : la sélection serait perdue) */
 .fmtbar.dis{opacity:.4;pointer-events:none}
 /* Annulation : croix empillée juste au-dessus du crayon (plus de bouton texte en bas) */
-.vstack{display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+.vstack{display:inline-flex;flex-direction:row;align-items:center;gap:0}
 .vstack .xbtn,.row .xbtn{min-width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);cursor:pointer;opacity:.85}
 .xbtn:hover{opacity:1;color:#d98f7f}
 /* Panneau de droits : case à cocher d'héritage + entête de matrice */
