@@ -40,3 +40,11 @@ test('<DndList> est toujours utilisé avec la prop renderRow (3 sites, jamais d�
   expect(src.includes('</DndList>')).toBe(false);
   expect((src.match(/renderRow=\{/g) ?? []).length).toBe(3);
 });
+
+// Garde anti-régression « impossible d’ajouter/effacer du texte » : le spread de `bind` doit
+// toujours porter un onChange (un champ contrôlé sans onChange est gelé par React — c'était le
+// bug de l'éditeur inline). Toute saisie de champ reste editable.
+test('bind() fournit un onChange (champ contrôlé éditable)', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  expect(src).toMatch(/const bind = set => \(\{[\s\S]{0,120}onChange: e => set\(e\.target\.value\)/);
+});

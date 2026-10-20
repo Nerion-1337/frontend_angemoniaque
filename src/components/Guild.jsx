@@ -30,6 +30,7 @@ function NewFolderModal({ g, me, run, load, onClose, onCreated }) {
     <FmtBar onFmt={fm.fmt} onColor={fm.color} />
     <input {...fm.bind(setName)} placeholder="Titre…" value={name} onChange={e => setName(e.target.value)} />
     <textarea {...fm.bind(setDesc)} rows={2} placeholder="Description (facultative) (formattable : **gras**, *italique*, #rrggbb)…" value={desc} onChange={e => setDesc(e.target.value)} />
+    <FPrev text={desc} />
     <small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={fr} onChange={setFr} />
     <small>Qui peut ÉCRIRE (créer des sujets) :</small><RankPick ranks={g.ranks} value={wr} onChange={setWr} />
     <button className="primary" disabled={!name.trim()} onClick={() => run(() => api('/guilds/folders', { characterId: me.id, name: name.trim(), description: desc.trim() || undefined, visibleRanks: fr, writeRanks: wr }), () => { onClose(); (onCreated ?? load)(); })}>Créer la catégorie</button></div></Modal>;
@@ -41,6 +42,7 @@ function NewTopicModal({ g, folder, me, run, load, onClose, onCreated }) {
     <FmtBar onFmt={fm.fmt} onColor={fm.color} />
     <input {...fm.bind(set('title'))} placeholder="Titre du sujet…" value={t.title} onChange={e => setT({ ...t, title: e.target.value })} />
     <textarea rows={4} {...fm.bind(set('body'))} placeholder="Contenu… (**gras** · *italique* · #rrggbb)" value={t.body} onChange={e => setT({ ...t, body: e.target.value })} />
+    <FPrev text={t.body} />
     <textarea rows={2} {...fm.bind(set('description'))} placeholder="Description (facultative, formattable)…" value={t.description} onChange={e => setT({ ...t, description: e.target.value })} />
     <label className="chk"><input type="checkbox" checked={inhR} onChange={e => setInhR(e.target.checked)} /> Lecture héritée de la catégorie</label>
     {!inhR && <><small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={tr} onChange={setTr} /></>}
@@ -69,21 +71,32 @@ function PermsPanel({ kind, g, target, me, run, onDone }) {
 // ---- Facteurs communs (Rangs / Catégories / Sujets) : formatage, carte d'ajout, réorganisation ----
 /** Barre d'outils de formatage compacte (Gras / Italique / Nuancier) : agit sur la sélection du
  *  dernier champ focalisé ; n'insère que des balises texte supportées par `fmt` (le rendu reste
- *  assaini par fmt.js — jamais de HTML brut). */
+ *  assaini par fmt.js — jamais de HTML brut). La couleur s'applique au COMMIT du sélecteur
+ *  natif (onChange) : un click sur la pastille ouvre un dialog natif où aucun mouseup ne se
+ *  déclenche sur l'élément — d'où l'application sur l'événement d'engagement uniquement. */
 function FmtBar({ onFmt, onColor }) {
   const [hex, setHex] = useState('#c8a24a');
   return <span className="fmtbar">
     <button type="button" title="Gras : entoure la sélection de **" onClick={() => onFmt('**')}><b>B</b></button>
     <button type="button" title="Italique : entoure la sélection de *" onClick={() => onFmt('*')}><i>I</i></button>
     <label title="Couleur : insère le code #rrggbb à la suite de la sélection">
-      <input type="color" value={hex} onChange={e => setHex(e.target.value)} onMouseUp={() => onColor(hex)} onTouchEnd={() => onColor(hex)} /></label>
+      <input type="color" value={hex} onChange={e => { setHex(e.target.value); onColor(e.target.value); }} /></label>
   </span>;
 }
-/** `bind(setter)` se répand sur le <input>/<textarea> cible ; `fmt`/`color` agissent sur la
- *  sélection du dernier champ focalisé (wrapSel/colorSel pures, unitaires dans test/fmt.test.js). */
+/** Aperçu live du rendu `fmt` (gras / italique / couleur) sous un champ de saisie : l'utilisateur
+ *  voit le RÉSULTAT, pas seulement les balises. Sûr : le texte passe par `fmt` (échappement
+ *  HTML d'abord) ; jamais de HTML brut. */
+function FPrev({ text }) {
+  return (text ?? '').trim() ? <div className="fprev"><small>Aperçu</small><div dangerouslySetInnerHTML={{ __html: fmt(text) }} /></div> : null;
+}
+/** `bind(setter)` se répand sur le <input>/<textarea> cible : `onFocus` retient le champ pour
+ *  la barre d'outils, `onChange` garde le champ éditable (un champ contrôlé SANS onChange est
+ *  gelé par React — c'était le bug « impossible d'ajouter/effacer du texte »). Les balises ne
+ *  sont insérées QUE par `fmt`/`color` sur la sélection du dernier champ focalisé
+ *  (wrapSel/colorSel pures, unitaires dans test/fmt.test.js). */
 const useFmt = () => {
   const f = useRef(null);
-  const bind = set => ({ onFocus: e => { f.current = { el: e.target, set }; } });
+  const bind = set => ({ onFocus: e => { f.current = { el: e.target, set }; }, onChange: e => set(e.target.value) });
   const apply = make => { const x = f.current; if (!x) return;
     const s = x.el.selectionStart ?? 0, e = x.el.selectionEnd ?? 0, r = make(x.el.value, s, e);
     x.set(r.text); requestAnimationFrame(() => x.el.setSelectionRange?.(r.cursor, r.cursor)); };
@@ -122,7 +135,9 @@ function InlineEdit({ label, title, desc, save, onDone }) {
     <div className="edrow">
       <input {...fm.bind(x => setV(p => ({ ...p, title: x })))} value={v.title} placeholder={label} />
       <textarea rows={2} {...fm.bind(x => setV(p => ({ ...p, desc: x })))} placeholder="Description…" value={v.desc} />
-      <button className="primary" onClick={() => save(v, onDone)}>Enregistrer</button></div></div>;
+      <button className="primary" onClick={() => save(v, onDone)}>Enregistrer</button></div>
+    <FPrev text={v.desc} />
+  </div>;
 }
 function Forum({ g, me, run, load }) {
   const can = g.me.permissions.create_topics, lead = g.me.leader;
@@ -205,7 +220,8 @@ function Forum({ g, me, run, load }) {
       <div className="posts">{posts.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
       {lead || effWrite(topic, folder).includes(g.me.rank)
         ? <div className="replywrap"><FmtBar onFmt={fmRep.fmt} onColor={fmRep.color} />
-            <div className="replyrow"><input {...fmRep.bind(setReply)} value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… (**gras** · *italique* · #rrggbb)" /><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); })}>Envoyer</button></div></div>
+            <div className="replyrow"><input {...fmRep.bind(setReply)} value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… (**gras** · *italique* · #rrggbb)" /><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); })}>Envoyer</button></div>
+            <FPrev text={reply} /></div>
         : <small>Votre rang ne permet pas de répondre dans ce sujet.</small>}
     </div>}
     {nfold && <NewFolderModal g={g} me={me} run={run} load={load} onCreated={afterFold} onClose={() => setNfold(false)} />}

@@ -26,8 +26,6 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **react-redux-base** [done] (.kb/cards/react-redux-base.md) React + Redux base: store, app shell, API client, Vite config — The React 18 + Redux Toolkit base that boots the SPA: a single `game` slice holds auth/session, selected character, entities, active panel, hover/selection and toasts. — files: src/main.jsx, src/store/index.js, src/App.jsx, src/lib/api.js (+1)
 
 ## File map
-- `dist/assets/index-BX5suOG2.css`
-- `dist/index.html`
 - `index.html`
 - `package.json`
 - `src/App.jsx` — App
@@ -37,7 +35,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/Capital.jsx` — (header), CAP, Capital
 - `src/components/ChatDock.jsx` — (header), TABS, ChatDock
 - `src/components/GameCanvas.jsx` — (header), useRefreshMe, GameCanvas
-- `src/components/Guild.jsx` — Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite. — (header), PERMS, RankPick, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, PermsPanel, FmtBar
+- `src/components/Guild.jsx` — Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite. — (header), PERMS, RankPick, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, PermsPanel, FmtBar, FPrev
 - `src/components/Info.jsx` — Petite icône « i » : l'infobulle s'affiche au survol (ou au focus / clic sur mobile). Rendue dans <body> pour  — Info
 - `src/components/Location.jsx` — (header), WORLDS, Location
 - `src/components/Login.jsx` — (header), Logo, Login, RACES, CharSelect
