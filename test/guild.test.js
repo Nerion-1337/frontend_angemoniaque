@@ -87,3 +87,33 @@ test('Confirm.jsx : écran contrôlé (clic extérieur = annuler)', () => {
   expect(src).toContain('onCancel');
   expect(src).toContain('onClick={onCancel}');
 });
+
+// Annulation : le bouton texte « Annuler » en bas est retiré ; une croix (Close) est
+// empilée juste au-dessus du crayon pour abandonner le brouillon en cours.
+test('annulation : croix empilée au-dessus du crayon (edrow2 retirée)', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  expect(src).not.toContain('edrow2');
+  expect(src).toContain('vstack');
+  expect(src).toContain('xbtn');
+});
+
+// Régression « la sauvegarde échoue » : le schéma back attend `name` pour une catégorie et
+// `title` pour un sujet — zod supprime tout autre champ (le COALESCE garde alors l'ancienne
+// valeur sur un 200 muet). Les deux noms de champ doivent être présents dans saveAll.
+test('sauvegarde : `name` (catégorie) et `title` (sujet) envoyés à la route correspondante', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  expect(src).toContain('{ name: draft.title.trim() }');
+  expect(src).toContain('{ title: draft.title.trim() }');
+});
+
+// Un seul groupe d'icônes par bloc édité (partagé entre ses champs via `fm`) + bascule
+// édition/aperçu DANS LE MÊME ESPACE (plus de div d'aperçu distincte).
+test('groupe d' + 'icônes : un seul par bloc édité + bascule aperçu dans le même espace', () => {
+  const f = readFileSync(new URL('../src/components/fmtbar.jsx', import.meta.url), 'utf8');
+  expect(f).toContain('pvbtn');
+  expect(f).toContain('fmtprev');
+  expect(f).toContain('disabled');
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  expect(src).toContain('fmEd');
+  expect((src.match(/bar=\{false\}/g) ?? []).length).toBeGreaterThanOrEqual(3);
+});

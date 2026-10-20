@@ -25,9 +25,10 @@ const Post = ({ p }) => <div className="post"><div className="pauthor"><Avatar p
   <div className="postbody" dangerouslySetInnerHTML={{ __html: fmt(p.body) }} /><small className="ptime">{new Date(p.created_at).toLocaleString('fr-FR')}</small></div>;
 function NewFolderModal({ g, me, run, load, onClose, onCreated }) {
   const [name, setName] = useState(''), [desc, setDesc] = useState(''), [fr, setFr] = useState(g.ranks.map(r => r.name)), [wr, setWr] = useState(g.ranks.map(r => r.name));
+  const fm = useFmt(); // le SEUL groupe d'icônes de la modale, partagé par les deux champs
   return <Modal onClose={onClose} className="inv guild" label="Nouvelle catégorie"><div className="form"><h4><Plus size={14} /> Nouvelle catégorie</h4>
-    <FmtField value={name} onChange={setName} placeholder="Titre…" />
-    <FmtField value={desc} onChange={setDesc} multiline placeholder="Description (facultative) (formattable : [g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])…" />
+    <FmtField value={name} onChange={setName} fm={fm} placeholder="Titre…" />
+    <FmtField value={desc} onChange={setDesc} fm={fm} bar={false} multiline placeholder="Description (facultative) (formattable : [g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])…" />
     <small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={fr} onChange={setFr} />
     <small>Qui peut ÉCRIRE (créer des sujets) :</small><RankPick ranks={g.ranks} value={wr} onChange={setWr} />
     <button className="primary" disabled={!name.trim()} onClick={() => run(() => api('/guilds/folders', { characterId: me.id, name: name.trim(), description: desc.trim() || undefined, visibleRanks: fr, writeRanks: wr }), () => { onClose(); (onCreated ?? load)(); })}>Créer la catégorie</button></div></Modal>;
@@ -35,10 +36,11 @@ function NewFolderModal({ g, me, run, load, onClose, onCreated }) {
 function NewTopicModal({ g, folder, me, run, load, onClose, onCreated }) {
   const [t, setT] = useState({ title: '', body: '', description: '' }), [tr, setTr] = useState([]), [tw, setTw] = useState([]), [inhR, setInhR] = useState(true), [inhW, setInhW] = useState(true);
   const set = k => v => setT(x => ({ ...x, [k]: v }));
+  const fm = useFmt(); // le SEUL groupe d'icônes de la modale, partagé par les trois champs
   return <Modal onClose={onClose} className="inv guild" label="Nouveau sujet"><div className="form"><h4><Plus size={14} /> Nouveau sujet — {folder.name}</h4>
-    <FmtField value={t.title} onChange={set('title')} placeholder="Titre du sujet…" />
-    <FmtField value={t.body} onChange={set('body')} multiline rows={4} placeholder="Contenu… ([g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])" />
-    <FmtField value={t.description} onChange={set('description')} multiline placeholder="Description (facultative, formattable)…" />
+    <FmtField value={t.title} onChange={set('title')} fm={fm} placeholder="Titre du sujet…" />
+    <FmtField value={t.body} onChange={set('body')} fm={fm} bar={false} multiline rows={4} placeholder="Contenu… ([g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])" />
+    <FmtField value={t.description} onChange={set('description')} fm={fm} bar={false} multiline placeholder="Description (facultative, formattable)…" />
     <label className="chk"><input type="checkbox" checked={inhR} onChange={e => setInhR(e.target.checked)} /> Lecture héritée de la catégorie</label>
     {!inhR && <><small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={tr} onChange={setTr} /></>}
     <label className="chk"><input type="checkbox" checked={inhW} onChange={e => setInhW(e.target.checked)} /> Écriture héritée de la catégorie</label>
@@ -105,7 +107,8 @@ function Forum({ g, me, run, load }) {
    *  instantané à l'ouverture (détection des modifications). */
   const [ed, setEd] = useState(null), [draft, setDraft] = useState(null), [base, setBase] = useState(null);
   const [cSave, setCSave] = useState(false), [cDel, setCDel] = useState(null), [move, setMove] = useState(null);
-  const fmRep = useFmt();
+  const fmRep = useFmt(); // composeur de réponse
+  const fmEd = useFmt(); // session d'édition : le SEUL groupe d'icônes (au-dessus du bloc) sert tous ses champs (dernier focalisé)
   const folder = g.folders.find(f => f.id === fid), topic = folder?.topics.find(x => x.id === tid);
   const open = async x => { setTid(x.id); setEd(null); setDraft(null); setPosts(await api(`/guilds/topics/${me.id}/${x.id}`).catch(() => [])); load(); }; // ouverture → messages marqués lus (back) + résync des badges
   const back = () => { if (tid !== null) setTid(null); else setFid(null); setEd(null); setDraft(null); };
@@ -147,13 +150,17 @@ function Forum({ g, me, run, load }) {
     dirty() ? setCSave(true) : closeEdit();
   };
   /** Enregistrement unifié : titre + description (POST /edit, auteur ou create_topics) et,
-   *  Chef, les droits (POST /perms). Erreur → toast par `run`, les champs restent ouverts. */
+   *  Chef, les droits (POST /perms). Erreur → toast par `run`, les champs restent ouverts.
+   *  ATTENTION au nom de champ : le schéma back attend `name` pour une CATEGORIE et `title`
+   *  pour un SUJET — zod supprime silencieusement tout champ inconnu et le COALESCE back
+   *  garde alors l'ancienne valeur (c'était le bug « la sauvegarde échoue » : on envoyait
+   *  `title` pour les deux, le nom de catégorie restait inchangé sur un 200). */
   const saveAll = () => {
     if (!ed || !draft) return;
+    const isF = ed.kind === 'f';
     run(async () => {
-      const p = ed.kind === 'f' ? 'folders' : 'topics';
-      await api(`/guilds/${p}/${ed.id}/edit`, { characterId: me.id, title: draft.title.trim(), description: draft.desc });
-      if (lead) await api(`/guilds/${p}/${ed.id}/perms`, { characterId: me.id, readRanks: ed.kind === 'f' ? draft.read : (draft.iR ? [] : draft.read), writeRanks: draft.iW ? null : draft.write });
+      await api(`/guilds/${isF ? 'folders' : 'topics'}/${ed.id}/edit`, { characterId: me.id, ...(isF ? { name: draft.title.trim() } : { title: draft.title.trim() }), description: draft.desc });
+      if (lead) await api(`/guilds/${isF ? 'folders' : 'topics'}/${ed.id}/perms`, { characterId: me.id, readRanks: isF ? draft.read : (draft.iR ? [] : draft.read), writeRanks: draft.iW ? null : draft.write });
       closeEdit(); load();
     });
   };
@@ -179,11 +186,10 @@ function Forum({ g, me, run, load }) {
     });
   };
   const setD = patch => setDraft(d => (d ? { ...d, ...patch } : d));
-  /** Bloc d'édition d'un sujet (vue liste ou vue sujet) : description + droits (Chef) +
-   *  annulation du brouillon. */
-  const TopicEditBlock = extra => <><FmtField value={draft.desc} onChange={v => setD({ desc: v })} multiline placeholder="Description…" />
-    {lead && <Perks g={g} kind="topics" value={draft} onChange={setDraft} />}
-    <div className="edrow2"><button className="btnlike" title="Annuler les changements" onClick={closeEdit}><X size={13} /> Annuler</button><small>Re-clic sur le crayon pour sauvegarder{extra ? ' ' + extra : ''}</small></div></>;
+  /** Bloc d'édition d'un sujet (vue liste ou vue sujet) : description + droits (Chef).
+   *  L'annulation est le X empilé juste au-dessus du crayon (plus de bouton texte en bas). */
+  const TopicEditBlock = () => <><FmtField fm={fmEd} bar={false} inrow value={draft.desc} onChange={v => setD({ desc: v })} multiline placeholder="Description…" />
+    {lead && <Perks g={g} kind="topics" value={draft} onChange={setDraft} />}</>;
   return <div className="forum">
     {!folder && <div className="fview">
       <div className="row2 fhead2"><span /><h4 className="rhead">Catégories</h4><span /></div>
@@ -191,16 +197,18 @@ function Forum({ g, me, run, load }) {
         if (row.add) return <AddCard i={i} len={fRows.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />;
         const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0, editing = ed?.id === f.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
-          <div className="row2 sel">{editing
-            ? <FmtField value={draft.title} onChange={v => setD({ title: v })} placeholder="Nom de la catégorie…" />
+          {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
+          <div className={'row2 sel' + (editing ? ' edit' : '')}>{editing
+            ? <FmtField fm={fmEd} bar={false} inrow value={draft.title} onChange={v => setD({ title: v })} placeholder="Nom de la catégorie…" />
             : <button className="selitem" onClick={() => { setFid(f.id); setTid(null); }}><span><b dangerouslySetInnerHTML={{ __html: fmt(f.name) }} />{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></button>}
-            <span className="row">{can && <button title={editing ? 'Éditer : sauvegarder' : 'Éditer (titre, description, droits)'} onClick={() => pencil('f', f.id, f)}><Pencil size={13} /></button>}
+            <span className="row">{can && <span className="vstack">
+              {editing && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
+              <button title={editing ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('f', f.id, f)}><Pencil size={13} /></button></span>}
               {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}
               {lead && <button title="Supprimer la catégorie" className="delb" onClick={() => setCDel({ kind: 'f', id: f.id, name: f.name })}><Trash2 size={13} /></button>}</span></div>
           {editing
-            ? <><FmtField value={draft.desc} onChange={v => setD({ desc: v })} multiline placeholder="Description…" />
-              {lead && <Perks g={g} kind="folders" value={draft} onChange={setDraft} />}
-              <div className="edrow2"><button className="btnlike" title="Annuler les changements" onClick={closeEdit}><X size={13} /> Annuler</button><small>Re-clic sur le crayon pour sauvegarder</small></div></>
+            ? <><FmtField fm={fmEd} bar={false} inrow value={draft.desc} onChange={v => setD({ desc: v })} multiline placeholder="Description…" />
+              {lead && <Perks g={g} kind="folders" value={draft} onChange={setDraft} />}</>
             : <>{f.description && <div className="fsep">-----</div>}
               {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}</>}
         </div>;
@@ -216,14 +224,17 @@ function Forum({ g, me, run, load }) {
         if (row.add) return <AddCard i={i} len={tRows.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />;
         const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id), editing = ed?.id === x.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
-          <div className="row2 sel">{editing
-            ? <FmtField value={draft.title} onChange={v => setD({ title: v })} placeholder="Titre du sujet…" />
+          {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
+          <div className={'row2 sel' + (editing ? ' edit' : '')}>{editing
+            ? <FmtField fm={fmEd} bar={false} inrow value={draft.title} onChange={v => setD({ title: v })} placeholder="Titre du sujet…" />
             : <button className="selitem" onClick={() => open(x)}><span><b dangerouslySetInnerHTML={{ __html: fmt(x.title) }} />{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></button>}
-            <span className="row">{editable && <button title={editing ? 'Éditer : sauvegarder' : 'Éditer (titre, description, droits)'} onClick={() => pencil('t', x.id, x, folder)}><Pencil size={13} /></button>}
+            <span className="row">{editable && <span className="vstack">
+              {editing && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
+              <button title={editing ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('t', x.id, x, folder)}><Pencil size={13} /></button></span>}
               {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}
               {can && <button title="Transférer vers une autre catégorie" onClick={() => setMove({ id: x.id, name: x.title, from: folder.id, to: null })}><MoveRight size={13} /></button>}
               {lead && <button title="Supprimer le sujet" className="delb" onClick={() => setCDel({ kind: 't', id: x.id, name: x.title })}><Trash2 size={13} /></button>}</span></div>
-          {editing ? TopicEditBlock(' — puis le sujet restera dans cette liste')
+          {editing ? TopicEditBlock()
             : <>{x.description && <div className="fsep">-----</div>}
               {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}</>}
         </div>;
@@ -231,13 +242,16 @@ function Forum({ g, me, run, load }) {
       {!(folder.topics?.length) && <small>Aucun sujet dans cette catégorie.</small>}
     </div>}
     {topic && <div className="fview">
+      {ed?.id === topic.id && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux sujets"><ArrowLeft size={15} /> Sujets</button>
         {ed?.id === topic.id
-          ? <FmtField value={draft.title} onChange={v => setD({ title: v })} placeholder="Titre du sujet…" />
+          ? <FmtField fm={fmEd} bar={false} value={draft.title} onChange={v => setD({ title: v })} placeholder="Titre du sujet…" />
           : <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(topic.title) }} />}
-        {canEditTopic(topic, folder, g.me, me.id) && <button className="btnlike" title={ed?.id === topic.id ? 'Éditer : sauvegarder' : 'Éditer'} onClick={() => pencil('t', topic.id, topic, folder)}><Pencil size={13} /></button>}</div>
+        {canEditTopic(topic, folder, g.me, me.id) && <span className="vstack">
+          {ed?.id === topic.id && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
+          <button className="btnlike" title={ed?.id === topic.id ? 'Sauvegarder les modifications' : 'Éditer'} onClick={() => pencil('t', topic.id, topic, folder)}><Pencil size={13} /></button></span>}</div>
       {ed?.id === topic.id
-        ? TopicEditBlock('')
+        ? TopicEditBlock()
         : <>{topic.description && <div className="fsep">-----</div>}
           {topic.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(topic.description) }} />}</>}
       <div className="posts">{posts.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
