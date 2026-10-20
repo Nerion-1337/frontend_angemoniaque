@@ -30,3 +30,13 @@ test('canEditTopic : porteur de create_topics édite (même sujet d’un autre)'
 test('canEditTopic : porteur du droit d’écriture de la catégorie parente', () => expect(canEditTopic({ author_id: 9 }, { write_ranks: ['Membre'] }, NOBODY, 2)).toBe(true));
 test('canEditTopic : aucun des trois droits = refus', () => expect(canEditTopic({ author_id: 9 }, { write_ranks: ['Officier'] }, NOBODY, 2)).toBe(false));
 test('canEditTopic : write_ranks absent = aucun droit d’écriture', () => expect(canEditTopic({ author_id: 9 }, {}, NOBODY, 2)).toBe(false));
+
+// Garde anti-régression du crash « renderRow is not a function » : <DndList> ne prend son
+// rendu de ligne QUE par la prop `renderRow` (aucun enfant-fonction) ; les 3 sites d'appel
+// (rangs, catégories, sujets) doivent la passer — sinon crash au rendu.
+import { readFileSync } from 'node:fs';
+test('<DndList> est toujours utilisé avec la prop renderRow (3 sites, jamais d’enfants)', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  expect(src.includes('</DndList>')).toBe(false);
+  expect((src.match(/renderRow=\{/g) ?? []).length).toBe(3);
+});

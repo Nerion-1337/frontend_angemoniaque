@@ -158,22 +158,20 @@ function Forum({ g, me, run, load }) {
   return <div className="forum">
     {!folder && <div className="fview">
       <div className="row2 fhead2"><span /><h4 className="rhead">Catégories</h4><span /></div>
-      <DndList rows={fRows} onReorder={(from, to) => persistF(dropRankRow(fIds, fAdd, from, to))}>
-        {(row, i, dnd) => {
-          if (row.add) return <AddCard i={i} len={fRows.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />;
-          const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0;
-          return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
-            <div className="row2 sel"><button className="selitem" onClick={() => { setFid(f.id); setTid(null); setFpOpen(null); }}><span><b dangerouslySetInnerHTML={{ __html: fmt(f.name) }} />{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></button>
-              <span className="row">{can && <button title="Éditer" onClick={() => { setFEd(f.id); setFpOpen(null); }}><Pencil size={13} /></button>}
-                {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}</span></div>
-            {f.description && <div className="fsep">-----</div>}
-            {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}
-            {fEd === f.id && folderEdit(f)}
-            {lead && <div className="prow"><button className="btnlike" onClick={() => setFpOpen(fpOpen === f.id ? null : f.id)}>{fpOpen === f.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
-              {fpOpen === f.id && <PermsPanel kind="folders" g={g} target={f} me={me} run={run} onDone={() => { setFpOpen(null); load(); }} />}</div>}
-          </div>;
-        }}
-      </DndList>
+      <DndList rows={fRows} onReorder={(from, to) => persistF(dropRankRow(fIds, fAdd, from, to))} renderRow={(row, i, dnd) => {
+        if (row.add) return <AddCard i={i} len={fRows.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />;
+        const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0;
+        return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
+          <div className="row2 sel"><button className="selitem" onClick={() => { setFid(f.id); setTid(null); setFpOpen(null); }}><span><b dangerouslySetInnerHTML={{ __html: fmt(f.name) }} />{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></button>
+            <span className="row">{can && <button title="Éditer" onClick={() => { setFEd(f.id); setFpOpen(null); }}><Pencil size={13} /></button>}
+              {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}</span></div>
+          {f.description && <div className="fsep">-----</div>}
+          {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}
+          {fEd === f.id && folderEdit(f)}
+          {lead && <div className="prow"><button className="btnlike" onClick={() => setFpOpen(fpOpen === f.id ? null : f.id)}>{fpOpen === f.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
+            {fpOpen === f.id && <PermsPanel kind="folders" g={g} target={f} me={me} run={run} onDone={() => { setFpOpen(null); load(); }} />}</div>}
+        </div>;
+      }} />
       {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
     </div>}
     {folder && tid === null && <div className="fview">
@@ -181,22 +179,20 @@ function Forum({ g, me, run, load }) {
         <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(folder.name) }} /><span /></div>
       {folder.description && <div className="fsep">-----</div>}
       {folder.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(folder.description) }} />}
-      <DndList rows={tRows} onReorder={(from, to) => persistT(dropRankRow(tIds, tAdd, from, to))}>
-        {(row, i, dnd) => {
-          if (row.add) return <AddCard i={i} len={tRows.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />;
-          const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id);
-          return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
-            <div className="row2 sel"><button className="selitem" onClick={() => open(x)}><span><b dangerouslySetInnerHTML={{ __html: fmt(x.title) }} />{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></button>
-              <span className="row">{editable && <button title="Éditer" onClick={() => { setTEd(x.id); setTpOpen(null); }}><Pencil size={13} /></button>}
-                {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}</span></div>
-            {x.description && <div className="fsep">-----</div>}
-            {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}
-            {tEd === x.id && topicEdit(x)}
-            {lead && <div className="prow"><button className="btnlike" onClick={() => setTpOpen(tpOpen === x.id ? null : x.id)}>{tpOpen === x.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
-              {tpOpen === x.id && <PermsPanel kind="topics" g={g} target={x} me={me} run={run} onDone={() => { setTpOpen(null); load(); }} />}</div>}
-          </div>;
-        }}
-      </DndList>
+      <DndList rows={tRows} onReorder={(from, to) => persistT(dropRankRow(tIds, tAdd, from, to))} renderRow={(row, i, dnd) => {
+        if (row.add) return <AddCard i={i} len={tRows.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />;
+        const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id);
+        return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}>
+          <div className="row2 sel"><button className="selitem" onClick={() => open(x)}><span><b dangerouslySetInnerHTML={{ __html: fmt(x.title) }} />{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></button>
+            <span className="row">{editable && <button title="Éditer" onClick={() => { setTEd(x.id); setTpOpen(null); }}><Pencil size={13} /></button>}
+              {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}</span></div>
+          {x.description && <div className="fsep">-----</div>}
+          {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}
+          {tEd === x.id && topicEdit(x)}
+          {lead && <div className="prow"><button className="btnlike" onClick={() => setTpOpen(tpOpen === x.id ? null : x.id)}>{tpOpen === x.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
+            {tpOpen === x.id && <PermsPanel kind="topics" g={g} target={x} me={me} run={run} onDone={() => { setTpOpen(null); load(); }} />}</div>}
+        </div>;
+      }} />
       {!(folder.topics?.length) && <small>Aucun sujet dans cette catégorie.</small>}
     </div>}
     {topic && <div className="fview">
@@ -244,18 +240,16 @@ function Manage({ g, me, run, load }) {
   }).catch(() => load());
   // Drag & drop + flèches : contrôles partagés par <DndList> (aussi utilisé par le forum).
   return <div className="form ranks"><h4 className="rhead">Rangs & privilèges</h4>
-    <DndList rows={rows} onReorder={(from, to) => persistOrder(dropRankRow(ids, addPos, from, to))}>
-      {(row, i, dnd) => {
-        if (row.add) return <AddCard i={i} len={rows.length} onOpen={() => setOpen(true)} dnd={dnd} below={below} setBelow={setBelow} label="Ajouter un rang" canMove onMove={moveRow} />;
-        const r = g.ranks.find(x => x.id === row.id);
-        return <div className={'item rcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}><div className="head"><b>{r.name}</b>
-          <span className="row">{r.is_leader && <span className="pill">Chef — tous les droits</span>}
-            {ren === r.id ? <span className="row"><input value={rname} onChange={e => setRname(e.target.value)} /><button className="primary" onClick={() => saveRename(r)}>Renommer</button></span>
-              : <button title={`Renommer « ${r.name} »`} onClick={() => { setRen(r.id); setRname(r.name); }}><Pencil size={13} /></button>}
-            <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>
-          <div className="grid2">{PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" disabled={r.is_leader} checked={r.is_leader || !!r.permissions[k]} onChange={e => run(() => api(`/guilds/ranks/${r.id}/permission`, { characterId: me.id, permission: k, value: e.target.checked }), load)} /> {l}</label>)}</div></div>;
-      }}
-    </DndList>
+    <DndList rows={rows} onReorder={(from, to) => persistOrder(dropRankRow(ids, addPos, from, to))} renderRow={(row, i, dnd) => {
+      if (row.add) return <AddCard i={i} len={rows.length} onOpen={() => setOpen(true)} dnd={dnd} below={below} setBelow={setBelow} label="Ajouter un rang" canMove onMove={moveRow} />;
+      const r = g.ranks.find(x => x.id === row.id);
+      return <div className={'item rcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}><div className="head"><b>{r.name}</b>
+        <span className="row">{r.is_leader && <span className="pill">Chef — tous les droits</span>}
+          {ren === r.id ? <span className="row"><input value={rname} onChange={e => setRname(e.target.value)} /><button className="primary" onClick={() => saveRename(r)}>Renommer</button></span>
+            : <button title={`Renommer « ${r.name} »`} onClick={() => { setRen(r.id); setRname(r.name); }}><Pencil size={13} /></button>}
+          <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>
+        <div className="grid2">{PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" disabled={r.is_leader} checked={r.is_leader || !!r.permissions[k]} onChange={e => run(() => api(`/guilds/ranks/${r.id}/permission`, { characterId: me.id, permission: k, value: e.target.checked }), load)} /> {l}</label>)}</div></div>;
+    }} />
     <div className="item drank"><div className="head"><b>Rang par défaut des nouveaux arrivants</b></div>
       <div className="drow">{[<label key="auto" className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id == null} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: null }), load)} /> Automatique (rang le plus bas)</label>,
         ...g.ranks.filter(r => !r.is_leader).map(r => <label key={r.id} className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id === r.id} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: r.id }), load)} /> {r.name}</label>)]}
