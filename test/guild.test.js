@@ -58,3 +58,18 @@ test('bind() fournit un onChange (champ contrôlé éditable)', () => {
   const src = readFileSync(new URL('../src/components/fmtbar.jsx', import.meta.url), 'utf8');
   expect(src).toMatch(/const bind = set => \(\{[\s\S]{0,120}onChange: e => set\(e\.target\.value\)/);
 });
+
+// Éditeur riche WYSIWYG : la zone est un contentEditable (pas d'input), B/I en execCommand,
+// sérialisation par rich.js ; actions ✓/✕ (titles Enregistrer/Annuler) dans la barre.
+test('WYSIWYG : InlineField est un contentEditable avec execCommand + richToFmt', () => {
+  const src = readFileSync(new URL('../src/components/InlineField.jsx', import.meta.url), 'utf8');
+  expect(src).toContain('contentEditable');
+  expect(src).not.toMatch(/<input[\s]/);
+  expect(src).toContain('execCommand');
+  expect(src).toContain('richToFmt');
+});
+test('WYSIWYG : RichBar porte les actions ✓ (Enregistrer) et ✕ (Annuler)', () => {
+  const src = readFileSync(new URL('../src/components/fmtbar.jsx', import.meta.url), 'utf8');
+  expect(src).toContain('title="Enregistrer"');
+  expect(src).toContain('title="Annuler"');
+});

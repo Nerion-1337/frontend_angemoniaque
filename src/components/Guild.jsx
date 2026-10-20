@@ -145,7 +145,7 @@ function Forum({ g, me, run, load }) {
             <span className="row">{can && <button title="Éditer" onClick={() => { setFEd(fEd === f.id ? null : f.id); setFpOpen(null); }}><Pencil size={13} /></button>}
               {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}</span></div>
           {editing
-            ? <InlineField value={f.description ?? ''} pencil={false} multiline fmt placeholder="Description…" onSave={v => saveFold(f, 'description', v)} />
+            ? <InlineField value={f.description ?? ''} pencil={false} multiline placeholder="Description…" onSave={v => saveFold(f, 'description', v)} />
             : <>{f.description && <div className="fsep">-----</div>}
               {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}</>}
           {lead && <div className="prow"><button className="btnlike" onClick={() => setFpOpen(fpOpen === f.id ? null : f.id)}>{fpOpen === f.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
@@ -169,7 +169,7 @@ function Forum({ g, me, run, load }) {
             <span className="row">{editable && <button title="Éditer" onClick={() => { setTEd(tEd === x.id ? null : x.id); setTpOpen(null); }}><Pencil size={13} /></button>}
               {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}</span></div>
           {editing
-            ? <InlineField value={x.description ?? ''} pencil={false} multiline fmt placeholder="Description…" onSave={v => saveTopic(x, 'description', v)} />
+            ? <InlineField value={x.description ?? ''} pencil={false} multiline placeholder="Description…" onSave={v => saveTopic(x, 'description', v)} />
             : <>{x.description && <div className="fsep">-----</div>}
               {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}</>}
           {lead && <div className="prow"><button className="btnlike" onClick={() => setTpOpen(tpOpen === x.id ? null : x.id)}>{tpOpen === x.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
@@ -185,7 +185,7 @@ function Forum({ g, me, run, load }) {
           : <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(topic.title) }} />}
         {canEditTopic(topic, folder, g.me, me.id) && <button className="btnlike" title="Éditer le sujet" onClick={() => setTEd(tEd === topic.id ? null : topic.id)}><Pencil size={13} /></button>}</div>
       {tEd === topic.id
-        ? <InlineField value={topic.description ?? ''} pencil={false} multiline fmt placeholder="Description…" onSave={v => saveTopic(topic, 'description', v)} />
+        ? <InlineField value={topic.description ?? ''} pencil={false} multiline placeholder="Description…" onSave={v => saveTopic(topic, 'description', v)} />
         : <>{topic.description && <div className="fsep">-----</div>}
           {topic.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(topic.description) }} />}</>}
       <div className="posts">{posts.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>

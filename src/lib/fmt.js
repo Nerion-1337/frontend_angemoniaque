@@ -1,7 +1,11 @@
 /** Micro-formatage du texte du forum, rendu par innerHTML APRÈS échappement HTML (donc sûr) :
- *  `**gras**`, `*italique*`, un code `#rrggbb` isolé (affiché dans sa couleur), `\n` → <br>. */
+ *  `**gras**`, `*italique*`, `#rrggbb:text#` (texte coloré, éditeur WYSIWYG), un code `#rrggbb`
+ *  isolé (affiché dans sa couleur — sémantique historique), `\n` → <br>. L'ordre des règles
+ *  compte : `#hex:text#` avant gras/italique (les marqueurs se nichent les uns dans les autres),
+ *  le code isolé historique reste inchangé (rétro-compatible avec les contenus existants). */
 export const fmt = t => (t ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  .replace(/#([0-9a-fA-F]{6}):([^#\n]*)#/g, '<span style="color:#$1">$2</span>')
   .replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>')
   .replace(/\*([^*\n]+)\*/g, '<i>$1</i>')
   .replace(/(^|\s)#([0-9a-fA-F]{6})(?=\s|$)/g, '$1<span style="color:#$2">#$2</span>')

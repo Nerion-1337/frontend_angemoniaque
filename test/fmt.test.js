@@ -15,3 +15,9 @@ test('colorSel : curseur juste après un code = remplacement (changement de coul
 test('colorSel : clic idempotent sur le même code = texte inchangé', () => expect(colorSel('aa #ff0000', 10, 10, '#ff0000')).toEqual({ text: 'aa #ff0000', cursor: 10 }));
 test('sécurité : HTML brut entouré de ** reste échappé après fmt', () => expect(fmt(wrapSel('<img src=x>', 0, 11, '**').text)).toBe('<b>&lt;img src=x&gt;</b>'));
 test('sécurité : code couleur inséré par colorSel est rendu par fmt', () => expect(fmt(colorSel('salut', 0, 5, '#ff0000').text)).toBe('salut <span style="color:#ff0000">#ff0000</span>'));
+
+// Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
+test('texte coloré : #rrggbb:text# est rendu en span coloré', () => expect(fmt('#ff0000:bonjour#')).toBe('<span style="color:#ff0000">bonjour</span>'));
+test('texte coloré : imbriqué dans le gras (marqueur coloré avant gras)', () => expect(fmt('**#ff0000:mot#**')).toBe('<b><span style="color:#ff0000">mot</span></b>'));
+test('texte coloré : code historique isolé inchangé (rétro-compat)', () => expect(fmt('salut #ff0000')).toBe('salut <span style="color:#ff0000">#ff0000</span>'));
+test('sécurité : HTML dans un texte coloré reste échappé', () => expect(fmt('#ff0000:<img src=x>#')).toBe('<span style="color:#ff0000">&lt;img src=x&gt;</span>'));
