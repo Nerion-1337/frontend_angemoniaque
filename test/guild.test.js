@@ -121,9 +121,12 @@ test('liste de guilde : invitations en tête, puces de postulants, membres 2 par
   expect(css).toContain('.mgrid{display:grid;grid-template-columns:1fr 1fr');
   expect(css).toContain('.member .minfo{display:flex;align-items:center;justify-content:center;gap:12px');
   expect(css).not.toContain('.fcol');
-  // Vue liste des sujets : .fsep/.fdesc remises, .fsep CENTRÉE (margin auto), pas de .fcol
+  // Vue liste des sujets : titre + .fsep (centrée, enfant directe de .fview) et AUCUNE description
   expect(src).toMatch(/Retour aux catégories[\s\S]{0,500}?<div className="fsep">/);
-  expect(css).toContain('.fsep{width:25%;height:0;margin:4px auto 8px');
+  expect(src).not.toMatch(/Retour aux catégories[\s\S]{0,400}?fdesc/);
+  // .fsep par défaut NON centrée (cartes .item.fcard : 25 % depuis la gauche), centrée uniquement en .fview > .fsep
+  expect(css).toContain('.fsep{width:25%;height:0;margin:4px 0 8px');
+  expect(css).toContain('.fview > .fsep{margin-left:auto;margin-right:auto}');
 });
 test('présentation : colonne centrée, emblème en tête ; rang par défaut au-dessus de la liste des rangs', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');

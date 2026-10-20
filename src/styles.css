@@ -151,7 +151,10 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Ligne de séparation titre/description : les tirets « ----- » sont MASQUÉS (font-size:0,
    hauteur 0) ; la ligne visuelle vient du border-bottom — MÊME épaisseur (2px) et MÊME
    couleur (var(--plus-line)) que la bordure du bouton « ajouter » (.radd .plus). */
-.fsep{width:25%;height:0;margin:4px auto 8px;padding:0;color:transparent;font-size:0;line-height:0;letter-spacing:0;user-select:none;border-bottom:2px solid var(--plus-line)}
+.fsep{width:25%;height:0;margin:4px 0 8px;padding:0;color:transparent;font-size:0;line-height:0;letter-spacing:0;user-select:none;border-bottom:2px solid var(--plus-line)}
+/* 2) En-tête de la vue sujets : la séparation EST centrée — enfant DIRECT de .fview uniquement
+   (les .fsep des cartes .item.fcard, plus profondes, restent à gauche) */
+.fview > .fsep{margin-left:auto;margin-right:auto}
 .fdesc{font-size:1.125rem;opacity:.8;text-align:center;margin:0 0 8px}
 .fcard{min-height:88px}
 .unread{display:inline-block;min-width:20px;margin-left:8px;padding:0 7px;border-radius:10px;background:var(--halo);color:#241b05;font-size:.72rem;font-weight:700;text-align:center;vertical-align:middle}
