@@ -1,4 +1,4 @@
-:root{--ink:#ece8f4;--mute:#a8a2bc;--bg:#0d0b16;--glass:rgba(24,21,40,.62);--glass2:rgba(17,15,30,.9);--line:rgba(240,210,138,.17);--halo:#f0d28a;--ember:#e2603a;--bronze:#c9a36b;--angel:#bfe4ff;
+:root{--ink:#ece8f4;--mute:#a8a2bc;--bg:#0d0b16;--glass:rgba(24,21,40,.62);--glass2:rgba(17,15,30,.9);--line:rgba(240,210,138,.17);--halo:#f0d28a;--plus-line:var(--halo);--ember:#e2603a;--bronze:#c9a36b;--angel:#bfe4ff;
 --hp:#e5545a;--en:#f2b84b;--div:#6fd0ff;--ok:#5fd08a;--race:var(--bronze);--serif:'Cinzel','Trajan Pro',Georgia,serif;--sans:'Alegreya Sans',system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 var(--sans);-webkit-font-smoothing:antialiased}small{color:var(--mute);font-size:.82em}
 .glass{background:var(--glass);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);border:1px solid var(--line);box-shadow:0 14px 44px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.07);border-radius:18px}
@@ -124,7 +124,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .rcard,.radd{min-height:150px}
 .radd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;cursor:pointer;border-style:dashed;border-color:rgba(240,210,138,.45);background:rgba(240,210,138,.04)}
 .radd:hover{background:rgba(240,210,138,.09)}
-.radd .plus{width:58px;height:58px;padding:0;border:2px solid var(--halo);border-radius:50%;display:grid;place-items:center;color:var(--halo);background:rgba(240,210,138,.06)}
+.radd .plus{width:58px;height:58px;padding:0;border:2px solid var(--plus-line);border-radius:50%;display:grid;place-items:center;color:var(--halo);background:rgba(240,210,138,.06)}
 .radd .aacts{justify-self:end;display:flex;align-items:center;gap:12px}
 .aacts .ord{gap:2px}
 /* ---- Gestion des rangs : toggle d'insertion (carte ajout) + drag & drop ---- */
@@ -148,7 +148,10 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fhead2 .btnlike{justify-self:end}
 .fhead2 .backbtn{justify-self:start}
 .fhead2 .rhead{font-size:1.6rem;margin:4px 0 6px}
-.fsep{margin:0 0 8px;text-align:center;color:#7d7893;letter-spacing:2px;font-size:.85rem;user-select:none}
+/* Ligne de séparation titre/description : les tirets « ----- » sont MASQUÉS (font-size:0,
+   hauteur 0) ; la ligne visuelle vient du border-bottom — MÊME épaisseur (2px) et MÊME
+   couleur (var(--plus-line)) que la bordure du bouton « ajouter » (.radd .plus). */
+.fsep{height:0;margin:8px 0;padding:0;color:transparent;font-size:0;line-height:0;letter-spacing:0;user-select:none;border-bottom:2px solid var(--plus-line)}
 .fdesc{font-size:.9rem;opacity:.8;text-align:center;margin:0 0 8px}
 .fcard{min-height:88px}
 .unread{display:inline-block;min-width:20px;margin-left:8px;padding:0 7px;border-radius:10px;background:var(--halo);color:#241b05;font-size:.72rem;font-weight:700;text-align:center;vertical-align:middle}
@@ -190,18 +193,30 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fmtprev{flex:1;min-width:0;padding:8px 10px;border:1px dashed var(--line);border-radius:8px;background:rgba(255,255,255,.02);font-size:.95rem;line-height:1.45;max-height:160px;overflow:auto;cursor:default}
 .pvbtn{flex:none;min-width:26px;height:26px;padding:0 6px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);color:var(--halo);cursor:pointer}
 .pvbtn:hover{background:rgba(240,210,138,.12)}
-/* Variante ligne de liste (inrow) : le champ démarre exactement aux coordonnées du <b>
- *  d'affichage — alignement gauche ET haut (pas de recentrage ni de saut de ligne) */
-.fmtf.inrow{align-items:flex-start}
+/* Champ inrow (lignes de liste) : CENTRÉ comme le titre affiché (base .fmtf align-items:center),
+ *  le corps du champ tient toute la largeur de la ligne. */
 .fmtf.inrow .fmtf-body{max-width:none}
-.fmtf.inrow input,.fmtf.inrow textarea{width:100%}
-/* Lignes du forum (fcard) : contenu aligné EN HAUT — la balise <b> d'affichage ET le champ
- *  en édition démarrent au même coin haut-gauche (les icônes d'action restent centrées en
- *  affichage, en haut à l'édition). Limité aux lignes du forum : .row2.sel existe aussi
- *  ailleurs (ex. choix de personnage) et garde son alignement centré. */
-.fcard .row2.sel{align-items:flex-start}
-.fcard .row2.sel .row{align-self:center}
-.fcard .row2.sel.edit .row{align-self:stretch;align-items:flex-start}
+/* ---- Cartes forum (.item.fcard : catégories ET sujets) — mise en page flottante ----
+   .item.fcard est le CONTENEUR DE POSITIONNEMENT (position:relative) :
+   1) .row2.sel : plus de background/bordure (la carte .item les garde), titre PARFAITEMENT
+      centré horizontalement dans la div (le <small> et .row étant en flux sortant) ;
+   2) .fsep : ligne visuelle (voir règle .fsep plus haut) ;
+   3) actions Éditer/Annuler/Supprimer/Transférer (.row) : absolute HAUT-DROITE —
+      top:5px / right:10px — et REDUITES (transform:scale) ;
+   4) flèches d'ordre (.ord) : absolute, CENTRÉES VERTICALEMENT sur la hauteur TOTALE de la
+      carte (top:50% / translateY(-50%)) — même logique d'alignement droite/centré que le bloc
+      d'ajout (.radd .aacts) ;
+   5-6) le <small> (rangs autorisés / auteur · lecture) : absolute BAS-DROITE —
+      bottom:5px / right:10px — catégories ET sujets (mêmes cartes .fcard).
+   Le tout est scopé à .fcard : .row2.sel / .row / .ord / .selitem existent ailleurs
+   (choix de personnage, cartes de rangs .rcard, .radd) et n'y sont pas touchés. */
+.fcard{position:relative}
+.fcard .row2.sel{background:transparent;border:none;padding:0;margin:0}
+.fcard .selitem{justify-content:center}
+.fcard .row{position:absolute;top:5px;right:10px;z-index:2}
+.fcard .row button{transform:scale(.8);transform-origin:center}
+.fcard .ord{position:absolute;top:50%;right:10px;transform:translateY(-50%);z-index:2}
+.fcard .selitem small{position:absolute;bottom:5px;right:10px;z-index:2}
 /* Groupe d'icônes inactif (aperçu affiché : la sélection serait perdue) */
 .fmtbar.dis{opacity:.4;pointer-events:none}
 /* Annulation : croix empillée juste au-dessus du crayon (plus de bouton texte en bas) */

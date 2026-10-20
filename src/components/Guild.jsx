@@ -204,13 +204,13 @@ function Forum({ g, me, run, load }) {
             <span className="row">{can && <span className="vstack">
               {editing && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
               <button title={editing ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('f', f.id, f)}><Pencil size={13} /></button></span>}
-              {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}
               {lead && <button title="Supprimer la catégorie" className="delb" onClick={() => setCDel({ kind: 'f', id: f.id, name: f.name })}><Trash2 size={13} /></button>}</span></div>
           {editing
             ? <><FmtField fm={fmEd} bar={false} inrow value={draft.desc} onChange={v => setD({ desc: v })} multiline placeholder="Description…" />
               {lead && <Perks g={g} kind="folders" value={draft} onChange={setDraft} />}</>
             : <>{f.description && <div className="fsep">-----</div>}
               {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}</>}
+          {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}
         </div>;
       }} />
       {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
@@ -231,12 +231,12 @@ function Forum({ g, me, run, load }) {
             <span className="row">{editable && <span className="vstack">
               {editing && <button title="Annuler les changements" className="xbtn" onClick={closeEdit}><X size={13} /></button>}
               <button title={editing ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('t', x.id, x, folder)}><Pencil size={13} /></button></span>}
-              {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}
               {can && <button title="Transférer vers une autre catégorie" onClick={() => setMove({ id: x.id, name: x.title, from: folder.id, to: null })}><MoveRight size={13} /></button>}
               {lead && <button title="Supprimer le sujet" className="delb" onClick={() => setCDel({ kind: 't', id: x.id, name: x.title })}><Trash2 size={13} /></button>}</span></div>
           {editing ? TopicEditBlock()
             : <>{x.description && <div className="fsep">-----</div>}
               {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}</>}
+          {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}
         </div>;
       }} />
       {!(folder.topics?.length) && <small>Aucun sujet dans cette catégorie.</small>}

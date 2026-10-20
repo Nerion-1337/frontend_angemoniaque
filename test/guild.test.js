@@ -117,3 +117,34 @@ test('groupe d' + 'icônes : un seul par bloc édité + bascule aperçu dans le 
   expect(src).toContain('fmEd');
   expect((src.match(/bar=\{false\}/g) ?? []).length).toBeGreaterThanOrEqual(3);
 });
+
+// ---- Mise en page flottante des cartes forum (catégories + sujets) ----
+// .item.fcard = position:relative ; actions .row absolues haut-droite (top:5px/right:10px,
+// scale réduit) ; .ord (flèches) absolu centré verticalement (top:50%, translateY(-50%) —
+// logique du bloc d'ajout) ; <small> absolu bas-droite ; .row2.sel sans fond/bordure et
+// titre centré ; .fsep = vraie ligne (border-bottom 2px, var(--plus-line) = bordure du
+// bouton « + »).
+test('cartes forum : positionnement flottant scoppé à .fcard (CSS)', () => {
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  expect(css).toContain('.fcard{position:relative}');
+  expect(css).toContain('.fcard .row{position:absolute;top:5px;right:10px');
+  expect(css).toContain('transform:scale(.8)');
+  expect(css).toContain('.fcard .ord{position:absolute;top:50%;right:10px;transform:translateY(-50%)');
+  expect(css).toContain('.fcard .selitem small{position:absolute;bottom:5px;right:10px');
+  expect(css).toContain('.fcard .row2.sel{background:transparent;border:none');
+  expect(css).toContain('--plus-line:var(--halo)');
+  expect(css).toContain('border-bottom:2px solid var(--plus-line)');
+  expect(css).toContain('.radd .plus{width:58px;height:58px;padding:0;border:2px solid var(--plus-line)');
+  // Les tirets « ----- » sont masqués dans la règle .fsep
+  const fsep = css.slice(css.indexOf('.fsep{'), css.indexOf('.fsep{') + 400);
+  expect(fsep).toContain('font-size:0');
+  expect(fsep).toContain('color:transparent');
+});
+test('cartes forum : les flèches d' + 'ordre sont hors du conteneur .row (JSX)', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  // Le .row des lignes forum ne contient plus d'Arrows (ceux de rangs .rcard restent dans leur .row)
+  expect(src).not.toMatch(/className="row">[\s\S]{0,600}?<Arrows i=\{i\} len=\{fRows/);
+  expect(src).not.toMatch(/className="row">[\s\S]{0,600}?<Arrows i=\{i\} len=\{tRows/);
+  expect(src).toContain('<Arrows i={i} len={fRows.length}');
+  expect(src).toContain('<Arrows i={i} len={tRows.length}');
+});
