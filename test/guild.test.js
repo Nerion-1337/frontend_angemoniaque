@@ -113,7 +113,7 @@ test('liste de guilde : invitations en tête, puces de postulants, membres 2 par
   const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
   expect(src).toContain('className="form members"');
   // Invitations AVANT postulants, postulants AVANT membres
-  expect(src).toMatch(/Inviter un joueur[\s\S]{0,500}?Postulants en attente[\s\S]{0,700}?Membres \(/);
+  expect(src).toMatch(/Inviter un joueur[\s\S]{0,900}?Postulants en attente[\s\S]{0,1500}?Membres \(/);
   expect(src).toContain('achips'); expect(src).toContain('achip');
   expect(src).toContain('<div className="mgrid">');
   expect(src).toContain('m.game_rank');
@@ -137,6 +137,33 @@ test('présentation : colonne centrée, emblème en tête ; rang par défaut au-
   // Gestion : le bloc drank est le PREMIER enfant du conteneur ranks (au-dessus du DndList)
   const iD = src.indexOf('className="item drank"'), iL = src.indexOf('<DndList', iD);
   expect(iD).toBeGreaterThan(-1); expect(iL - iD).toBeLessThan(1500);
+});
+
+// ---- Pagination commune + restructuration des messages (catégories/sujets/messages + listes) ----
+test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 listes', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  expect(src).toContain('function PageNav');
+  // Flèches icones seules (ChevronLeft/Right) + input modifiable + /total
+  expect(src).toContain('<ChevronLeft size={16} />'); expect(src).toContain('<ChevronRight size={16} />');
+  expect(src).toContain('className="ppage"'); expect(src).toContain('/{pages}');
+  // Appliquée aux 5 listes : catégories, sujets, messages, postulants, membres
+  expect(src.split('<PageNav').length - 1).toBeGreaterThanOrEqual(5);
+  expect(src).toContain('fRowsP'); expect(src).toContain('tRowsP'); expect(src).toContain('postsP');
+  expect(src).toContain('applicantsP'); expect(src).toContain('membersP');
+  // Les indices locaux de page sont traduits en indices globaux (off) pour drag & drop / flèches
+  expect(src).toContain('const off = (pg, i) => (pg - 1) * PAGE + i');
+  expect(src).toContain('useEffect(() => setPgT(1), [fid])'); expect(src).toContain('useEffect(() => setPgP(1), [tid])');
+  expect(css).toContain('.pagenav{display:flex');
+});
+test('messages : div auteur à gauche + div message à droite, date bas-droite, fond alterné', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  expect(src).toContain('<div className="pmsg">');
+  expect(css).toContain('.post{display:flex;flex-direction:row');
+  expect(css).toContain('.post:nth-child(odd){background:rgba(255,255,255,.05)');
+  expect(css).toContain('.post:nth-child(even){background:rgba(240,210,138,.07)');
+  expect(css).toContain('.ptime{position:absolute;right:10px;bottom:5px');
 });
 
 // Régression « la sauvegarde échoue » : le schéma back attend `name` pour une catégorie et
@@ -194,6 +221,6 @@ test('cartes forum : les flèches d' + 'ordre sont hors du conteneur .row (JSX)'
   // Le .row des lignes forum ne contient plus d'Arrows (ceux de rangs .rcard restent dans leur .row)
   expect(src).not.toMatch(/className="row">[\s\S]{0,600}?<Arrows i=\{i\} len=\{fRows/);
   expect(src).not.toMatch(/className="row">[\s\S]{0,600}?<Arrows i=\{i\} len=\{tRows/);
-  expect(src).toContain('<Arrows i={i} len={fRows.length}');
-  expect(src).toContain('<Arrows i={i} len={tRows.length}');
+  expect(src).toContain('<Arrows i={i} len={fRowsP.length}');
+  expect(src).toContain('<Arrows i={i} len={tRowsP.length}');
 });

@@ -1,7 +1,25 @@
-import { useEffect, useRef, useState, Fragment } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronUp, ChevronDown, Trash2, MoveRight, X } from 'lucide-react';
+import { useEffect, useRef, useState, Fragment } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Trash2, MoveRight, X } from 'lucide-react';
 import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt } from '../lib/fmt'; import { FmtBar, FmtField, FPrev, useFmt } from './fmtbar'; import Confirm from './Confirm';
 const PERMS = [['accept_applicants', 'Accepter des postulants'], ['send_invites', 'Envoyer des invitations'], ['create_topics', 'Créer catégories et sujets'], ['assign_ranks', 'Attribuer des rangs']], words = t => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.map(r => <button type="button" key={r.id} className={'pill' + (value.includes(r.name) ? ' on' : '')} onClick={() => onChange(value.includes(r.name) ? value.filter(x => x !== r.name) : [...value, r.name])}>{r.name}</button>)}</div>;
+const PAGE = 10; // éléments par page — forum (catégories/sujets/messages) ET listes
+/** Pagination commune des listes : « ‹ [page] /total › » — flèches icones seules (pas de texte),
+ *  input modifiable : à la validation (Entrée / perte de focus) on atterrit sur la page demandée
+ *  (borne 1..total). Affichée en bas de page. */
+function PageNav({ page, total, onPage }) {
+  const pages = Math.max(1, Math.ceil(total / PAGE)), p = Math.min(page, pages);
+  const [v, setV] = useState(String(p));
+  useEffect(() => setV(String(p)), [p]); // resynchronise l'input quand la page change (flèches, donnes)
+  const go = n => { const q = Math.min(pages, Math.max(1, Math.round(n))); if (!Number.isNaN(q)) onPage(q); };
+  const commit = () => { const n = +v; if (v.trim() === '' || Number.isNaN(n)) setV(String(p)); else go(n); };
+  return <div className="pagenav">
+    <button title="Page précédente" disabled={p <= 1} onClick={() => go(p - 1)}><ChevronLeft size={16} /></button>
+    <input className="ppage" value={v} onChange={e => setV(e.target.value.replace(/[^0-9]/g, ''))} onBlur={commit}
+      onKeyDown={e => { if (e.key === 'Enter') { commit(); e.currentTarget.blur(); } }} />
+    <small className="ptotal">/{pages}</small>
+    <button title="Page suivante" disabled={p >= pages} onClick={() => go(p + 1)}><ChevronRight size={16} /></button>
+  </div>;
+}
 function Pres({ g, me, run, load, leave }) {
   const lead = g.me.leader, [mantra, setMantra] = useState(g.guild.mantra || ''), [desc, setDesc] = useState(g.guild.description || ''), d = useDispatch();
   const upload = e => { const f = e.target.files[0]; if (!f) return; if (f.size > 2 * 1024 * 1024) return d(A.toast('Image trop lourde (2 Mo maximum)')); const r = new FileReader(); r.onload = () => run(() => api('/guilds/presentation', { characterId: me.id, logo: r.result }), load); r.readAsDataURL(f); };
@@ -12,18 +30,27 @@ function Pres({ g, me, run, load, leave }) {
 }
 function Members({ g, me, run, load }) {
   const P = g.me.permissions, [pseudo, setPseudo] = useState('');
+  // Pagination commune (PAGE éléments/page) : postulants et membres — page à 1 au montage (onglet)
+  const [pgA, setPgA] = useState(1), [pgM, setPgM] = useState(1);
+  const aP = Math.min(pgA, Math.max(1, Math.ceil((g.applicants.length || 1) / PAGE))), mP = Math.min(pgM, Math.max(1, Math.ceil((g.members.length || 1) / PAGE)));
+  const applicantsP = g.applicants.slice((aP - 1) * PAGE, aP * PAGE), membersP = g.members.slice((mP - 1) * PAGE, mP * PAGE);
   return <div className="form members"><h4><UserPlus size={14} /> Inviter un joueur</h4>
     {P.send_invites ? <div className="row"><input placeholder="Pseudo du joueur…" value={pseudo} onChange={e => setPseudo(e.target.value)} /><button onClick={() => run(() => api('/guilds/invite', { characterId: me.id, pseudo }), () => setPseudo(''))}>Inviter</button></div> : <small>Votre rang ne permet pas d'envoyer des invitations.</small>}
     <h4>Postulants en attente ({g.applicants.length})</h4>{!P.accept_applicants && <small>Droit requis pour voir et accepter les postulants.</small>}
-    {g.applicants.length ? <div className="achips">{g.applicants.map(a => <div key={a.id} className="achip"><span>{a.pseudo} <small>{a.race}</small></span><span className="row"><button className="primary" onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: true }), load)}>Accepter</button><button onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: false }), load)}>Refuser</button></span></div>)}</div> : null}
+    {g.applicants.length ? <><div className="achips">{applicantsP.map(a => <div key={a.id} className="achip"><span>{a.pseudo} <small>{a.race}</small></span><span className="row"><button className="primary" onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: true }), load)}>Accepter</button><button onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: false }), load)}>Refuser</button></span></div>)}</div>
+      <PageNav page={aP} total={g.applicants.length} onPage={setPgA} /></> : null}
     <h4>Membres ({g.members.length}) <small>{P.assign_ranks ? 'Vous pouvez attribuer des rangs' : 'Lecture seule'}</small></h4>
-    <div className="mgrid">{g.members.map(m => <div key={m.id} className="item row2 member"><span className="minfo"><b>{m.pseudo}</b><small>{m.race}</small><small className="mgrank" title="Rang de jeu">{m.game_rank ?? '—'}</small>{P.assign_ranks ? <select value={m.rank_id} disabled={m.id === me.id && lastChef(g)} title={m.id === me.id && lastChef(g) ? 'Le dernier Chef ne peut pas changer de rang' : ''} onChange={e => run(() => api('/guilds/members/rank', { characterId: me.id, memberId: m.id, rankId: +e.target.value }), load)}>{g.ranks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select> : <span className="pill">{m.rank}</span>}</span></div>)}</div></div>;
+    <div className="mgrid">{membersP.map(m => <div key={m.id} className="item row2 member"><span className="minfo"><b>{m.pseudo}</b><small>{m.race}</small><small className="mgrank" title="Rang de jeu">{m.game_rank ?? '—'}</small>{P.assign_ranks ? <select value={m.rank_id} disabled={m.id === me.id && lastChef(g)} title={m.id === me.id && lastChef(g) ? 'Le dernier Chef ne peut pas changer de rang' : ''} onChange={e => run(() => api('/guilds/members/rank', { characterId: me.id, memberId: m.id, rankId: +e.target.value }), load)}>{g.ranks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select> : <span className="pill">{m.rank}</span>}</span></div>)}</div>
+    {g.members.length > 0 && <PageNav page={mP} total={g.members.length} onPage={setPgM} />}
+  </div>;
 }
 const AV = ['#c8a24a', '#7fa8d9', '#9d7fce', '#7fce9d', '#d98f7f', '#69c9c9'];
 const Avatar = ({ p }) => <span className="avatar" style={{ background: AV[[...p].reduce((h, c) => h + c.charCodeAt(0), 0) % AV.length] }}>{(p[0] || '?').toUpperCase()}</span>;
-// Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite.
+// Carte de message : div auteur à GAUCHE (avatar 40 px → rang guilde → pseudo), div message à DROITE,
+// date en bas à droite (right:10px / bottom:5px) ; fond alterné pair/impair sur les deux divs.
 const Post = ({ p }) => <div className="post"><div className="pauthor"><Avatar p={p.pseudo} />{p.rank && <span className="prank">{p.rank}</span>}<b>{p.pseudo}</b></div>
-  <div className="postbody" dangerouslySetInnerHTML={{ __html: fmt(p.body) }} /><small className="ptime">{new Date(p.created_at).toLocaleString('fr-FR')}</small></div>;
+  <div className="pmsg"><div className="postbody" dangerouslySetInnerHTML={{ __html: fmt(p.body) }} />
+    <small className="ptime">{new Date(p.created_at).toLocaleString('fr-FR')}</small></div></div>;
 function NewFolderModal({ g, me, run, load, onClose, onCreated }) {
   const noChef = g.ranks.filter(r => !r.is_leader); // le Chef a toujours tous les droits : aucune case pour lui
   const [name, setName] = useState(''), [desc, setDesc] = useState(''), [fr, setFr] = useState(noChef.map(r => r.name)), [wr, setWr] = useState(noChef.map(r => r.name));
@@ -109,6 +136,12 @@ function Forum({ g, me, run, load }) {
    *  instantané à l'ouverture (détection des modifications). */
   const [ed, setEd] = useState(null), [draft, setDraft] = useState(null), [base, setBase] = useState(null);
   const [cSave, setCSave] = useState(false), [cDel, setCDel] = useState(null), [move, setMove] = useState(null);
+  // Pagination commune (PAGE éléments/page) : catégories / sujets / messages — la page redescend à 1
+  // quand on change de vue (catégorie fous, sujet fous) ; l'index local d'une ligne → index global
+  // d'affichage via off() (le drag & drop et les flèches restent corrects : la lib opère sur l'ordre complet).
+  const [pgF, setPgF] = useState(1), [pgT, setPgT] = useState(1), [pgP, setPgP] = useState(1);
+  useEffect(() => setPgT(1), [fid]);
+  useEffect(() => setPgP(1), [tid]);
   const fmRep = useFmt(); // composeur de réponse
   const fmEd = useFmt(); // session d'édition : le SEUL groupe d'icônes (au-dessus du bloc) sert tous ses champs (dernier focalisé)
   const folder = g.folders.find(f => f.id === fid), topic = folder?.topics.find(x => x.id === tid);
@@ -116,6 +149,9 @@ function Forum({ g, me, run, load }) {
   const back = () => { if (tid !== null) setTid(null); else setFid(null); setEd(null); setDraft(null); };
   const fIds = g.folders.map(f => f.id), tIds = (folder?.topics ?? []).map(t => t.id);
   const fRows = displayRanks(fIds, fAdd), tRows = displayRanks(tIds, tAdd);
+  const fpg = Math.min(pgF, Math.max(1, Math.ceil(fRows.length / PAGE))), tpg = Math.min(pgT, Math.max(1, Math.ceil(tRows.length / PAGE))), ppg = Math.min(pgP, Math.max(1, Math.ceil((posts.length || 1) / PAGE)));
+  const fRowsP = fRows.slice((fpg - 1) * PAGE, fpg * PAGE), tRowsP = tRows.slice((tpg - 1) * PAGE, tpg * PAGE), postsP = posts.slice((ppg - 1) * PAGE, ppg * PAGE);
+  const off = (pg, i) => (pg - 1) * PAGE + i; // index local (page) → index global d'affichage
   const persistF = n => { setFAdd(n.addPos); if (n.ids.join() !== fIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'folders', ids: n.ids }), load); };
   const persistT = n => { setTAdd(n.addPos); if (n.ids.join() !== tIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'topics', folderId: fid, ids: n.ids }), load); };
   const afterFold = () => api(`/guilds/${me.id}`).then(s2 => {
@@ -195,8 +231,8 @@ function Forum({ g, me, run, load }) {
   return <div className="forum">
     {!folder && <div className="fview">
       <div className="row2 fhead2"><span /><h4 className="rhead">Catégories</h4><span /></div>
-      <DndList rows={fRows} onReorder={(from, to) => persistF(dropRankRow(fIds, fAdd, from, to))} renderRow={(row, i, dnd) => {
-        if (row.add) return <AddCard i={i} len={fRows.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />;
+      <DndList rows={fRowsP} onReorder={(a, b) => persistF(dropRankRow(fIds, fAdd, off(fpg, a), off(fpg, b)))} renderRow={(row, i, dnd) => {
+        if (row.add) return <AddCard i={i} len={fRowsP.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, off(fpg, a), d))} />;
         const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0, editing = ed?.id === f.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} onClick={e => { if (editing || dnd.justDrag.current || e.target.closest('button,select,input,textarea,label,a')) return; setFid(f.id); setTid(null); }} {...dnd.rowProps(i)}>
           {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
@@ -212,17 +248,18 @@ function Forum({ g, me, run, load }) {
               {lead && <Perks g={g} kind="folders" value={draft} onChange={setDraft} />}</>
             : <>{f.description && <div className="fsep">-----</div>}
               {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}</>}
-          {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}
+          {can && <Arrows i={i} len={fRowsP.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, off(fpg, a), d))} />}
         </div>;
       }} />
+      <PageNav page={fpg} total={fRows.length} onPage={setPgF} />
       {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
     </div>}
     {folder && tid === null && <div className="fview">
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button>
         <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(folder.name) }} /><span /></div>
       <div className="fsep">-----</div>
-      <DndList rows={tRows} onReorder={(from, to) => persistT(dropRankRow(tIds, tAdd, from, to))} renderRow={(row, i, dnd) => {
-        if (row.add) return <AddCard i={i} len={tRows.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />;
+      <DndList rows={tRowsP} onReorder={(a, b) => persistT(dropRankRow(tIds, tAdd, off(tpg, a), off(tpg, b)))} renderRow={(row, i, dnd) => {
+        if (row.add) return <AddCard i={i} len={tRowsP.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, off(tpg, a), d))} />;
         const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id), editing = ed?.id === x.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} onClick={e => { if (editing || dnd.justDrag.current || e.target.closest('button,select,input,textarea,label,a')) return; open(x); }} {...dnd.rowProps(i)}>
           {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
@@ -237,9 +274,10 @@ function Forum({ g, me, run, load }) {
           {editing ? TopicEditBlock()
             : <>{x.description && <div className="fsep">-----</div>}
               {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}</>}
-          {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}
+          {can && <Arrows i={i} len={tRowsP.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, off(tpg, a), d))} />}
         </div>;
       }} />
+      <PageNav page={tpg} total={tRows.length} onPage={setPgT} />
       {!(folder.topics?.length) && <small>Aucun sujet dans cette catégorie.</small>}
     </div>}
     {topic && <div className="fview">
@@ -255,7 +293,8 @@ function Forum({ g, me, run, load }) {
         ? TopicEditBlock()
         : <>{topic.description && <div className="fsep">-----</div>}
           {topic.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(topic.description) }} />}</>}
-      <div className="posts">{posts.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
+      <div className="posts">{postsP.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
+      {posts.length > 0 && <PageNav page={ppg} total={posts.length} onPage={setPgP} />}
       {lead || effWrite(topic, folder).includes(g.me.rank)
         ? <div className="replywrap"><FmtBar onFmt={fmRep.fmt} onColor={fmRep.color} />
             <div className="replyrow"><input {...fmRep.bind(setReply)} value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… ([g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])" /><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); })}>Envoyer</button></div>

@@ -168,12 +168,22 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Champ en place (composant InlineField) : la balise d'affichage se transforme en input —
  *  aucun nouveau champ n'est créé. */
 /* Carte de message : auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite */
-.post{display:flex;flex-direction:column;align-items:center;gap:6px}
-.pauthor{display:flex;flex-direction:column;align-items:center;gap:3px}
+/* Carte de message : div auteur à GAUCHE + div message à DROITE ; fond ALTERNÉ pair/impair
+   (appliqué au conteneur .post → couvre les deux divs) ; date en bas à droite */
+.post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;max-width:460px;margin:0 auto;padding:10px 12px;border-radius:12px}
+.post:nth-child(odd){background:rgba(255,255,255,.05)}
+.post:nth-child(even){background:rgba(240,210,138,.07)}
+.pauthor{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+.pmsg{flex:1;min-width:0;position:relative;padding-bottom:24px}
 .post .avatar{width:40px;height:40px;font-size:16px}
 .prank{font-size:.62rem;letter-spacing:.4px;text-transform:uppercase;color:var(--halo);border:1px solid rgba(240,210,138,.4);border-radius:8px;padding:0 7px}
-.post .postbody{max-width:92%;text-align:center;padding:4px 0}
-.ptime{margin-top:auto;align-self:flex-end;font-size:.65rem;opacity:.6}
+.post .postbody{max-width:92%;margin:0 auto;text-align:center;padding:4px 0}
+.ptime{position:absolute;right:10px;bottom:5px;font-size:.65rem;opacity:.6}
+/* Pagination commune des listes : « ‹ [page] /total › » (flèches icones seules, en bas de page) */
+.pagenav{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 2px}
+.pagenav button{min-width:28px;height:28px;padding:0 5px;display:grid;place-items:center}
+.ppage{width:44px;text-align:center;padding:4px 6px}
+.ptotal{color:var(--mute);font-size:.8rem}
 /* Liste du forum v2 : conteneur positionné (ligne d'insertion du drag & drop) + prise tactile */
 .fview{position:relative}
 .dlist{position:relative}
