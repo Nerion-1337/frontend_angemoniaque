@@ -104,9 +104,36 @@ test('cartes forum : clic/hover toute la carte, croix sans xbtn, Chef sans optio
   expect(css).toContain('.fcard:hover{');
   // Le Chef (is_leader) n'offre aucune option (modales de création + matrice d'édition)
   expect(src.split('!r.is_leader').length - 1).toBeGreaterThanOrEqual(5);
-  // Vue liste des sujets : liste de cartes centrée (.fcol) et en-tête sans fsep/fdesc
-  expect(src).toContain('fview fcol');
-  expect(css).toContain('.fcol .dlist{width:min(720px,100%);margin:0 auto}');
+});
+
+// ---- Onglets guilde : liste (centrée, invitations en tête, postulants en puces, membres 2/ligne)
+//      présentation (centrée, logo en tête), rang par défaut au-dessus des rangs, rang de jeu ----
+test('liste de guilde : invitations en tête, puces de postulants, membres 2 par ligne + rang de jeu', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  expect(src).toContain('className="form members"');
+  // Invitations AVANT postulants, postulants AVANT membres
+  expect(src).toMatch(/Inviter un joueur[\s\S]{0,500}?Postulants en attente[\s\S]{0,700}?Membres \(/);
+  expect(src).toContain('achips'); expect(src).toContain('achip');
+  expect(src).toContain('<div className="mgrid">');
+  expect(src).toContain('m.game_rank');
+  expect(css).toContain('.achip{flex:1 1 220px');
+  expect(css).toContain('.mgrid{display:grid;grid-template-columns:1fr 1fr');
+  expect(css).toContain('.member .minfo{display:flex;align-items:center;justify-content:center;gap:12px');
+  expect(css).not.toContain('.fcol');
+  // Vue liste des sujets : .fsep/.fdesc remises, .fsep CENTRÉE (margin auto), pas de .fcol
+  expect(src).toMatch(/Retour aux catégories[\s\S]{0,500}?<div className="fsep">/);
+  expect(css).toContain('.fsep{width:25%;height:0;margin:4px auto 8px');
+});
+test('présentation : colonne centrée, emblème en tête ; rang par défaut au-dessus de la liste des rangs', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  expect(src).toContain('className="form pres"');
+  expect(src).toMatch(/className="form pres">[\s\S]{0,250}?<div className="emblem">[\s\S]{0,500}?Mantra de la guilde/);
+  expect(css).toContain('.pres{text-align:center}');
+  // Gestion : le bloc drank est le PREMIER enfant du conteneur ranks (au-dessus du DndList)
+  const iD = src.indexOf('className="item drank"'), iL = src.indexOf('<DndList', iD);
+  expect(iD).toBeGreaterThan(-1); expect(iL - iD).toBeLessThan(1500);
 });
 
 // Régression « la sauvegarde échoue » : le schéma back attend `name` pour une catégorie et

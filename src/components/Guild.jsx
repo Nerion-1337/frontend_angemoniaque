@@ -5,18 +5,19 @@ const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.ma
 function Pres({ g, me, run, load, leave }) {
   const lead = g.me.leader, [mantra, setMantra] = useState(g.guild.mantra || ''), [desc, setDesc] = useState(g.guild.description || ''), d = useDispatch();
   const upload = e => { const f = e.target.files[0]; if (!f) return; if (f.size > 2 * 1024 * 1024) return d(A.toast('Image trop lourde (2 Mo maximum)')); const r = new FileReader(); r.onload = () => run(() => api('/guilds/presentation', { characterId: me.id, logo: r.result }), load); r.readAsDataURL(f); };
-  return <div className="cols"><div className="emblem">{g.guild.logo ? <img alt="" src={g.guild.logo} /> : <Shield size={64} />}<h3>{g.guild.name}</h3><span className="pill">[{g.guild.tag}]</span>{lead && <label className="btnlike"><Upload size={14} /> Modifier le logo (2 Mo max)<input type="file" accept="image/*" hidden onChange={upload} /></label>}</div>
-    <div className="form"><label>Mantra de la guilde <small>{mantra.length} / 120 caractères</small><input maxLength={120} readOnly={!lead} value={mantra} onChange={e => setMantra(e.target.value.slice(0, 120))} /></label>
-      <label>Histoire & description <small>{words(desc)} / 1000 mots</small><textarea rows={8} readOnly={!lead} value={desc} onChange={e => words(e.target.value) <= 1000 && setDesc(e.target.value)} /></label>
-      {lead && <button className="primary" onClick={() => run(() => api('/guilds/presentation', { characterId: me.id, mantra, description: desc }), () => { load(); d(A.toast('Présentation enregistrée')); })}>Enregistrer</button>}{lastChef(g) ? <small>Le dernier Chef ne peut pas quitter la guilde tant qu'un autre membre n'a pas ce rang.</small> : <button className="danger" onClick={leave}>Quitter la guilde</button>}</div></div>;
+  return <div className="form pres"><div className="emblem">{g.guild.logo ? <img alt="" src={g.guild.logo} /> : <Shield size={64} />}<h3>{g.guild.name}</h3><span className="pill">[{g.guild.tag}]</span>{lead && <label className="btnlike"><Upload size={14} /> Modifier le logo (2 Mo max)<input type="file" accept="image/*" hidden onChange={upload} /></label>}</div>
+    <label>Mantra de la guilde <small>{mantra.length} / 120 caractères</small><input maxLength={120} readOnly={!lead} value={mantra} onChange={e => setMantra(e.target.value.slice(0, 120))} /></label>
+    <label>Histoire & description <small>{words(desc)} / 1000 mots</small><textarea rows={8} readOnly={!lead} value={desc} onChange={e => words(e.target.value) <= 1000 && setDesc(e.target.value)} /></label>
+    {lead && <button className="primary" onClick={() => run(() => api('/guilds/presentation', { characterId: me.id, mantra, description: desc }), () => { load(); d(A.toast('Présentation enregistrée')); })}>Enregistrer</button>}{lastChef(g) ? <small>Le dernier Chef ne peut pas quitter la guilde tant qu'un autre membre n'a pas ce rang.</small> : <button className="danger" onClick={leave}>Quitter la guilde</button>}</div>;
 }
 function Members({ g, me, run, load }) {
   const P = g.me.permissions, [pseudo, setPseudo] = useState('');
-  return <div className="cols"><div className="form"><h4>Membres ({g.members.length}) <small>{P.assign_ranks ? 'Vous pouvez attribuer des rangs' : 'Lecture seule'}</small></h4>
-    {g.members.map(m => <div key={m.id} className="item row2"><span><b>{m.pseudo}</b> <small>{m.race}</small></span>{P.assign_ranks ? <select value={m.rank_id} disabled={m.id === me.id && lastChef(g)} title={m.id === me.id && lastChef(g) ? 'Le dernier Chef ne peut pas changer de rang' : ''} onChange={e => run(() => api('/guilds/members/rank', { characterId: me.id, memberId: m.id, rankId: +e.target.value }), load)}>{g.ranks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select> : <span className="pill">{m.rank}</span>}</div>)}</div>
-    <div className="form"><h4><UserPlus size={14} /> Inviter un joueur</h4>{P.send_invites ? <div className="row"><input placeholder="Pseudo du joueur…" value={pseudo} onChange={e => setPseudo(e.target.value)} /><button onClick={() => run(() => api('/guilds/invite', { characterId: me.id, pseudo }), () => setPseudo(''))}>Inviter</button></div> : <small>Votre rang ne permet pas d'envoyer des invitations.</small>}
-      <h4>Postulants en attente ({g.applicants.length})</h4>{!P.accept_applicants && <small>Droit requis pour voir et accepter les postulants.</small>}
-      {g.applicants.map(a => <div key={a.id} className="item row2"><span>{a.pseudo} <small>{a.race}</small></span><span className="row"><button className="primary" onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: true }), load)}>Accepter</button><button onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: false }), load)}>Refuser</button></span></div>)}</div></div>;
+  return <div className="form members"><h4><UserPlus size={14} /> Inviter un joueur</h4>
+    {P.send_invites ? <div className="row"><input placeholder="Pseudo du joueur…" value={pseudo} onChange={e => setPseudo(e.target.value)} /><button onClick={() => run(() => api('/guilds/invite', { characterId: me.id, pseudo }), () => setPseudo(''))}>Inviter</button></div> : <small>Votre rang ne permet pas d'envoyer des invitations.</small>}
+    <h4>Postulants en attente ({g.applicants.length})</h4>{!P.accept_applicants && <small>Droit requis pour voir et accepter les postulants.</small>}
+    {g.applicants.length ? <div className="achips">{g.applicants.map(a => <div key={a.id} className="achip"><span>{a.pseudo} <small>{a.race}</small></span><span className="row"><button className="primary" onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: true }), load)}>Accepter</button><button onClick={() => run(() => api(`/guilds/applicants/${a.id}/answer`, { characterId: me.id, accept: false }), load)}>Refuser</button></span></div>)}</div> : null}
+    <h4>Membres ({g.members.length}) <small>{P.assign_ranks ? 'Vous pouvez attribuer des rangs' : 'Lecture seule'}</small></h4>
+    <div className="mgrid">{g.members.map(m => <div key={m.id} className="item row2 member"><span className="minfo"><b>{m.pseudo}</b><small>{m.race}</small><small className="mgrank" title="Rang de jeu">{m.game_rank ?? '—'}</small>{P.assign_ranks ? <select value={m.rank_id} disabled={m.id === me.id && lastChef(g)} title={m.id === me.id && lastChef(g) ? 'Le dernier Chef ne peut pas changer de rang' : ''} onChange={e => run(() => api('/guilds/members/rank', { characterId: me.id, memberId: m.id, rankId: +e.target.value }), load)}>{g.ranks.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}</select> : <span className="pill">{m.rank}</span>}</span></div>)}</div></div>;
 }
 const AV = ['#c8a24a', '#7fa8d9', '#9d7fce', '#7fce9d', '#d98f7f', '#69c9c9'];
 const Avatar = ({ p }) => <span className="avatar" style={{ background: AV[[...p].reduce((h, c) => h + c.charCodeAt(0), 0) % AV.length] }}>{(p[0] || '?').toUpperCase()}</span>;
@@ -216,9 +217,11 @@ function Forum({ g, me, run, load }) {
       }} />
       {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
     </div>}
-    {folder && tid === null && <div className="fview fcol">
+    {folder && tid === null && <div className="fview">
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button>
         <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(folder.name) }} /><span /></div>
+      {folder.description && <div className="fsep">-----</div>}
+      {folder.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(folder.description) }} />}
       <DndList rows={tRows} onReorder={(from, to) => persistT(dropRankRow(tIds, tAdd, from, to))} renderRow={(row, i, dnd) => {
         if (row.add) return <AddCard i={i} len={tRows.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />;
         const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id), editing = ed?.id === x.id;
@@ -304,6 +307,10 @@ function Manage({ g, me, run, load }) {
   }).catch(() => load());
   // Drag & drop + flèches : contrôles partagés par <DndList> (aussi utilisé par le forum).
   return <div className="form ranks"><h4 className="rhead">Rangs & privilèges</h4>
+    <div className="item drank"><div className="head"><b>Rang par défaut des nouveaux arrivants</b></div>
+      <div className="drow">{[<label key="auto" className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id == null} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: null }), load)} /> Automatique (rang le plus bas)</label>,
+        ...g.ranks.filter(r => !r.is_leader).map(r => <label key={r.id} className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id === r.id} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: r.id }), load)} /> {r.name}</label>)]}
+      </div><small>Un candidat accepté ou une invitation acceptée reçoit ce rang. « Automatique » = le rang non-Chef le plus bas.</small></div>
     <DndList rows={rows} onReorder={(from, to) => persistOrder(dropRankRow(ids, addPos, from, to))} renderRow={(row, i, dnd) => {
       if (row.add) return <AddCard i={i} len={rows.length} onOpen={() => setOpen(true)} dnd={dnd} below={below} setBelow={setBelow} label="Ajouter un rang" canMove onMove={moveRow} />;
       const r = g.ranks.find(x => x.id === row.id);
@@ -314,10 +321,6 @@ function Manage({ g, me, run, load }) {
           <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>
         <div className="grid2">{PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" disabled={r.is_leader} checked={r.is_leader || !!r.permissions[k]} onChange={e => run(() => api(`/guilds/ranks/${r.id}/permission`, { characterId: me.id, permission: k, value: e.target.checked }), load)} /> {l}</label>)}</div></div>;
     }} />
-    <div className="item drank"><div className="head"><b>Rang par défaut des nouveaux arrivants</b></div>
-      <div className="drow">{[<label key="auto" className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id == null} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: null }), load)} /> Automatique (rang le plus bas)</label>,
-        ...g.ranks.filter(r => !r.is_leader).map(r => <label key={r.id} className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id === r.id} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: r.id }), load)} /> {r.name}</label>)]}
-      </div><small>Un candidat accepté ou une invitation acceptée reçoit ce rang. « Automatique » = le rang non-Chef le plus bas.</small></div>
     {open && <NewRankModal me={me} run={run} load={load} onCreated={afterCreate} onClose={() => setOpen(false)} />}
   </div>;
 }

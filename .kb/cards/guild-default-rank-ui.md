@@ -16,7 +16,7 @@ Front half of the "default rank for newcomers" feature: in the guild manage tab 
 
 ## How it works
 In `src/components/Guild.jsx` `Manage`:
-- A `.drank` card renders below the rank cards: a header, a flex row of radios (`.drow`), and a helper line. The radios are built from `[auto, ...g.ranks.filter(r => !r.is_leader)]` — the **leader rank is not offered** (the back rejects it, 400), so the choice is always a valid one.
+- La carte `.drank` est le PREMIER élément de l'onglet Gestion (`.item.drank` rendu **avant** le `DndList` des rangs — en haut de l'onglet, Chef seul) : un en-tête, une ligne de radios (`.drow`) et une ligne d'aide. The radios are built from `[auto, ...g.ranks.filter(r => !r.is_leader)]` — the **leader rank is not offered** (the back rejects it, 400), so the choice is always a valid one.
 - "Automatique" is `checked={g.guild.default_rank_id == null}`; each rank radio is `checked={g.guild.default_rank_id === r.id}`. Changing a radio fires `run(() => api('/guilds/default-rank', { characterId: me.id, rankId: <id | null> }), load)` — `null` for automatic — which persists then re-fetches the guild (so `load()` re-syncs the control state).
 - CSS (`.drank` block in `src/styles.css`): flex-wrapping radio row, `white-space:nowrap` per option, helper small text.
 
