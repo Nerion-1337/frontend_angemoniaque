@@ -161,25 +161,6 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .pp small{opacity:.6}
 /* Champ en place (composant InlineField) : la balise d'affichage se transforme en input —
  *  aucun nouveau champ n'est créé. */
-.infield{display:inline-flex;align-items:baseline;gap:5px;min-width:0;flex:1}
-.infield .itool{opacity:.55;flex:none}
-.infield .itool:hover{opacity:1}
-.infield.edit{display:flex;flex-direction:column;align-items:center;gap:4px}
-/* Éditeur riche WYSIWYG (InlineField) : conteneur contentEditable + barre B/I/nuancier/✓/✕ */
-.richbar{display:inline-flex;align-items:center;gap:6px}
-.richbar button{min-width:26px;height:26px;padding:0 6px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);color:var(--halo);font-size:.78rem;cursor:pointer}
-.richbar button:hover{background:rgba(240,210,138,.12)}
-.richbar label{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);cursor:pointer}
-.richbar input[type=color]{width:18px;height:18px;border:none;padding:0;background:transparent;cursor:pointer}
-.richbar .ractions{display:inline-flex;gap:6px;margin-left:8px}
-.richbar .ractions .ok{color:#7ec96a;border-color:rgba(126,201,106,.4)}
-.richbar .ractions .ok:hover{background:rgba(126,201,106,.14)}
-.richbar .ractions button:hover{opacity:.9}
-.edbody{width:100%;max-width:440px;min-height:46px;padding:8px 10px;border:1px solid #f0d28a;border-radius:8px;background:rgba(255,255,255,.05);font-size:.95rem;line-height:1.45;outline:none}
-.edbody:focus{box-shadow:0 0 0 2px rgba(240,210,138,.35)}
-.edbody:empty::before{content:attr(data-ph);opacity:.4}
-.infield .ihint{font-size:.66rem;opacity:.45}
-.row2 .infield{justify-content:flex-start}
 /* Carte de message : auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite */
 .post{display:flex;flex-direction:column;align-items:center;gap:6px}
 .pauthor{display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -198,6 +179,33 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fmtbar button:hover{background:rgba(240,210,138,.12)}
 .fmtbar label{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);cursor:pointer}
 .fmtbar input[type=color]{width:18px;height:18px;border:none;padding:0;background:transparent;cursor:pointer}
+/* Champ formatable (FmtField) : barre d'outils EN HAUT, input/textarea pré-rempli, aperçu en
+ *  dessous (les balises [g]/[i]/[rgb] n'apparaissent qu'au rendu final). */
+.fmtf{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;flex:1}
+.fmtf input,.fmtf textarea{width:100%;max-width:460px;padding:8px 10px;border:1px solid #f0d28a;border-radius:8px;background:rgba(255,255,255,.05);color:inherit;font:inherit;outline:none;resize:vertical}
+.fmtf input:focus,.fmtf textarea:focus{box-shadow:0 0 0 2px rgba(240,210,138,.35)}
+/* Ligne d'action du bloc d'édition (Annuler + rappel « re-clic crayon ») */
+.edrow2{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:6px}
+.edrow2 small{opacity:.55}
+/* Panneau de droits : case à cocher d'héritage + entête de matrice */
+.ppanel .pprow{display:flex;gap:14px;flex-wrap:wrap;margin:0 0 6px}
+.pprow{margin:0 0 6px}
+.pp.ph{opacity:.6;font-size:.72rem}
+/* Bouton corbeille (suppression, Chef) dans les actions de ligne */
+.delb{opacity:.7}
+.delb:hover{opacity:1;color:#d98f7f}
+/* Liste de transfert : radios catégorie cible */
+.mov{width:100%;margin:4px 0;padding:8px 10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:10px;cursor:pointer}
+.mov input{flex:none}
+.mov span{display:flex;flex-direction:column;gap:2px}
+.mov small{opacity:.6}
+.mov:hover{border-color:rgba(240,210,138,.4)}
+.mov:has(input:checked){border-color:var(--halo);background:rgba(240,210,138,.1)}
+/* Écran de confirmation (enregistrement / suppression) : voile + carte centrée */
+.confirm{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);display:grid;place-items:center}
+.ccard{width:min(340px,92vw);padding:14px 16px;background:var(--panel,rgba(20,18,28,.98));border:1px solid rgba(240,210,138,.4);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.cmsg{font-size:.95rem;line-height:1.4;margin:0 0 12px}
+.crow{display:flex;gap:8px;justify-content:flex-end}
 /* Aperçu du résultat formaté sous les champs du forum (voir FPrev dans Guild.jsx). */
 .fprev{margin:4px 0 8px;padding:6px 10px 8px;border:1px dashed var(--line);border-radius:8px;font-size:.95rem;line-height:1.45;background:rgba(255,255,255,.02);max-width:520px}
 .fprev small{display:block;font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;opacity:.5;margin-bottom:2px}

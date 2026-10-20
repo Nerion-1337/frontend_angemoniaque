@@ -44,32 +44,46 @@ test('<DndList> est toujours utilisé avec la prop renderRow (3 sites, jamais d�
 // Garde anti-régression « impossible d’ajouter/effacer du texte » : le spread de `bind` doit
 // toujours porter un onChange (un champ contrôlé sans onChange est gelé par React — c'était le
 // bug de l'éditeur inline). Toute saisie de champ reste editable.
-// Garde anti-régression « nouveau champ créé pour éditer » : l'édition passe par le
-// composant générique InlineField (la balise d'affichage se transforme elle-même en input) ;
-// l'ancienne boîte d'édition (InlineEdit / .edbox) doit rester supprimée.
-test('édition inline : InlineField utilisé, InlineEdit/.edbox absents', () => {
+// Garde anti-régression « les balises d'affichage remplacées par des CHAMPS PRÉ-REMPLIS » :
+// le crayon fait apparaître des FmtField (input/textarea, barre d'outils au-dessus) dans la
+// même rangée — l'éditeur WYSIWYG contentEditable (InlineField) et l'ancienne boîte
+// (InlineEdit / .edbox) restent supprimés.
+test('édition : FmtField pré-rempli dans la ligne, WYSIWYG absent', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
-  expect(src).toContain('InlineField');
+  expect(src).toContain('FmtField');
+  expect(src).not.toContain('contentEditable');
+  expect(src).not.toContain('InlineField');
   expect(src).not.toContain('InlineEdit');
   expect(src).not.toContain('edbox');
 });
 
 test('bind() fournit un onChange (champ contrôlé éditable)', () => {
   const src = readFileSync(new URL('../src/components/fmtbar.jsx', import.meta.url), 'utf8');
-  expect(src).toMatch(/const bind = set => \(\{[\s\S]{0,120}onChange: e => set\(e\.target\.value\)/);
+  expect(src).toContain('onChange: e => (s ?? set)(e.target.value)');
 });
 
-// Éditeur riche WYSIWYG : la zone est un contentEditable (pas d'input), B/I en execCommand,
-// sérialisation par rich.js ; actions ✓/✕ (titles Enregistrer/Annuler) dans la barre.
-test('WYSIWYG : InlineField est un contentEditable avec execCommand + richToFmt', () => {
-  const src = readFileSync(new URL('../src/components/InlineField.jsx', import.meta.url), 'utf8');
-  expect(src).toContain('contentEditable');
-  expect(src).not.toMatch(/<input[\s]/);
-  expect(src).toContain('execCommand');
-  expect(src).toContain('richToFmt');
-});
-test('WYSIWYG : RichBar porte les actions ✓ (Enregistrer) et ✕ (Annuler)', () => {
+// Barre d'outils : insertion des balises texte [g]/[i]/[rgb:R.G.B] (aucun HTML brut, aucun
+// execCommand) ; le rendu passe par fmt.js (échappement d'abord).
+test('la barre insère [g]/[i]/[rgb] et ne connaît plus execCommand', () => {
   const src = readFileSync(new URL('../src/components/fmtbar.jsx', import.meta.url), 'utf8');
-  expect(src).toContain('title="Enregistrer"');
-  expect(src).toContain('title="Annuler"');
+  expect(src).toContain("'[g]'");
+  expect(src).toContain("'[i]'");
+  expect(src).toContain('[rgb:${rgbOf(h)}]');
+  expect(src).not.toContain('execCommand');
+  expect(src).not.toContain('contentEditable');
+});
+
+// Suppression (cascade) et transfert de sujet : les routes back sont appelées par le front et
+// chaque action dangereuse passe par l'écran de confirmation Confirm.
+test('suppression / transfert : routes back + écran de confirmation', () => {
+  const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
+  expect(src).toContain('/delete');
+  expect(src).toContain('/move');
+  expect(src).toContain('<Confirm');
+});
+test('Confirm.jsx : écran contrôlé (clic extérieur = annuler)', () => {
+  const src = readFileSync(new URL('../src/components/Confirm.jsx', import.meta.url), 'utf8');
+  expect(src).toContain('onOk');
+  expect(src).toContain('onCancel');
+  expect(src).toContain('onClick={onCancel}');
 });
