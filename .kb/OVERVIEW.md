@@ -15,8 +15,9 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (7)
+## Features (8)
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
+- **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage sécurisé B/I/#, droits d'édition, en-têtes, factorisation AddCard/DndList — UX pass over the forum v2 (`guild-forum-v2`): (1) a compact **secure formatting toolbar** (Gras / Italique / Nuancier) on edit fields — it only inserts the text markers `fmt` supports (`**x**`, `*x*`, — files: src/components/Guild.jsx, src/lib/fmt.js, src/lib/guild.js, src/styles.css
 - **guild-forum-ui** [done] (.kb/cards/guild-forum-ui.md) Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage — The "Forum" tab of the guild modal is a three-level drilldown (categories → topics → messages), with a back icon at each level. — files: src/components/Guild.jsx, src/lib/fmt.js, src/styles.css
 - **guild-forum-v2** [done] (.kb/cards/guild-forum-v2.md) Guilde (UI) : forum v2 — typo centrée, cartes d'ajout + toggle, drag & drop, droits par rang, non-lus, carte de message — Front half of the forum revamp: centered larger section/category/topic titles (`.rhead`), a description line under each category/topic title (inline-editable, no reload), standardized "add" cards (big — files: src/components/Guild.jsx, src/lib/guild.js, src/lib/drag.js, src/styles.css
 - **guild-ranks-insert-dnd** [done] (.kb/cards/guild-ranks-insert-dnd.md) Guilde (UI) : toggle d'insertion + drag & drop des rangs (Gestion) — Evolution of the "Rangs & privilèges" manage section: (1) a **toggle switch on the add-rank card** chooses whether a newly created rank is inserted **above** the add card (default) or **below** it, wi — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
@@ -25,6 +26,8 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **react-redux-base** [done] (.kb/cards/react-redux-base.md) React + Redux base: store, app shell, API client, Vite config — The React 18 + Redux Toolkit base that boots the SPA: a single `game` slice holds auth/session, selected character, entities, active panel, hover/selection and toasts. — files: src/main.jsx, src/store/index.js, src/App.jsx, src/lib/api.js (+1)
 
 ## File map
+- `dist/assets/index-BX5suOG2.css`
+- `dist/index.html`
 - `index.html`
 - `package.json`
 - `src/App.jsx` — App
@@ -34,7 +37,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/Capital.jsx` — (header), CAP, Capital
 - `src/components/ChatDock.jsx` — (header), TABS, ChatDock
 - `src/components/GameCanvas.jsx` — (header), useRefreshMe, GameCanvas
-- `src/components/Guild.jsx` — Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite. — (header), PERMS, RankPick, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, PermsPanel, Forum
+- `src/components/Guild.jsx` — Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite. — (header), PERMS, RankPick, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, PermsPanel, FmtBar
 - `src/components/Info.jsx` — Petite icône « i » : l'infobulle s'affiche au survol (ou au focus / clic sur mobile). Rendue dans <body> pour  — Info
 - `src/components/Location.jsx` — (header), WORLDS, Location
 - `src/components/Login.jsx` — (header), Logo, Login, RACES, CharSelect
@@ -46,8 +49,8 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/api.js` — token, setToken, hasToken, api
 - `src/lib/drag.js` — Drag & drop des lignes d'affichage (appui + glissement, seuil 8 px pour préserver les clics). — useDrag
 - `src/lib/energy.js` — Énergie d'un trajet (8 directions) jusqu'à stopAt cases de la cible. Miroir de game/movement.ts : — (header), water, pathEnergy, COLORS
-- `src/lib/fmt.js` — Micro-formatage du texte du forum, rendu par innerHTML APRÈS échappement HTML (donc sûr) : — fmt
-- `src/lib/guild.js` — Intégrité des rangs (miroir de back/src/routes/guilds.ts) : le dernier porteur du rang Chef — lastChef, ADD, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite
+- `src/lib/fmt.js` — Micro-formatage du texte du forum, rendu par innerHTML APRÈS échappement HTML (donc sûr) : — fmt, wrapSel, colorSel
+- `src/lib/guild.js` — Intégrité des rangs (miroir de back/src/routes/guilds.ts) : le dernier porteur du rang Chef — lastChef, ADD, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic
 - `src/lib/hooks.js` — (header), useData, useDo, pct
 - `src/lib/relief.js` — Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué. — (header), base, WATER_Y, ss, micro, ridge, heightAt, C, DEEP, g2, groundColor, hash
 - `src/lib/terrain.js` — Copie exacte de backend/src/game/terrain.ts (règle de coût partagée) — h, noiseAt, terrain
@@ -57,6 +60,6 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/three/entities.js` — (header), M, stone, label, person, BEAST, beast, building, mountModel, golem, RACE_COL, makeEntity
 - `src/three/scene.js` — Scène réaliste : terrain en relief continu, ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, v — noiseTex, createScene
 - `test/fmt.test.js`
-- `test/guild.test.js` — (header), R, g
+- `test/guild.test.js` — (header), R, g, NOBODY
 - `test/lib.test.js`
 - `vite.config.js`

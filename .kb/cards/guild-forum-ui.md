@@ -2,7 +2,7 @@
 title: Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage
 slug: guild-forum-ui
 status: done
-updated: 2026-10-19
+updated: 2026-10-20
 files:
   - src/components/Guild.jsx
   - src/lib/fmt.js
@@ -41,6 +41,7 @@ All in "src/components/Guild.jsx" (subcomponents of "GuildModal", "Forum" tab):
 
 ## Cross-references
 - The forum was redesigned (v2): centered titles, description fields, add cards with insertion toggle, drag & drop, per-rank Voir/Écrire panels, unread badges, restructured message cards — card `guild-forum-v2` (see also back `guild-forum-perms`). The drill-down navigation described here survives as the base pattern.
+- A third pass (`guild-forum-tools`) reworked the headers (no right « + » button, back strictly left, `-----` title/description separator), added the secure formatting toolbar and gated the topic edit pencil (`canEditTopic`, back `guild-forum-edit`); it also consolidated the add card / DnD controls into the shared `AddCard` / `DndList` components.
 
 ## Gotchas
 - Nested modals: three modals can be stacked (guild > category/topic). Esc closes all of them (existing "Modal" pattern: one "keydown" listener per instance). An interrupted draft is lost — accepted.

@@ -28,3 +28,7 @@ export const insertRankTarget = (ids, addPos, newId, below) => {
 /** Droits d'écriture effectifs d'un sujet : sa `write_ranks` (NULL = hérite de la catégorie,
  *  `{}` = explicitement personne hors Chef), repli sur `write_ranks` de la catégorie si NULL. */
 export const effWrite = (topic, folder) => topic.write_ranks === null ? (folder.write_ranks ?? []) : (topic.write_ranks ?? []);
+/** Droit d'édition titre/description d'un SUJET (miroir de back `/guilds/topics/{id}/edit`) :
+ *  auteur du sujet, détenteur de create_topics, ou porteur du droit d'écriture de la catégorie
+ *  parente ; `gme` = `g.me` (leader/rank/permissions), `uid` = id du personnage courant. */
+export const canEditTopic = (t, f, gme, uid) => gme.leader || t.author_id === uid || !!gme.permissions?.create_topics || (f.write_ranks ?? []).includes(gme.rank);

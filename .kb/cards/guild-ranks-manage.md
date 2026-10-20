@@ -38,6 +38,7 @@ All in `src/components/Guild.jsx` (manage tab of `GuildModal`) with pure helpers
 
 ## Cross-references
 - The manage-tab drag & drop logic was extracted into the shared hook `src/lib/drag.js:useDrag` (reused by the forum v2 add/topic lists — card `guild-forum-v2`); behaviour is unchanged (8 px arm threshold, `.rkdr`/`.inl` visuals, drop → `dropRankRow` → reorder API).
+- Later pass (`guild-forum-tools`): the add card and the DnD/arrows controls were consolidated into the shared `AddCard` / `DndList` components (`src/components/Guild.jsx`), used by the manage tab, the forum folder list and the topic lists — the toggle now sits on the action-buttons line for all three lists.
 
 ## Data flow
 - Arrow → `moveRankRow` → new ids → `POST /guilds/reorder` {kind:'ranks', ids} → tx writes `sort_order=index` → `load()` → `GET /guilds/{me.id}` returns ranks ordered by `sort_order, id` → cards re-render. New rank creation: API assigns `sort_order = max+1` → appears just before the add card (which re-anchors itself at the end on the next `load()` because `addPos` is session-local).

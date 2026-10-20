@@ -145,8 +145,11 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .drank small{margin-top:6px}
 /* ---- Forum v2 : typo centrée, descriptions, badges non-lus, panneau droits par rang, carte de message ---- */
 .fhead2{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
-.fhead2 .btnlike,.fhead2 .backbtn{justify-self:end}
-.fdesc{font-size:.78rem;opacity:.75;text-align:center;margin:-4px 0 8px}
+.fhead2 .btnlike{justify-self:end}
+.fhead2 .backbtn{justify-self:start}
+.fhead2 .rhead{font-size:1.6rem;margin:4px 0 6px}
+.fsep{margin:0 0 8px;text-align:center;color:#7d7893;letter-spacing:2px;font-size:.85rem;user-select:none}
+.fdesc{font-size:.9rem;opacity:.8;text-align:center;margin:0 0 8px}
 .fcard{min-height:88px}
 .unread{display:inline-block;min-width:20px;margin-left:8px;padding:0 7px;border-radius:10px;background:var(--halo);color:#241b05;font-size:.72rem;font-weight:700;text-align:center;vertical-align:middle}
 .prow{margin-top:8px}
@@ -158,6 +161,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .pp small{opacity:.6}
 .edrow{display:flex;gap:8px;margin-top:8px;align-items:flex-start}
 .edrow input,.edrow textarea{flex:1}
+.edbox{margin-top:8px}
 /* Carte de message : auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite */
 .post{display:flex;flex-direction:column;align-items:center;gap:6px}
 .pauthor{display:flex;flex-direction:column;align-items:center;gap:3px}
@@ -167,5 +171,14 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .ptime{margin-top:auto;align-self:flex-end;font-size:.65rem;opacity:.6}
 /* Liste du forum v2 : conteneur positionné (ligne d'insertion du drag & drop) + prise tactile */
 .fview{position:relative}
+.dlist{position:relative}
 .fcard{touch-action:none;cursor:grab}
 .fcard:active{cursor:grabbing}
+/* Barre de formatage compacte (B / I / nuancier) au-dessus des champs d'édition du forum */
+.fmtbar{display:inline-flex;align-items:center;gap:6px;margin:0 0 6px;justify-content:center;width:100%}
+.fmtbar button{min-width:26px;height:26px;padding:0 6px;display:grid;place-items:center;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);color:var(--halo);font-size:.78rem;cursor:pointer}
+.fmtbar button:hover{background:rgba(240,210,138,.12)}
+.fmtbar label{display:grid;place-items:center;width:28px;height:28px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.04);cursor:pointer}
+.fmtbar input[type=color]{width:18px;height:18px;border:none;padding:0;background:transparent;cursor:pointer}
+.replywrap{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:20px}
+.replywrap .replyrow{margin-top:0}

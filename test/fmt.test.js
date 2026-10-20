@@ -1,7 +1,14 @@
-import { test, expect } from 'vitest'; import { fmt } from '../src/lib/fmt';
+import { test, expect } from 'vitest'; import { fmt, wrapSel, colorSel } from '../src/lib/fmt';
 test('échappe le HTML (pas de balise qui passe)', () => expect(fmt('<script>alert(1)</script>')).toBe('&lt;script&gt;alert(1)&lt;/script&gt;'));
 test('gras et italique', () => expect(fmt('**a** puis *b*')).toBe('<b>a</b> puis <i>b</i>'));
 test('couleur : un #rrggbb isolé est affiché dans sa couleur', () => expect(fmt('salut #ff0000')).toBe('salut <span style="color:#ff0000">#ff0000</span>'));
 test('un # hex dans un mot reste du texte', () => expect(fmt('pas #1234567')).toContain('#1234567'));
 test('retours à la ligne', () => expect(fmt('a\nb')).toBe('a<br>b'));
 test('null reste vide', () => expect(fmt(null)).toBe(''));
+test('wrapSel : entoure la sélection (gras)', () => expect(wrapSel('salut monde', 6, 11, '**')).toEqual({ text: 'salut **monde**', cursor: 15 }));
+test('wrapSel : sélection vide = paire de balises insérée au curseur', () => expect(wrapSel('ab', 2, 2, '*')).toEqual({ text: 'ab**', cursor: 4 }));
+test('wrapSel : balises asymétriques', () => expect(wrapSel('x', 0, 1, '[', ']').text).toBe('[x]'));
+test('colorSel : code inséré après la sélection (espace séparateur)', () => expect(colorSel('titre', 0, 5, '#ff0000')).toEqual({ text: 'titre #ff0000', cursor: 13 }));
+test('colorSel : sélection vide = code simple au curseur', () => expect(colorSel('bonjour', 7, 7, '#00ff00')).toEqual({ text: 'bonjour#00ff00', cursor: 14 }));
+test('sécurité : HTML brut entouré de ** reste échappé après fmt', () => expect(fmt(wrapSel('<img src=x>', 0, 11, '**').text)).toBe('<b>&lt;img src=x&gt;</b>'));
+test('sécurité : code couleur inséré par colorSel est rendu par fmt', () => expect(fmt(colorSel('salut', 0, 5, '#ff0000').text)).toBe('salut <span style="color:#ff0000">#ff0000</span>'));
