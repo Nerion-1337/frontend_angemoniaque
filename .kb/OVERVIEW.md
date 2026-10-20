@@ -15,7 +15,8 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (5)
+## Features (6)
+- **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
 - **guild-forum-ui** [done] (.kb/cards/guild-forum-ui.md) Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage — The "Forum" tab of the guild modal is a three-level drilldown (categories → topics → messages), with a back icon at each level. — files: src/components/Guild.jsx, src/lib/fmt.js, src/styles.css
 - **guild-ranks-insert-dnd** [done] (.kb/cards/guild-ranks-insert-dnd.md) Guilde (UI) : toggle d'insertion + drag & drop des rangs (Gestion) — Evolution of the "Rangs & privilèges" manage section: (1) a **toggle switch on the add-rank card** chooses whether a newly created rank is inserted **above** the add card (default) or **below** it, wi — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
 - **guild-ranks-manage** [done] (.kb/cards/guild-ranks-manage.md) Guilde (UI) : section Rangs & privilèges (titre centré, carte ajout, réorganisation, label Chef éditable) — Front half of the "Rangs & privilèges" revamp in the manage tab (leader only): the section title is centered and larger; the inline "create rank" form is replaced by an **add-rank placeholder card** ( — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css

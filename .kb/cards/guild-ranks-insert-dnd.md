@@ -29,6 +29,9 @@ All in `src/components/Guild.jsx` (Manage tab) with pure helpers in `src/lib/gui
 - `src/lib/guild.js:insertRankTarget(ids, addPos, newId, below)` / `:dropRankRow(ids, addPos, from, to)` — import anywhere to build/mutate the ranks display list (pure, unit-tested).
 - API: `POST /guilds/reorder` (`kind: 'ranks'`) + `POST /guilds/ranks` (create) — no backend change for this feature (see back card `guild-ranks-order`).
 
+## Cross-references
+- Later evolution of the manage section: the **default rank for newcomers** (single-choice radio, `POST /guilds/default-rank`) — card `guild-default-rank-ui`.
+
 ## Data flow
 - Toggle + create: modal submit → `POST /guilds/ranks` (end of list) → refetch → `insertRankTarget` (target order from `addPos` + `below`) → `POST /guilds/reorder` when it differs → `load()` → cards re-render with the new rank above/below the add card as toggled.
 - Drag: pointerdown → (8 px) drag state → pointermove: `dropIndex` + insertion line y (measured) → pointerup: `dropRankRow` → persist when the ranks order changed → `load()`.

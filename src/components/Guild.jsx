@@ -127,6 +127,10 @@ function Manage({ g, me, run, load }) {
           <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>
         <div className="grid2">{PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" disabled={r.is_leader} checked={r.is_leader || !!r.permissions[k]} onChange={e => run(() => api(`/guilds/ranks/${r.id}/permission`, { characterId: me.id, permission: k, value: e.target.checked }), load)} /> {l}</label>)}</div></div>;
     })}
+    <div className="item drank"><div className="head"><b>Rang par défaut des nouveaux arrivants</b></div>
+      <div className="drow">{[<label key="auto" className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id == null} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: null }), load)} /> Automatique (rang le plus bas)</label>,
+        ...g.ranks.filter(r => !r.is_leader).map(r => <label key={r.id} className="chk"><input type="radio" name="drank" checked={g.guild.default_rank_id === r.id} onChange={() => run(() => api('/guilds/default-rank', { characterId: me.id, rankId: r.id }), load)} /> {r.name}</label>)]}
+      </div><small>Un candidat accepté ou une invitation acceptée reçoit ce rang. « Automatique » = le rang non-Chef le plus bas.</small></div>
     {open && <NewRankModal me={me} run={run} load={load} onCreated={afterCreate} onClose={() => setOpen(false)} />}
   </div>;
 }

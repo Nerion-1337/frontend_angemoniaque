@@ -33,6 +33,9 @@ All in `src/components/Guild.jsx` (manage tab of `GuildModal`) with pure helpers
 - `src/lib/guild.js:displayRanks` / `:moveRankRow` — import anywhere to build/mutate the ranks display list (pure; the only place the ADD sentinel lives).
 - API: `POST /guilds/reorder` (`kind: 'ranks'`, leader-only — see back card `guild-ranks-order`), `POST /guilds/ranks/{id}/rename` (now allowed on the leader rank), `POST /guilds/ranks` (create, lands last).
 
+## Cross-references
+- Later evolution of the manage section: the **default rank for newcomers** (single-choice radio, `POST /guilds/default-rank`) — card `guild-default-rank-ui`.
+
 ## Data flow
 - Arrow → `moveRankRow` → new ids → `POST /guilds/reorder` {kind:'ranks', ids} → tx writes `sort_order=index` → `load()` → `GET /guilds/{me.id}` returns ranks ordered by `sort_order, id` → cards re-render. New rank creation: API assigns `sort_order = max+1` → appears just before the add card (which re-anchors itself at the end on the next `load()` because `addPos` is session-local).
 
