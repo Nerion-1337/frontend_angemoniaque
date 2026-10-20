@@ -10,3 +10,11 @@ test('affichage : addPos insère la carte à la position demandée', () => expec
 test('déplacement d’un rang : l’ordre persistable change, la carte d’ajout suit', () => expect(moveRankRow([1, 2, 3], 3, 0, 1)).toEqual({ ids: [2, 1, 3], addPos: 3 }));
 test('déplacement de la carte d’ajout : l’ordre des rangs est inchangé (état local)', () => expect(moveRankRow([1, 2, 3], 3, 3, -1)).toEqual({ ids: [1, 2, 3], addPos: 2 }));
 test('bords : premier en haut / dernier en bas = rien ne bouge', () => { expect(moveRankRow([1, 2], 2, 0, -1)).toEqual({ ids: [1, 2], addPos: 2 }); expect(moveRankRow([1, 2], 0, 2, 1)).toEqual({ ids: [1, 2], addPos: 0 }); });
+import { dropRankRow, insertRankTarget } from '../src/lib/guild';
+test('dropRankRow : glisser la 1re ligne au fond du list (carte ajout suivie)', () => expect(dropRankRow([1, 2, 3], 3, 0, 3)).toEqual({ ids: [2, 3, 1], addPos: 3 }));
+test('dropRankRow : glisser la carte d’ajout en position 1 (ordre des rangs inchangé, état local)', () => expect(dropRankRow([1, 2, 3], 3, 3, 1)).toEqual({ ids: [1, 2, 3], addPos: 1 }));
+test('dropRankRow : drop juste sous soi-même = non-opération', () => expect(dropRankRow([1, 2, 3], 3, 1, 2)).toEqual({ ids: [1, 2, 3], addPos: 3 }));
+test('insertRankTarget : au-dessus par défaut + carte ajout en dernier = fin de liste (pas de réorganisation)', () => expect(insertRankTarget([1, 2, 3], null, 9, false)).toEqual([1, 2, 3, 9]));
+test('insertRankTarget : au-dessus avec carte ajout déplacée en 2 → insertion au milieu', () => expect(insertRankTarget([1, 2, 3], 1, 9, false)).toEqual([1, 9, 2, 3]));
+test('insertRankTarget : en dessous avec carte ajout en dernière position → fin de liste (la carte d’ajout s’affiche avant le nouveau rang)', () => expect(insertRankTarget([1, 2, 3], 3, 9, true)).toEqual([1, 2, 3, 9]));
+test('insertRankTarget : en dessous avec carte ajout en position 2 → rang juste après la carte d’ajout', () => expect(insertRankTarget([1, 2, 3], 1, 9, true)).toEqual([1, 2, 9, 3]));

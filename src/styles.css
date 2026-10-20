@@ -126,3 +126,14 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .radd:hover{background:rgba(240,210,138,.09)}
 .radd .plus{width:58px;height:58px;padding:0;border:2px solid var(--halo);border-radius:50%;display:grid;place-items:center;color:var(--halo);background:rgba(240,210,138,.06)}
 .radd .ord{justify-self:end}
+/* ---- Gestion des rangs : toggle d'insertion (carte ajout) + drag & drop ---- */
+.tgl{display:flex;align-items:center;gap:7px;user-select:none;font-size:.72rem;color:var(--halo);opacity:.92;cursor:pointer}
+.trk{width:30px;height:16px;border:1px solid var(--halo);border-radius:9px;position:relative;flex:none;background:rgba(240,210,138,.08)}
+.trk input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.trk .knob{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:rgba(240,210,138,.35);transition:left .15s,background .15s}
+.trk input:checked + .knob{left:16px;background:var(--halo)}
+.ranks{position:relative}
+.rcard,.radd{touch-action:none;cursor:grab}
+.rcard:active,.radd:active{cursor:grabbing}
+.rkdr{opacity:.45;outline:1px dashed rgba(240,210,138,.7);outline-offset:2px}
+.inl{position:absolute;left:8px;right:8px;height:2px;background:var(--halo);box-shadow:0 0 8px rgba(240,210,138,.9);border-radius:2px;pointer-events:none;z-index:2}

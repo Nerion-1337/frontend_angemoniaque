@@ -11,3 +11,17 @@ export const moveRankRow = (ids, addPos, i, dir) => { const L = displayRanks(ids
   if (j < 0 || j >= L.length) return { ids, addPos };
   const n = [...L]; [n[i], n[j]] = [n[j], n[i]];
   return { ids: n.filter(r => !r.add).map(r => r.id), addPos: n.findIndex(r => r.add) }; };
+/** Déplace la ligne d'affichage `from` vers l'indice d'insertion `to` (drag & drop, 0..rows.length) :
+ *  renvoie les ids de rangs (sans la carte d'ajout, à persister via POST /guilds/reorder kind 'ranks')
+ *  et la nouvelle position de la carte d'ajout (état local). */
+export const dropRankRow = (ids, addPos, from, to) => {
+  const n = displayRanks(ids, addPos); const [x] = n.splice(from, 1);
+  n.splice(Math.max(0, Math.min(to > from ? to - 1 : to, n.length)), 0, x);
+  return { ids: n.filter(r => !r.add).map(r => r.id), addPos: n.findIndex(r => r.add) }; };
+/** Ordre cible des rangs à la création d'un nouveau rang (`newId`, créé en fin de liste par l'API) :
+ *  l'insère au-dessus (défaut) ou en dessous de la carte d'ajout (position d'affichage `addPos`),
+ *  renvoie la liste d'ids à persister via POST /guilds/reorder (kind 'ranks') — vide de différence si l'ordre ne change pas. */
+export const insertRankTarget = (ids, addPos, newId, below) => {
+  const p = addPos == null ? ids.length : addPos;
+  const ins = Math.max(0, Math.min(p + (below ? 1 : 0), ids.length + 1));
+  const n = [...ids]; n.splice(Math.min(ins, n.length), 0, newId); return n; };

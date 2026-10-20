@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow } from '../lib/guild'; import { fmt } from '../lib/fmt';
+import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget } from '../lib/guild'; import { fmt } from '../lib/fmt';
 const PERMS = [['accept_applicants', 'Accepter des postulants'], ['send_invites', 'Envoyer des invitations'], ['create_topics', 'Créer catégories et sujets'], ['assign_ranks', 'Attribuer des rangs']], words = t => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.map(r => <button type="button" key={r.id} className={'pill' + (value.includes(r.name) ? ' on' : '')} onClick={() => onChange(value.includes(r.name) ? value.filter(x => x !== r.name) : [...value, r.name])}>{r.name}</button>)}</div>;
 function Pres({ g, me, run, load, leave }) {
@@ -56,35 +56,77 @@ function Forum({ g, me, run, load }) {
     {ntopic && <NewTopicModal g={g} folder={folder} me={me} run={run} load={load} onClose={() => setNtopic(false)} />}
   </div>;
 }
-function NewRankModal({ me, run, load, onClose }) {
+function NewRankModal({ me, run, load, onClose, onCreated }) {
   const [name, setName] = useState(''), [perms, setPerms] = useState({ create_topics: true });
   return <Modal onClose={onClose} className="inv guild" label="Nouveau rang"><div className="form"><h4><Plus size={14} /> Créer un rang</h4><input placeholder="Nom (ex : Sénéchal, Recrue…)" value={name} onChange={e => setName(e.target.value)} />
     {PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" checked={!!perms[k]} onChange={e => setPerms({ ...perms, [k]: e.target.checked })} /> {l}</label>)}
-    <button className="primary" disabled={name.trim().length < 2} onClick={() => run(() => api('/guilds/ranks', { characterId: me.id, name: name.trim(), permissions: perms }), () => { onClose(); load(); })}>Créer le rang</button></div></Modal>;
+    <button className="primary" disabled={name.trim().length < 2} onClick={() => run(() => api('/guilds/ranks', { characterId: me.id, name: name.trim(), permissions: perms }), () => { onClose(); (onCreated ?? load)(); })}>Créer le rang</button></div></Modal>;
 }
 function Arrows({ i, len, onMove }) {
   return <span className="ord"><button title="Monter" disabled={i === 0} onClick={e => { e.stopPropagation(); onMove(i, -1); }}><ChevronUp size={14} /></button><button title="Descendre" disabled={i === len - 1} onClick={e => { e.stopPropagation(); onMove(i, 1); }}><ChevronDown size={14} /></button></span>;
 }
 function Manage({ g, me, run, load }) {
-  const [open, setOpen] = useState(false), [ren, setRen] = useState(null), [rname, setRname] = useState(''), [addPos, setAddPos] = useState(null);
+  const [open, setOpen] = useState(false), [ren, setRen] = useState(null), [rname, setRname] = useState('');
+  const [addPos, setAddPos] = useState(null), [below, setBelow] = useState(false);
+  const [drag, setDrag] = useState(null), [lineY, setLineY] = useState(0);
+  const pending = useRef(null), overRef = useRef(null), justDrag = useRef(false), rowRefs = useRef([]), listRef = useRef(null);
   const ids = g.ranks.map(r => r.id), rows = displayRanks(ids, addPos);
-  const moveRow = (i, dir) => { const n = moveRankRow(ids, addPos, i, dir); setAddPos(n.addPos);
+  const persistOrder = n => { setAddPos(n.addPos);
     if (n.ids.join() !== ids.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'ranks', ids: n.ids }), load); };
+  const moveRow = (i, dir) => persistOrder(moveRankRow(ids, addPos, i, dir));
   const saveRename = r => run(() => api(`/guilds/ranks/${r.id}/rename`, { characterId: me.id, name: rname }), () => { setRen(null); load(); });
-  return <div className="form ranks"><h4 className="rhead">Rangs & privilèges</h4>
+  // Toggle d'insertion : par défaut le nouveau rang s'insère AU-DESSUS de la carte d'ajout ; quand on coche
+  // « en dessous », l'ordre cible est persisté juste après la création (le rang est créé en fin de liste
+  // par l'API, l'endpoint de réorganisation recalcule ensuite les sort_order).
+  const afterCreate = () => api(`/guilds/${me.id}`).then(s2 => {
+    const newId = s2.ranks[s2.ranks.length - 1].id, prev = s2.ranks.slice(0, -1).map(r => r.id);
+    const target = insertRankTarget(prev, addPos, newId, below);
+    if (target.join() !== s2.ranks.map(r => r.id).join()) return api('/guilds/reorder', { characterId: me.id, kind: 'ranks', ids: target }).then(load).catch(load);
+    return load();
+  }).catch(() => load());
+  // Drag & drop (appui + glissement) : pointeur avec seuil de 8 px pour préserver les clics ; le drag ne
+  // démarre jamais depuis un champ/bouton interne à la carte (renommage, flèches, cases) ; la ligne dorée
+  // indique la position d'insertion.
+  const dropIndex = y => { const rr = listRef.current?.getBoundingClientRect(); if (!rr) return rows.length;
+    for (let j = 0; j < rows.length; j++) { const el = rowRefs.current[j]; if (!el) continue;
+      const r = el.getBoundingClientRect(); if (y < r.top + r.height / 2) return j; }
+    return rows.length; };
+  const dragStart = (e, i) => {
+    if (e.target.closest('button,input,select,label,a,textarea')) return;
+    pending.current = { from: i, startY: e.clientY, active: false };
+    e.currentTarget.setPointerCapture?.(e.pointerId); };
+  const dragMove = e => {
+    const p = pending.current; if (!p) return;
+    if (!p.active) { if (Math.abs(e.clientY - p.startY) < 8) return; p.active = true; setDrag({ from: p.from }); }
+    e.preventDefault();
+    const over = dropIndex(e.clientY); overRef.current = over;
+    const rr = listRef.current?.getBoundingClientRect(), el = over > 0 ? rowRefs.current[over - 1] : rowRefs.current[over];
+    if (!rr || !el) return;
+    const b = el.getBoundingClientRect();
+    setLineY((over > 0 ? b.bottom : b.top) - rr.top); };
+  const dragEnd = e => {
+    const p = pending.current; pending.current = null; setDrag(null);
+    if (!p?.active) return;
+    justDrag.current = true; setTimeout(() => justDrag.current = false, 0);
+    persistOrder(dropRankRow(ids, addPos, p.from, overRef.current ?? dropIndex(e.clientY))); };
+  const rowProps = i => ({ ref: el => rowRefs.current[i] = el, onPointerDown: e => dragStart(e, i), onPointerMove: dragMove, onPointerUp: dragEnd, onPointerCancel: dragEnd });
+  return <div className="form ranks" ref={listRef}><h4 className="rhead">Rangs & privilèges</h4>
+    {drag && <div className="inl" style={{ top: lineY + 'px' }} />}
     {rows.map((row, i) => {
-      if (row.add) return <div key="add" className="item radd" title="Ajouter un rang" onClick={() => setOpen(true)}>
-        <span /><button className="plus" aria-label="Ajouter un rang" onClick={() => setOpen(true)}><Plus size={26} strokeWidth={2.5} /></button>
+      if (row.add) return <div key="add" className={'item radd' + (drag?.from === i ? ' rkdr' : '')} title="Ajouter un rang" onClick={() => { if (justDrag.current) return; setOpen(true); }} {...rowProps(i)}>
+        <label className="tgl" title="Position d'insertion du nouveau rang"><span>{below ? 'insertion en dessous' : 'insertion au-dessus'}</span>
+          <span className="trk"><input type="checkbox" checked={below} onChange={e => setBelow(e.target.checked)} /><span className="knob" /></span></label>
+        <button className="plus" aria-label="Ajouter un rang" onClick={() => setOpen(true)}><Plus size={26} strokeWidth={2.5} /></button>
         <Arrows i={i} len={rows.length} onMove={moveRow} /></div>;
       const r = g.ranks.find(x => x.id === row.id);
-      return <div key={r.id} className="item rcard"><div className="head"><b>{r.name}</b>
+      return <div key={r.id} className={'item rcard' + (drag?.from === i ? ' rkdr' : '')} {...rowProps(i)}><div className="head"><b>{r.name}</b>
         <span className="row">{r.is_leader && <span className="pill">Chef — tous les droits</span>}
           {ren === r.id ? <span className="row"><input value={rname} onChange={e => setRname(e.target.value)} /><button className="primary" onClick={() => saveRename(r)}>Renommer</button></span>
             : <button title={`Renommer « ${r.name} »`} onClick={() => { setRen(r.id); setRname(r.name); }}><Pencil size={13} /></button>}
           <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>
         <div className="grid2">{PERMS.map(([k, l]) => <label key={k} className="chk"><input type="checkbox" disabled={r.is_leader} checked={r.is_leader || !!r.permissions[k]} onChange={e => run(() => api(`/guilds/ranks/${r.id}/permission`, { characterId: me.id, permission: k, value: e.target.checked }), load)} /> {l}</label>)}</div></div>;
     })}
-    {open && <NewRankModal me={me} run={run} load={load} onClose={() => setOpen(false)} />}
+    {open && <NewRankModal me={me} run={run} load={load} onCreated={afterCreate} onClose={() => setOpen(false)} />}
   </div>;
 }
 function NoGuild({ me, run, reload }) {
