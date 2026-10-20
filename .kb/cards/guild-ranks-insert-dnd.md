@@ -32,6 +32,9 @@ All in `src/components/Guild.jsx` (Manage tab) with pure helpers in `src/lib/gui
 ## Cross-references
 - Later evolution of the manage section: the **default rank for newcomers** (single-choice radio, `POST /guilds/default-rank`) — card `guild-default-rank-ui`.
 
+## Cross-references
+- The manage-tab drag & drop logic was extracted into the shared hook `src/lib/drag.js:useDrag` (reused by the forum v2 add/topic lists — card `guild-forum-v2`); behaviour is unchanged (8 px arm threshold, `.rkdr`/`.inl` visuals, drop → `dropRankRow` → reorder API).
+
 ## Data flow
 - Toggle + create: modal submit → `POST /guilds/ranks` (end of list) → refetch → `insertRankTarget` (target order from `addPos` + `below`) → `POST /guilds/reorder` when it differs → `load()` → cards re-render with the new rank above/below the add card as toggled.
 - Drag: pointerdown → (8 px) drag state → pointermove: `dropIndex` + insertion line y (measured) → pointerup: `dropRankRow` → persist when the ranks order changed → `load()`.

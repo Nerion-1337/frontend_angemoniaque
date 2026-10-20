@@ -143,3 +143,29 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .drank .drow{display:flex;flex-wrap:wrap;gap:4px 14px}
 .drank .chk{white-space:nowrap}
 .drank small{margin-top:6px}
+/* ---- Forum v2 : typo centrée, descriptions, badges non-lus, panneau droits par rang, carte de message ---- */
+.fhead2{display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+.fhead2 .btnlike,.fhead2 .backbtn{justify-self:end}
+.fdesc{font-size:.78rem;opacity:.75;text-align:center;margin:-4px 0 8px}
+.fcard{min-height:88px}
+.unread{display:inline-block;min-width:20px;margin-left:8px;padding:0 7px;border-radius:10px;background:var(--halo);color:#241b05;font-size:.72rem;font-weight:700;text-align:center;vertical-align:middle}
+.prow{margin-top:8px}
+.prow .btnlike{align-self:flex-start}
+.ppanel{margin-top:8px;padding:10px;border:1px dashed rgba(240,210,138,.35);border-radius:10px;background:rgba(240,210,138,.04)}
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:6px;margin:8px 0}
+.pp{display:flex;align-items:center;gap:6px;font-size:.82rem}
+.pp b{flex:1}
+.pp small{opacity:.6}
+.edrow{display:flex;gap:8px;margin-top:8px;align-items:flex-start}
+.edrow input,.edrow textarea{flex:1}
+/* Carte de message : auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite */
+.post{display:flex;flex-direction:column;align-items:center;gap:6px}
+.pauthor{display:flex;flex-direction:column;align-items:center;gap:3px}
+.post .avatar{width:40px;height:40px;font-size:16px}
+.prank{font-size:.62rem;letter-spacing:.4px;text-transform:uppercase;color:var(--halo);border:1px solid rgba(240,210,138,.4);border-radius:8px;padding:0 7px}
+.post .postbody{max-width:92%;text-align:center;padding:4px 0}
+.ptime{margin-top:auto;align-self:flex-end;font-size:.65rem;opacity:.6}
+/* Liste du forum v2 : conteneur positionné (ligne d'insertion du drag & drop) + prise tactile */
+.fview{position:relative}
+.fcard{touch-action:none;cursor:grab}
+.fcard:active{cursor:grabbing}

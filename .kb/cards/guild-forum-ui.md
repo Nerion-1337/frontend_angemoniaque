@@ -39,6 +39,9 @@ All in "src/components/Guild.jsx" (subcomponents of "GuildModal", "Forum" tab):
 ## Tests
 - "test/fmt.test.js" (pure vitest): HTML escaping, bold + italic, standalone "#ff0000" colored vs. "hex within a word" left as-is, newline → "<br>", null → empty. The reorder API side is covered by "back/test/integration/guild-forum.test.ts"; the drilldown/modals themselves are not unit-tested (no DOM library in this repo — end-to-end via "npm test" + integration + visual).
 
+## Cross-references
+- The forum was redesigned (v2): centered titles, description fields, add cards with insertion toggle, drag & drop, per-rank Voir/Écrire panels, unread badges, restructured message cards — card `guild-forum-v2` (see also back `guild-forum-perms`). The drill-down navigation described here survives as the base pattern.
+
 ## Gotchas
 - Nested modals: three modals can be stacked (guild > category/topic). Esc closes all of them (existing "Modal" pattern: one "keydown" listener per instance). An interrupted draft is lost — accepted.
 - The "selitem" pattern (a clickable "<div class='row2 sel'>" + an inner "<button>") exists precisely to avoid the forbidden "<button>" inside "<button>" (the reordering arrows). Do not replace the outer div with a button.

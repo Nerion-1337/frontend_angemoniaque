@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronUp, ChevronDown } from 'lucide-react';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget } from '../lib/guild'; import { fmt } from '../lib/fmt';
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt } from '../lib/fmt';
 const PERMS = [['accept_applicants', 'Accepter des postulants'], ['send_invites', 'Envoyer des invitations'], ['create_topics', 'Créer catégories et sujets'], ['assign_ranks', 'Attribuer des rangs']], words = t => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.map(r => <button type="button" key={r.id} className={'pill' + (value.includes(r.name) ? ' on' : '')} onClick={() => onChange(value.includes(r.name) ? value.filter(x => x !== r.name) : [...value, r.name])}>{r.name}</button>)}</div>;
 function Pres({ g, me, run, load, leave }) {
@@ -20,40 +20,136 @@ function Members({ g, me, run, load }) {
 }
 const AV = ['#c8a24a', '#7fa8d9', '#9d7fce', '#7fce9d', '#d98f7f', '#69c9c9'];
 const Avatar = ({ p }) => <span className="avatar" style={{ background: AV[[...p].reduce((h, c) => h + c.charCodeAt(0), 0) % AV.length] }}>{(p[0] || '?').toUpperCase()}</span>;
-const Post = ({ p }) => <div className="post"><Avatar p={p.pseudo} /><b>{p.pseudo}</b><div className="postbody" dangerouslySetInnerHTML={{ __html: fmt(p.body) }} /></div>;
-function NewFolderModal({ g, me, run, load, onClose }) {
-  const [name, setName] = useState(''), [fr, setFr] = useState(g.ranks.map(r => r.name));
+// Carte de message : bloc auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite.
+const Post = ({ p }) => <div className="post"><div className="pauthor"><Avatar p={p.pseudo} />{p.rank && <span className="prank">{p.rank}</span>}<b>{p.pseudo}</b></div>
+  <div className="postbody" dangerouslySetInnerHTML={{ __html: fmt(p.body) }} /><small className="ptime">{new Date(p.created_at).toLocaleString('fr-FR')}</small></div>;
+function NewFolderModal({ g, me, run, load, onClose, onCreated }) {
+  const [name, setName] = useState(''), [desc, setDesc] = useState(''), [fr, setFr] = useState(g.ranks.map(r => r.name)), [wr, setWr] = useState(g.ranks.map(r => r.name));
   return <Modal onClose={onClose} className="inv guild" label="Nouvelle catégorie"><div className="form"><h4><Plus size={14} /> Nouvelle catégorie</h4><input placeholder="Titre…" value={name} onChange={e => setName(e.target.value)} />
-    <small>Rangs autorisés à la voir :</small><RankPick ranks={g.ranks} value={fr} onChange={setFr} />
-    <button className="primary" disabled={!name.trim()} onClick={() => run(() => api('/guilds/folders', { characterId: me.id, name: name.trim(), visibleRanks: fr }), () => { onClose(); load(); })}>Créer la catégorie</button></div></Modal>;
+    <textarea rows={2} placeholder="Description (facultative)…" value={desc} onChange={e => setDesc(e.target.value)} />
+    <small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={fr} onChange={setFr} />
+    <small>Qui peut ÉCRIRE (créer des sujets) :</small><RankPick ranks={g.ranks} value={wr} onChange={setWr} />
+    <button className="primary" disabled={!name.trim()} onClick={() => run(() => api('/guilds/folders', { characterId: me.id, name: name.trim(), description: desc.trim() || undefined, visibleRanks: fr, writeRanks: wr }), () => { onClose(); (onCreated ?? load)(); })}>Créer la catégorie</button></div></Modal>;
 }
-function NewTopicModal({ g, folder, me, run, load, onClose }) {
-  const [t, setT] = useState({ title: '', body: '' }), [tr, setTr] = useState(g.ranks.map(r => r.name));
+function NewTopicModal({ g, folder, me, run, load, onClose, onCreated }) {
+  const [t, setT] = useState({ title: '', body: '', description: '' }), [tr, setTr] = useState([]), [tw, setTw] = useState([]), [inhR, setInhR] = useState(true), [inhW, setInhW] = useState(true);
   return <Modal onClose={onClose} className="inv guild" label="Nouveau sujet"><div className="form"><h4><Plus size={14} /> Nouveau sujet — {folder.name}</h4>
     <input placeholder="Titre du sujet…" value={t.title} onChange={e => setT({ ...t, title: e.target.value })} />
     <textarea rows={4} placeholder="Contenu… (**gras** · *italique* · #rrggbb)" value={t.body} onChange={e => setT({ ...t, body: e.target.value })} />
-    <small>Visible aux rangs :</small><RankPick ranks={g.ranks} value={tr} onChange={setTr} />
-    <button className="primary" disabled={!t.title.trim() || !t.body.trim()} onClick={() => run(() => api('/guilds/topics', { characterId: me.id, folderId: folder.id, title: t.title.trim(), body: t.body, visibleRanks: tr }), () => { onClose(); load(); })}>Publier le sujet</button></div></Modal>;
+    <textarea rows={2} placeholder="Description (facultative)…" value={t.description} onChange={e => setT({ ...t, description: e.target.value })} />
+    <label className="chk"><input type="checkbox" checked={inhR} onChange={e => setInhR(e.target.checked)} /> Lecture héritée de la catégorie</label>
+    {!inhR && <><small>Qui peut VOIR :</small><RankPick ranks={g.ranks} value={tr} onChange={setTr} /></>}
+    <label className="chk"><input type="checkbox" checked={inhW} onChange={e => setInhW(e.target.checked)} /> Écriture héritée de la catégorie</label>
+    {!inhW && <><small>Qui peut ÉCRIRE :</small><RankPick ranks={g.ranks} value={tw} onChange={setTw} /></>}
+    <button className="primary" disabled={!t.title.trim() || !t.body.trim()} onClick={() => run(() => api('/guilds/topics', { characterId: me.id, folderId: folder.id, title: t.title.trim(), body: t.body, description: t.description.trim() || undefined, visibleRanks: inhR ? [] : tr, writeRanks: inhW ? undefined : tw }), () => { onClose(); (onCreated ?? load)(); })}>Publier le sujet</button></div></Modal>;
+}
+function PermsPanel({ kind, g, target, me, run, onDone }) {
+  const inhR = kind === 'topics' && (target.visible_ranks ?? []).length === 0;
+  const inhW = target.write_ranks === null;
+  const [pm, setPm] = useState({ read: [...(target.visible_ranks ?? [])], write: [...(target.write_ranks ?? [])] });
+  const [iR, setIR] = useState(inhR), [iW, setIW] = useState(inhW);
+  const setR = (rn, v) => setPm(p => v ? { ...p, read: p.read.includes(rn) ? p.read : [...p.read, rn] }
+    : { read: p.read.filter(x => x !== rn), write: p.write.filter(x => x !== rn) }); // voir décoché → écrire aussi
+  const setW = (rn, v) => setPm(p => v ? { write: p.write.includes(rn) ? p.write : [...p.write, rn], read: p.read.includes(rn) ? p.read : [...p.read, rn] }
+    : { ...p, write: p.write.filter(x => x !== rn) }); // écrire coché → voir coché
+  const save = () => run(() => api(`/guilds/${kind}/${target.id}/perms`, { characterId: me.id, readRanks: iR ? null : pm.read, writeRanks: iW ? null : pm.write }), onDone);
+  const read = iR ? [] : pm.read, write = iW ? [] : pm.write;
+  return <div className="ppanel">
+    {kind === 'topics' && <div className="row"><label className="chk"><input type="checkbox" checked={iR} onChange={e => setIR(e.target.checked)} /> Lecture héritée de la catégorie</label>
+      <label className="chk"><input type="checkbox" checked={iW} onChange={e => setIW(e.target.checked)} /> Écriture héritée de la catégorie</label></div>}
+    <div className="pgrid">{g.ranks.map(r => <div key={r.id} className="pp"><input type="checkbox" disabled={kind === 'topics' && iR} checked={read.includes(r.name)} onChange={e => setR(r.name, e.target.checked)} /><input type="checkbox" disabled={kind === 'topics' && iW} checked={write.includes(r.name)} onChange={e => setW(r.name, e.target.checked)} /><b>{r.name}</b>{r.is_leader && <small> (tous droits)</small>}</div>)}</div>
+    <div className="row"><button className="primary" onClick={save}>Enregistrer les droits</button><small>Le Chef dépasse toujours ces droits ; écrire est limité à « voir ».</small></div>
+  </div>;
 }
 function Forum({ g, me, run, load }) {
-  const can = g.me.permissions.create_topics, [fid, setFid] = useState(null), [tid, setTid] = useState(null), [posts, setPosts] = useState([]), [reply, setReply] = useState(''), [nfold, setNfold] = useState(false), [ntopic, setNtopic] = useState(false);
+  const can = g.me.permissions.create_topics, lead = g.me.leader;
+  const [fid, setFid] = useState(null), [tid, setTid] = useState(null), [posts, setPosts] = useState([]), [reply, setReply] = useState('');
+  const [nfold, setNfold] = useState(false), [ntopic, setNtopic] = useState(false);
+  const [fAdd, setFAdd] = useState(null), [fBelow, setFBelow] = useState(false);
+  const [tAdd, setTAdd] = useState(null), [tBelow, setTBelow] = useState(false);
+  const [fpOpen, setFpOpen] = useState(null), [tpOpen, setTpOpen] = useState(null);
+  const [fEd, setFEd] = useState(null), [tEd, setTEd] = useState(null);
+  const fListRef = useRef(null), tListRef = useRef(null);
   const folder = g.folders.find(f => f.id === fid), topic = folder?.topics.find(x => x.id === tid);
-  const open = async x => { setTid(x.id); setPosts(await api(`/guilds/topics/${me.id}/${x.id}`).catch(() => [])); };
+  const open = async x => { setTid(x.id); setPosts(await api(`/guilds/topics/${me.id}/${x.id}`).catch(() => [])); load(); }; // ouverture → messages marqués lus (back) + résync des badges
   const back = () => (tid !== null ? setTid(null) : setFid(null));
-  const move = (kind, list, i, dir) => { const j = i + dir; if (j < 0 || j >= list.length) return; const ids = list.map(x => x.id); [ids[i], ids[j]] = [ids[j], ids[i]]; run(() => api('/guilds/reorder', { characterId: me.id, kind, ...(kind === 'topics' ? { folderId: fid } : {}), ids }), load); };
-  const arrows = (kind, list, i) => !can ? null : <span className="ord"><button title="Monter" disabled={i === 0} onClick={() => move(kind, list, i, -1)}><ChevronUp size={14} /></button><button title="Descendre" disabled={i === list.length - 1} onClick={() => move(kind, list, i, 1)}><ChevronDown size={14} /></button></span>;
+  const fIds = g.folders.map(f => f.id), tIds = (folder?.topics ?? []).map(t => t.id);
+  const fRows = displayRanks(fIds, fAdd), tRows = displayRanks(tIds, tAdd);
+  const persistF = n => { setFAdd(n.addPos); if (n.ids.join() !== fIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'folders', ids: n.ids }), load); };
+  const persistT = n => { setTAdd(n.addPos); if (n.ids.join() !== tIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'topics', folderId: fid, ids: n.ids }), load); };
+  const fdnd = useDrag(fRows.length, (from, to) => persistF(dropRankRow(fIds, fAdd, from, to)), fListRef);
+  const tdnd = useDrag(tRows.length, (from, to) => persistT(dropRankRow(tIds, tAdd, from, to)), tListRef);
+  const afterFold = () => api(`/guilds/${me.id}`).then(s2 => {
+    const newId = s2.folders[s2.folders.length - 1].id, prev = s2.folders.slice(0, -1).map(x => x.id);
+    const target = insertRankTarget(prev, fAdd, newId, fBelow);
+    if (target.join() !== s2.folders.map(x => x.id).join()) return api('/guilds/reorder', { characterId: me.id, kind: 'folders', ids: target }).then(load).catch(load);
+    return load(); }).catch(() => load());
+  const afterTopic = () => api(`/guilds/${me.id}`).then(s2 => {
+    const fl = s2.folders.find(f => f.id === fid), newId = fl.topics[fl.topics.length - 1].id, prev = fl.topics.slice(0, -1).map(x => x.id);
+    const target = insertRankTarget(prev, tAdd, newId, tBelow);
+    if (target.join() !== fl.topics.map(x => x.id).join()) return api('/guilds/reorder', { characterId: me.id, kind: 'topics', folderId: fid, ids: target }).then(load).catch(load);
+    return load(); }).catch(() => load());
+  const saveFEd = f => run(() => api(`/guilds/folders/${f.id}/edit`, { characterId: me.id, name: fEd.name, description: fEd.description ?? '' }), () => { setFEd(null); load(); });
+  const saveTEd = t => run(() => api(`/guilds/topics/${t.id}/edit`, { characterId: me.id, title: tEd.title, description: tEd.description ?? '' }), () => { setTEd(null); load(); });
+  const unread = g.unread ?? { topics: {}, folders: {} };
   return <div className="forum">
-    {!folder && <><div className="row2 fhead"><h4>Catégories</h4>{can && <button className="btnlike" title="Créer une catégorie" onClick={() => setNfold(true)}><Plus size={14} /></button>}</div>
-      {g.folders.map((f, i) => <div key={f.id} className="row2 sel"><button className="selitem" onClick={() => { setFid(f.id); setTid(null); }}><span>{f.name}</span><small><Eye size={12} /> {f.visible_ranks.join(', ')}</small></button>{arrows('folders', g.folders, i)}</div>)}
-      {!g.folders.length && <small>Aucune catégorie : créez-en une avec le bouton +.</small>}</>}
-    {folder && tid === null && <><div className="row2 fhead"><h4><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button> <b>{folder.name}</b></h4>{can && <button className="btnlike" title="Créer un sujet" onClick={() => setNtopic(true)}><Plus size={14} /></button>}</div>
-      {(folder.topics ?? []).map((x, i) => <div key={x.id} className="row2 sel"><button className="selitem" onClick={() => open(x)}><span>{x.title}</span><small>par {x.author} · {x.visible_ranks.join(', ')}</small></button>{arrows('topics', folder.topics, i)}</div>)}
-      {!(folder.topics?.length) && <small>Aucun sujet dans cette catégorie.</small>}</>}
-    {topic && <><div className="row2 fhead"><h4><button className="backbtn" onClick={back} title="Retour aux sujets"><ArrowLeft size={15} /> Sujets</button> <b>{topic.title}</b></h4></div>
-      <div className="posts">{posts.map((p, i) => <Post key={i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
-      <div className="replyrow"><input value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… (**gras** · *italique* · #rrggbb)" /><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); })}>Envoyer</button></div></>}
-    {nfold && <NewFolderModal g={g} me={me} run={run} load={load} onClose={() => setNfold(false)} />}
-    {ntopic && <NewTopicModal g={g} folder={folder} me={me} run={run} load={load} onClose={() => setNtopic(false)} />}
+    {!folder && <div className="fview" ref={fListRef}>
+      <div className="row2 fhead2"><span /><h4 className="rhead">Catégories</h4>{can && <button className="btnlike" title="Créer une catégorie" onClick={() => setNfold(true)}><Plus size={14} /></button>}</div>
+      {fdnd.drag && <div className="inl" style={{ top: fdnd.lineY + 'px' }} />}
+      {fRows.map((row, i) => {
+        if (row.add) return <div key="add" className={'item radd' + (fdnd.drag?.from === i ? ' rkdr' : '')} title="Ajouter une catégorie" onClick={() => { if (fdnd.justDrag.current) return; setNfold(true); }} {...fdnd.rowProps(i)}>
+          <label className="tgl" title="Position d'insertion de la nouvelle catégorie" onClick={e => e.stopPropagation()}><span>{fBelow ? 'insertion en dessous' : 'insertion au-dessus'}</span>
+            <span className="trk"><input type="checkbox" checked={fBelow} onChange={e => setFBelow(e.target.checked)} /><span className="knob" /></span></label>
+          <button className="plus" aria-label="Ajouter une catégorie" onClick={() => setNfold(true)}><Plus size={26} strokeWidth={2.5} /></button>
+          <span className="aacts">{can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}</span></div>;
+        const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0;
+        return <div key={f.id} className={'item fcard' + (fdnd.drag?.from === i ? ' rkdr' : '')} {...fdnd.rowProps(i)}>
+          <div className="row2 sel"><button className="selitem" onClick={() => { setFid(f.id); setTid(null); setFpOpen(null); }}><span><b>{f.name}</b>{u > 0 && <span className="unread">{u}</span>}</span><small><Eye size={12} /> {f.visible_ranks.length ? f.visible_ranks.join(', ') : 'personne (hors Chef)'}</small></button>
+            <span className="row">{can && <button title="Éditer" onClick={() => { setFEd({ id: f.id, name: f.name, description: f.description ?? '' }); setFpOpen(null); }}><Pencil size={13} /></button>}
+              {can && <Arrows i={i} len={fRows.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, a, d))} />}</span></div>
+          {f.description && <small className="fdesc">{f.description}</small>}
+          {fEd?.id === f.id && <div className="edrow"><input value={fEd.name} onChange={e => setFEd({ ...fEd, name: e.target.value })} /><textarea rows={2} placeholder="Description…" value={fEd.description} onChange={e => setFEd({ ...fEd, description: e.target.value })} /><button className="primary" onClick={() => saveFEd(f)}>Enregistrer</button></div>}
+          {lead && <div className="prow"><button className="btnlike" onClick={() => setFpOpen(fpOpen === f.id ? null : f.id)}>{fpOpen === f.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
+            {fpOpen === f.id && <PermsPanel kind="folders" g={g} target={f} me={me} run={run} onDone={() => { setFpOpen(null); load(); }} />}</div>}
+        </div>;
+      })}
+      {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
+    </div>}
+    {folder && tid === null && <div className="fview" ref={tListRef}>
+      <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button>
+        <h4 className="rhead">{folder.name}</h4>{can && <button className="btnlike" title="Créer un sujet" onClick={() => setNtopic(true)}><Plus size={14} /></button>}</div>
+      {tdnd.drag && <div className="inl" style={{ top: tdnd.lineY + 'px' }} />}
+      {tRows.map((row, i) => {
+        if (row.add) return <div key="add" className={'item radd' + (tdnd.drag?.from === i ? ' rkdr' : '')} title="Ajouter un sujet" onClick={() => { if (tdnd.justDrag.current) return; setNtopic(true); }} {...tdnd.rowProps(i)}>
+          <label className="tgl" title="Position d'insertion du nouveau sujet" onClick={e => e.stopPropagation()}><span>{tBelow ? 'insertion en dessous' : 'insertion au-dessus'}</span>
+            <span className="trk"><input type="checkbox" checked={tBelow} onChange={e => setTBelow(e.target.checked)} /><span className="knob" /></span></label>
+          <button className="plus" aria-label="Ajouter un sujet" onClick={() => setNtopic(true)}><Plus size={26} strokeWidth={2.5} /></button>
+          <span className="aacts">{can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}</span></div>;
+        const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0;
+        return <div key={x.id} className={'item fcard' + (tdnd.drag?.from === i ? ' rkdr' : '')} {...tdnd.rowProps(i)}>
+          <div className="row2 sel"><button className="selitem" onClick={() => open(x)}><span><b>{x.title}</b>{un > 0 && <span className="unread">{un}</span>}</span><small>par {x.author} · {(x.visible_ranks ?? []).length ? `voir : ${x.visible_ranks.join(', ')}` : 'lecture héritée'}</small></button>
+            <span className="row">{can && <button title="Éditer" onClick={() => { setTEd({ id: x.id, title: x.title, description: x.description ?? '' }); setTpOpen(null); }}><Pencil size={13} /></button>}
+              {can && <Arrows i={i} len={tRows.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, a, d))} />}</span></div>
+          {x.description && <small className="fdesc">{x.description}</small>}
+          {tEd?.id === x.id && <div className="edrow"><input value={tEd.title} onChange={e => setTEd({ ...tEd, title: e.target.value })} /><textarea rows={2} placeholder="Description…" value={tEd.description} onChange={e => setTEd({ ...tEd, description: e.target.value })} /><button className="primary" onClick={() => saveTEd(x)}>Enregistrer</button></div>}
+          {lead && <div className="prow"><button className="btnlike" onClick={() => setTpOpen(tpOpen === x.id ? null : x.id)}>{tpOpen === x.id ? 'Masquer les droits' : 'Droits par rang (Voir / Écrire)'}</button>
+            {tpOpen === x.id && <PermsPanel kind="topics" g={g} target={x} me={me} run={run} onDone={() => { setTpOpen(null); load(); }} />}</div>}
+        </div>;
+      })}
+      {!(folder.topics?.length) && <small>Aucun sujet dans cette catégorie.</small>}
+    </div>}
+    {topic && <div className="fview">
+      <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux sujets"><ArrowLeft size={15} /> Sujets</button>
+        <h4 className="rhead">{topic.title}</h4>{can && <button className="btnlike" title="Éditer le sujet" onClick={() => setTEd({ id: topic.id, title: topic.title, description: topic.description ?? '' })}><Pencil size={13} /></button>}</div>
+      {topic.description && <small className="fdesc">{topic.description}</small>}
+      {tEd?.id === topic.id && <div className="edrow"><input value={tEd.title} onChange={e => setTEd({ ...tEd, title: e.target.value })} /><textarea rows={2} placeholder="Description…" value={tEd.description} onChange={e => setTEd({ ...tEd, description: e.target.value })} /><button className="primary" onClick={() => saveTEd(topic)}>Enregistrer</button></div>}
+      <div className="posts">{posts.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
+      {lead || effWrite(topic, folder).includes(g.me.rank)
+        ? <div className="replyrow"><input value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… (**gras** · *italique* · #rrggbb)" /><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); })}>Envoyer</button></div>
+        : <small>Votre rang ne permet pas de répondre dans ce sujet.</small>}
+    </div>}
+    {nfold && <NewFolderModal g={g} me={me} run={run} load={load} onCreated={afterFold} onClose={() => setNfold(false)} />}
+    {ntopic && <NewTopicModal g={g} folder={folder} me={me} run={run} load={load} onCreated={afterTopic} onClose={() => setNtopic(false)} />}
   </div>;
 }
 function NewRankModal({ me, run, load, onClose, onCreated }) {
@@ -68,8 +164,7 @@ function Arrows({ i, len, onMove }) {
 function Manage({ g, me, run, load }) {
   const [open, setOpen] = useState(false), [ren, setRen] = useState(null), [rname, setRname] = useState('');
   const [addPos, setAddPos] = useState(null), [below, setBelow] = useState(false);
-  const [drag, setDrag] = useState(null), [lineY, setLineY] = useState(0);
-  const pending = useRef(null), overRef = useRef(null), justDrag = useRef(false), rowRefs = useRef([]), listRef = useRef(null);
+  const listRef = useRef(null);
   const ids = g.ranks.map(r => r.id), rows = displayRanks(ids, addPos);
   const persistOrder = n => { setAddPos(n.addPos);
     if (n.ids.join() !== ids.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'ranks', ids: n.ids }), load); };
@@ -84,43 +179,20 @@ function Manage({ g, me, run, load }) {
     if (target.join() !== s2.ranks.map(r => r.id).join()) return api('/guilds/reorder', { characterId: me.id, kind: 'ranks', ids: target }).then(load).catch(load);
     return load();
   }).catch(() => load());
-  // Drag & drop (appui + glissement) : pointeur avec seuil de 8 px pour préserver les clics ; le drag ne
-  // démarre jamais depuis un champ/bouton interne à la carte (renommage, flèches, cases) ; la ligne dorée
-  // indique la position d'insertion.
-  const dropIndex = y => { const rr = listRef.current?.getBoundingClientRect(); if (!rr) return rows.length;
-    for (let j = 0; j < rows.length; j++) { const el = rowRefs.current[j]; if (!el) continue;
-      const r = el.getBoundingClientRect(); if (y < r.top + r.height / 2) return j; }
-    return rows.length; };
-  const dragStart = (e, i) => {
-    if (e.target.closest('button,input,select,label,a,textarea')) return;
-    pending.current = { from: i, startY: e.clientY, active: false };
-    e.currentTarget.setPointerCapture?.(e.pointerId); };
-  const dragMove = e => {
-    const p = pending.current; if (!p) return;
-    if (!p.active) { if (Math.abs(e.clientY - p.startY) < 8) return; p.active = true; setDrag({ from: p.from }); }
-    e.preventDefault();
-    const over = dropIndex(e.clientY); overRef.current = over;
-    const rr = listRef.current?.getBoundingClientRect(), el = over > 0 ? rowRefs.current[over - 1] : rowRefs.current[over];
-    if (!rr || !el) return;
-    const b = el.getBoundingClientRect();
-    setLineY((over > 0 ? b.bottom : b.top) - rr.top); };
-  const dragEnd = e => {
-    const p = pending.current; pending.current = null; setDrag(null);
-    if (!p?.active) return;
-    justDrag.current = true; setTimeout(() => justDrag.current = false, 0);
-    persistOrder(dropRankRow(ids, addPos, p.from, overRef.current ?? dropIndex(e.clientY))); };
-  const rowProps = i => ({ ref: el => rowRefs.current[i] = el, onPointerDown: e => dragStart(e, i), onPointerMove: dragMove, onPointerUp: dragEnd, onPointerCancel: dragEnd });
+  // Drag & drop partagé avec le forum (lib/drag.js) : appui 8 px + glissement, opacité réduite de la
+  // ligne tractée, ligne dorée d'insertion ; au relâchement, recalcul + persistance si l'ordre change.
+  const dnd = useDrag(rows.length, (from, to) => persistOrder(dropRankRow(ids, addPos, from, to)), listRef);
   return <div className="form ranks" ref={listRef}><h4 className="rhead">Rangs & privilèges</h4>
-    {drag && <div className="inl" style={{ top: lineY + 'px' }} />}
+    {dnd.drag && <div className="inl" style={{ top: dnd.lineY + 'px' }} />}
     {rows.map((row, i) => {
-      if (row.add) return <div key="add" className={'item radd' + (drag?.from === i ? ' rkdr' : '')} title="Ajouter un rang" onClick={() => { if (justDrag.current) return; setOpen(true); }} {...rowProps(i)}>
+      if (row.add) return <div key="add" className={'item radd' + (dnd.drag?.from === i ? ' rkdr' : '')} title="Ajouter un rang" onClick={() => { if (dnd.justDrag.current) return; setOpen(true); }} {...dnd.rowProps(i)}>
         <span />
         <button className="plus" aria-label="Ajouter un rang" onClick={() => setOpen(true)}><Plus size={26} strokeWidth={2.5} /></button>
         <span className="aacts"><label className="tgl" title="Position d'insertion du nouveau rang — le clic ne doit pas ouvrir la modale" onClick={e => e.stopPropagation()}><span>{below ? 'insertion en dessous' : 'insertion au-dessus'}</span>
           <span className="trk"><input type="checkbox" checked={below} onChange={e => setBelow(e.target.checked)} /><span className="knob" /></span></label>
           <Arrows i={i} len={rows.length} onMove={moveRow} /></span></div>;
       const r = g.ranks.find(x => x.id === row.id);
-      return <div key={r.id} className={'item rcard' + (drag?.from === i ? ' rkdr' : '')} {...rowProps(i)}><div className="head"><b>{r.name}</b>
+      return <div key={r.id} className={'item rcard' + (dnd.drag?.from === i ? ' rkdr' : '')} {...dnd.rowProps(i)}><div className="head"><b>{r.name}</b>
         <span className="row">{r.is_leader && <span className="pill">Chef — tous les droits</span>}
           {ren === r.id ? <span className="row"><input value={rname} onChange={e => setRname(e.target.value)} /><button className="primary" onClick={() => saveRename(r)}>Renommer</button></span>
             : <button title={`Renommer « ${r.name} »`} onClick={() => { setRen(r.id); setRname(r.name); }}><Pencil size={13} /></button>}

@@ -25,3 +25,6 @@ export const insertRankTarget = (ids, addPos, newId, below) => {
   const p = addPos == null ? ids.length : addPos;
   const ins = Math.max(0, Math.min(p + (below ? 1 : 0), ids.length + 1));
   const n = [...ids]; n.splice(Math.min(ins, n.length), 0, newId); return n; };
+/** Droits d'écriture effectifs d'un sujet : sa `write_ranks` (NULL = hérite de la catégorie,
+ *  `{}` = explicitement personne hors Chef), repli sur `write_ranks` de la catégorie si NULL. */
+export const effWrite = (topic, folder) => topic.write_ranks === null ? (folder.write_ranks ?? []) : (topic.write_ranks ?? []);

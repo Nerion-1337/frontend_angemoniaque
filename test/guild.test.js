@@ -18,3 +18,7 @@ test('insertRankTarget : au-dessus par défaut + carte ajout en dernier = fin de
 test('insertRankTarget : au-dessus avec carte ajout déplacée en 2 → insertion au milieu', () => expect(insertRankTarget([1, 2, 3], 1, 9, false)).toEqual([1, 9, 2, 3]));
 test('insertRankTarget : en dessous avec carte ajout en dernière position → fin de liste (la carte d’ajout s’affiche avant le nouveau rang)', () => expect(insertRankTarget([1, 2, 3], 3, 9, true)).toEqual([1, 2, 3, 9]));
 test('insertRankTarget : en dessous avec carte ajout en position 2 → rang juste après la carte d’ajout', () => expect(insertRankTarget([1, 2, 3], 1, 9, true)).toEqual([1, 2, 9, 3]));
+import { effWrite } from '../src/lib/guild';
+test('effWrite : sujet NULL hérite de la catégorie', () => expect(effWrite({ write_ranks: null }, { write_ranks: ['Officier'] })).toEqual(['Officier']));
+test('effWrite : sujet explicite [] = personne (hors Chef)', () => expect(effWrite({ write_ranks: [] }, { write_ranks: ['Officier'] })).toEqual([]));
+test('effWrite : sujet explicite propre', () => expect(effWrite({ write_ranks: ['Membre'] }, { write_ranks: ['Officier'] })).toEqual(['Membre']));
