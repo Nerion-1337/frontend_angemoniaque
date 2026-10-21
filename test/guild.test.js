@@ -174,6 +174,9 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   expect(css).toContain('.pagenav{display:flex');
   // .post pleine largeur (comme les .item.fcard) ; textarea de réponse 80 % centré + bouton dessous
   expect(css).not.toContain('.post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;max-width');
+  // .post à pleine largeur comme .item.fcard : width:100% (jamais de « margin:0 auto » — en flex-column ça rétrécit à la largeur de contenu)
+  expect(css).toContain('text-align:left;width:100%;padding:10px 12px;border-radius:12px}');
+  expect(css).not.toContain('margin:0 auto;padding:10px 12px');
   expect(src).toContain('className="rtext"'); expect(css).toContain('.rtext{width:80%'); expect(css).toContain('.rrow{display:flex;justify-content:center');
 });
 test('messages : div auteur à gauche + div message à droite, date bas-droite, fond alterné', () => {

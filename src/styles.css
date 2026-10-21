@@ -112,7 +112,6 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .ord{display:flex;flex-direction:column;gap:2px}
 .ord button{padding:1px 7px}
 .posts{display:flex;flex-direction:column;align-items:center;gap:24px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-.post{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
 .avatar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;font-size:15px;font-weight:700;color:#171225;box-shadow:0 0 0 2px rgba(240,210,138,.4)}
 .post b{font-size:.95em}
 .postbody{line-height:1.55}
@@ -171,7 +170,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Carte de message : auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite */
 /* Carte de message : div auteur à GAUCHE + div message à DROITE ; fond ALTERNÉ pair/impair
    (appliqué au conteneur .post → couvre les deux divs) ; date en bas à droite */
-.post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;margin:0 auto;padding:10px 12px;border-radius:12px}
+/* pleine largeur, même longueur que .item.fcard : width:100% (une « margin:0 auto » sur ce flex-item le rétrécirait à sa largeur de contenu) */
+.post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;width:100%;padding:10px 12px;border-radius:12px}
 .post:nth-child(odd){background:rgba(255,255,255,.05)}
 .post:nth-child(even){background:rgba(240,210,138,.07)}
 .pauthor{flex:none;display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 30px;}
