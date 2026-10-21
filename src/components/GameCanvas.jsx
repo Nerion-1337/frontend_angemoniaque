@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { createScene } from '../three/scene'; import { api } from '../lib/api'; import { A } from '../store';
+import { useEffect, useRef } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { createScene } from '../three/scene'; import { api } from '../lib/api'; import { setWorld } from '../lib/terrain'; import { A } from '../store';
 export function useRefreshMe() {
   const d = useDispatch(), id = useSelector(s => s.game.charId);
-  return async () => { const me = await api(`/characters/${id}`); d(A.setMe(me)); const P = me.actor.pos, ents = await api(`/map/${P.map_id}/area?x=${P.x}&y=${P.y}&r=${me.actor.see}`); d(A.setEntities(ents)); return me; };
+  return async () => { const me = await api(`/characters/${id}`); setWorld(me.actor.pos.map_id); d(A.setMe(me)); const P = me.actor.pos, ents = await api(`/map/${P.map_id}/area?x=${P.x}&y=${P.y}&r=${me.actor.see}`); d(A.setEntities(ents)); return me; };
 }
 export default function GameCanvas() {
   const el = useRef(), api3 = useRef(), d = useDispatch(), { me, entities } = useSelector(s => s.game), refresh = useRefreshMe(), mapId = me?.actor.pos.map_id;

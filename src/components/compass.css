@@ -1,0 +1,6 @@
+.compass.glass{position:fixed;left:14px;bottom:62px;z-index:6;width:94px;height:94px;padding:5px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.compass svg{display:block;transition:transform .06s linear}
+.compass .ring{fill:rgba(8,8,16,.45);stroke:var(--line);stroke-width:1.5}
+.compass .needle{fill:var(--halo)}.compass .tail{fill:rgba(236,232,244,.45)}
+.compass text{text-anchor:middle;font:700 13px var(--serif);fill:var(--ink)}.compass text.n{fill:var(--halo);font-size:15px}
+@media (max-width:900px){.compass.glass{width:74px;height:74px;bottom:60px}.compass svg{width:64px;height:64px}}

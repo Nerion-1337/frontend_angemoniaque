@@ -10,4 +10,4 @@ export function pathEnergy(from, to, { flying = false, aquatic = false, stopAt =
     const c = flying ? 1 : aquatic ? (water(t.kind) ? 1 : Infinity) : t.kind === 'deep' ? Infinity : t.cost; if (!isFinite(c)) return Infinity; cost += c;
   } return cost;
 }
-export const COLORS = { plain: 0x4a7a46, forest: 0x2d5a30, mountain: 0x77777f, shallow: 0x4aa0b0, deep: 0x1b3f7a };
+export const COLORS = { plain: 0x4a7a46, forest: 0x2d5a30, mountain: 0x77777f, shallow: 0x4aa0b0, deep: 0x1b3f7a, arid: 0xc9a86a, snow: 0xe6eef7, ether: 0x3a3548, volcano: 0xd9481f };
