@@ -4,10 +4,30 @@ const g = (leader, members) => ({ me: { leader, rank: leader ? 'Chef' : 'Membre'
 test('le seul porteur du rang Chef est le dernier Chef', () => expect(lastChef(g(true, [{ id: 1, rank_id: 1 }, { id: 2, rank_id: 3 }]))).toBe(true));
 test('un second porteur du rang Chef le libère', () => expect(lastChef(g(true, [{ id: 1, rank_id: 1 }, { id: 2, rank_id: 1 }]))).toBe(false));
 test('un non-Chef n\'est jamais le dernier Chef', () => expect(lastChef(g(false, [{ id: 1, rank_id: 1 }, { id: 2, rank_id: 3 }]))).toBe(false));
-import { displayRanks, moveRankRow } from '../src/lib/guild';
+import { displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite } from '../src/lib/guild';
 test('affichage : la carte d’ajout est en dernier par défaut', () => expect(displayRanks([1, 2, 3])).toEqual([{ id: 1 }, { id: 2 }, { id: 3 }, { add: true }]));
 test('affichage : addPos insère la carte à la position demandée', () => expect(displayRanks([1, 2, 3], 1)).toEqual([{ id: 1 }, { add: true }, { id: 2 }, { id: 3 }]));
 test('déplacement d’un rang : l’ordre persistable change, la carte d’ajout suit', () => expect(moveRankRow([1, 2, 3], 3, 0, 1)).toEqual({ ids: [2, 1, 3], addPos: 3 }));
+test('dropRankRow : glissade vers le bas (décalage de la ligne retirée)', () => {
+  // Affichage [1,2,3,ADD] : l’item 1 est déposé devant l’item 3 → [2,1,3], la carte reste en fin
+  expect(dropRankRow([1, 2, 3], 3, 0, 2)).toEqual({ ids: [2, 1, 3], addPos: 3 });
+});
+test('dropRankRow : la carte d’ajout suit la ligne déposée', () => {
+  // Affichage [1,ADD,2,3] : l’item 1 va devant l’item 2 (ligne 2) → la carte repoussée arrive en tête
+  expect(dropRankRow([1, 2, 3], 1, 0, 2)).toEqual({ ids: [1, 2, 3], addPos: 0 });
+});
+test('insertRankTarget : insertion au-dessus (défaut) ou en dessous de la carte d’ajout', () => {
+  expect(insertRankTarget([1, 2], 1, 9, false)).toEqual([1, 9, 2]);
+  expect(insertRankTarget([1, 2], 1, 9, true)).toEqual([1, 2, 9]);
+  expect(insertRankTarget([1, 2], null, 9, false)).toEqual([1, 2, 9]); // carte non mémorisée → fin de liste
+});
+test('effWrite : write_ranks NULL du sujet = hérite de la catégorie, explicite = lui-même', () => {
+  const folder = { write_ranks: ['Officier'] };
+  expect(effWrite({ write_ranks: null }, folder)).toEqual(['Officier']);
+  expect(effWrite({ write_ranks: [] }, folder)).toEqual([]);
+  expect(effWrite({ write_ranks: ['Membre'] }, folder)).toEqual(['Membre']);
+  expect(effWrite({ write_ranks: null }, { write_ranks: null })).toEqual([]); // catégorie NULL aussi → personne (hors Chef)
+});
 test('déplacement de la carte d’ajout : l’ordre des rangs est inchangé (état local)', () => expect(moveRankRow([1, 2, 3], 3, 3, -1)).toEqual({ ids: [1, 2, 3], addPos: 2 }));
 test('bords : premier en haut / dernier en bas = rien ne bouge', () => { expect(moveRankRow([1, 2], 2, 0, -1)).toEqual({ ids: [1, 2], addPos: 2 }); expect(moveRankRow([1, 2], 0, 2, 1)).toEqual({ ids: [1, 2], addPos: 0 }); });
 import { dropRankRow, insertRankTarget } from '../src/lib/guild';
@@ -197,6 +217,8 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   expect(src).toContain('setPv'); expect(src).not.toContain('<FPrev text={reply} />');
   expect(fmtSrc).toContain('<PrevToggle'); // FmtField utilise le même composant
   expect(css).toContain('.pvbtn{'); expect(css).toContain('.replywrap .fmtf-body{max-width:none');
+  // FmtBar de la réponse inactif pendant l'aperçu (reprise du comportement FmtField)
+  expect(src).toContain('<FmtBar onFmt={fmRep.fmt} onColor={fmRep.color} disabled={pv} />');
   expect(css).toContain('.replywrap .fmtprev{min-height');
 });
 test('messages : div auteur à gauche + div message à droite, date bas-droite, fond alterné', () => {

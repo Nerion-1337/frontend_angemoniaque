@@ -62,6 +62,6 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/three/entities.js` — (header), M, stone, label, person, BEAST, beast, building, mountModel, golem, RACE_COL, makeEntity
 - `src/three/scene.js` — Scène réaliste : terrain en relief continu, ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, v — noiseTex, createScene
 - `test/fmt.test.js` — Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
-- `test/guild.test.js` — (header), R, g, NOBODY
+- `test/guild.test.js` — Affichage [1,2,3,ADD] : l’item 1 est déposé devant l’item 3 → [2,1,3], la carte reste en fin — (header), R, g, NOBODY
 - `test/lib.test.js`
 - `vite.config.js`
