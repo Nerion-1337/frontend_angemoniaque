@@ -121,7 +121,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* ---- Gestion des rangs : titre centré, carte d'ajout (placeholder), réorganisation ---- */
 .ranks{align-items:stretch}
 .rhead{text-align:center;font-size:1.4rem;font-family:var(--serif);margin:4px 0 14px}
-.rcard,.radd{min-height:150px}
+.rcard,.radd{min-height:100px}
 .radd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;cursor:pointer;border-style:dashed;border-color:rgba(240,210,138,.45);background:rgba(240,210,138,.04)}
 .radd:hover{background:rgba(240,210,138,.09)}
 .radd .plus{width:58px;height:58px;padding:0;border:2px solid var(--plus-line);border-radius:50%;display:grid;place-items:center;color:var(--halo);background:rgba(240,210,138,.06)}
@@ -134,7 +134,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .trk .knob{position:absolute;top:2px;left:2px;width:10px;height:10px;border-radius:50%;background:rgba(240,210,138,.35);transition:left .15s,background .15s}
 .trk input:checked + .knob{left:16px;background:var(--halo)}
 .ranks{position:relative}
-.rcard,.radd{touch-action:none;cursor:grab}
+.rcard,.radd{touch-action:none;cursor:pointer}
 .rcard:active,.radd:active{cursor:grabbing}
 .rkdr{opacity:.45;outline:1px dashed rgba(240,210,138,.7);outline-offset:2px}
 .inl{position:absolute;left:8px;right:8px;height:2px;background:var(--halo);box-shadow:0 0 8px rgba(240,210,138,.9);border-radius:2px;pointer-events:none;z-index:2}
@@ -173,7 +173,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;max-width:460px;margin:0 auto;padding:10px 12px;border-radius:12px}
 .post:nth-child(odd){background:rgba(255,255,255,.05)}
 .post:nth-child(even){background:rgba(240,210,138,.07)}
-.pauthor{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px}
+.pauthor{flex:none;display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 30px;}
 .pmsg{flex:1;min-width:0;position:relative;padding-bottom:24px}
 .post .avatar{width:40px;height:40px;font-size:16px}
 .prank{font-size:.62rem;letter-spacing:.4px;text-transform:uppercase;color:var(--halo);border:1px solid rgba(240,210,138,.4);border-radius:8px;padding:0 7px}
@@ -187,7 +187,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Liste du forum v2 : conteneur positionné (ligne d'insertion du drag & drop) + prise tactile */
 .fview{position:relative}
 .dlist{position:relative}
-.fcard{touch-action:none;cursor:grab}
+.fcard{touch-action:none;cursor:pointer}
 .fcard:hover{background:rgba(255,255,255,.085);border-color:rgba(240,210,138,.4)}
 /* Présentation : colonne unique centrée, emblème (logo) en tête */
 .pres{text-align:center}.pres .emblem{margin-bottom:4px}.pres .primary,.pres .danger,.pres .btnlike{margin:6px auto 0}
