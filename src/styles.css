@@ -112,12 +112,13 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .ord{display:flex;flex-direction:column;gap:2px}
 .ord button{padding:1px 7px}
 .posts{display:flex;flex-direction:column;align-items:center;gap:24px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
-.post{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;max-width:460px}
+.post{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
 .avatar{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;font-size:15px;font-weight:700;color:#171225;box-shadow:0 0 0 2px rgba(240,210,138,.4)}
 .post b{font-size:.95em}
 .postbody{line-height:1.55}
-.replyrow{display:flex;gap:8px;justify-content:center;margin-top:20px}
-.replyrow input{width:min(430px,72%)}
+/* Réponse : textarea à 80 % de la largeur, centré ; bouton Envoyer centré juste dessous */
+.rtext{width:80%;margin:0 auto;resize:vertical;text-align:left}
+.rrow{display:flex;justify-content:center;margin-top:6px}
 /* ---- Gestion des rangs : titre centré, carte d'ajout (placeholder), réorganisation ---- */
 .ranks{align-items:stretch}
 .rhead{text-align:center;font-size:1.4rem;font-family:var(--serif);margin:4px 0 14px}
@@ -170,7 +171,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Carte de message : auteur vertical centré (avatar 40 px → rang → pseudo), corps aéré, date bas-droite */
 /* Carte de message : div auteur à GAUCHE + div message à DROITE ; fond ALTERNÉ pair/impair
    (appliqué au conteneur .post → couvre les deux divs) ; date en bas à droite */
-.post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;max-width:460px;margin:0 auto;padding:10px 12px;border-radius:12px}
+.post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;margin:0 auto;padding:10px 12px;border-radius:12px}
 .post:nth-child(odd){background:rgba(255,255,255,.05)}
 .post:nth-child(even){background:rgba(240,210,138,.07)}
 .pauthor{flex:none;display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 30px;}
@@ -183,7 +184,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .pagenav{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 2px}
 .pagenav button{min-width:28px;height:28px;padding:0 5px;display:grid;place-items:center}
 .ppage{width:44px;text-align:center;padding:4px 6px}
-.ptotal{color:var(--mute);font-size:.8rem}
+.ptotal{color:var(--mute);font-size:1.6rem;line-height:1}
 /* Liste du forum v2 : conteneur positionné (ligne d'insertion du drag & drop) + prise tactile */
 .fview{position:relative}
 .dlist{position:relative}

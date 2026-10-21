@@ -146,15 +146,24 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   expect(src).toContain('function PageNav');
   // Flèches icones seules (ChevronLeft/Right) + input modifiable + /total
   expect(src).toContain('<ChevronLeft size={16} />'); expect(src).toContain('<ChevronRight size={16} />');
-  expect(src).toContain('className="ppage"'); expect(src).toContain('/{pages}');
+  expect(src).toContain('className="ppage"'); expect(src).toContain('/ ${pages}');
+  // .ptotal : texte doublé (1.6rem) et espace entre « / » et le total
+  expect(css).toContain('.ptotal{color:var(--mute);font-size:1.6rem');
   // Appliquée aux 5 listes : catégories, sujets, messages, postulants, membres
   expect(src.split('<PageNav').length - 1).toBeGreaterThanOrEqual(5);
   expect(src).toContain('fRowsP'); expect(src).toContain('tRowsP'); expect(src).toContain('postsP');
   expect(src).toContain('applicantsP'); expect(src).toContain('membersP');
   // Les indices locaux de page sont traduits en indices globaux (off) pour drag & drop / flèches
-  expect(src).toContain('const off = (pg, i) => (pg - 1) * PAGE + i');
+  expect(src).toContain('const offF = i => (fpg - 1) * PFOLDER + i');
+  expect(src).toContain('offT = i => (tpg - 1) * PFOLDER + i');
+  // 8 éléments/page (catégories + sujets), 20 messages/page, listes à 10
+  expect(src).toContain('const PFOLDER = 8'); expect(src).toContain('const PMSG = 20'); expect(src).toContain('const PAGE = 10');
+  expect(src).toContain('onPage={setPgF} size={PFOLDER}'); expect(src).toContain('onPage={setPgP} size={PMSG}');
   expect(src).toContain('useEffect(() => setPgT(1), [fid])'); expect(src).toContain('useEffect(() => setPgP(1), [tid])');
   expect(css).toContain('.pagenav{display:flex');
+  // .post pleine largeur (comme les .item.fcard) ; textarea de réponse 80 % centré + bouton dessous
+  expect(css).not.toContain('.post{display:flex;flex-direction:row;align-items:stretch;gap:10px;text-align:left;max-width');
+  expect(src).toContain('className="rtext"'); expect(css).toContain('.rtext{width:80%'); expect(css).toContain('.rrow{display:flex;justify-content:center');
 });
 test('messages : div auteur à gauche + div message à droite, date bas-droite, fond alterné', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');

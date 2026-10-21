@@ -38,7 +38,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/ChatDock.jsx` — (header), TABS, ChatDock
 - `src/components/Confirm.jsx` — Écran de confirmation minimal (enregistrement avec modifications, suppression) : — Confirm
 - `src/components/GameCanvas.jsx` — (header), useRefreshMe, GameCanvas
-- `src/components/Guild.jsx` — Pagination commune des listes : « ‹ [page] /total › » — flèches icones seules (pas de texte), — (header), PERMS, RankPick, PAGE, PageNav, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, Perks
+- `src/components/Guild.jsx` — Pagination commune des listes : « ‹ [page] /total › » — flèches icones seules (pas de texte), — (header), PERMS, RankPick, PAGE, PFOLDER, PMSG, PageNav, Pres, Members, AV, Avatar, Post, NewFolderModal, NewTopicModal, Perks
 - `src/components/Info.jsx` — Petite icône « i » : l'infobulle s'affiche au survol (ou au focus / clic sur mobile). Rendue dans <body> pour  — Info
 - `src/components/Location.jsx` — (header), WORLDS, Location
 - `src/components/Login.jsx` — (header), Logo, Login, RACES, CharSelect
