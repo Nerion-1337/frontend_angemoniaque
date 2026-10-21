@@ -2,7 +2,7 @@
 title: React + Redux base: store, app shell, API client, Vite config
 slug: react-redux-base
 status: done
-updated: 2026-10-19
+updated: 2026-10-21
 files:
   - src/main.jsx
   - src/store/index.js
@@ -25,7 +25,7 @@ The React 18 + Redux Toolkit base that boots the SPA: a single `game` slice hold
 ## How it works
 - `index.html` → `src/main.jsx` mounts `<Provider store><App/></Provider>` into `#root`.
 - `src/store/index.js` defines one `game` slice (`configureStore({ reducer: { game } })`) with state `{auth, charId, me, entities, panel, hover, selected, toast}` and reducers `setAuth`, `setChar`, `setMe`, `setEntities`, `setPanel` (toggle: same payload closes the panel), `setHover`, `setSelected`, `toast`. It exports `A` (the action creators) and the configured `store`.
-- `src/App.jsx` (the shell): on mount it restores the session — if `hasToken()` it calls `api('/auth/me')` → `d(A.setAuth(m))` (also restoring the admin role) and clears the token on failure — and listens to `hashchange`. Rendering: `!ready` → nothing; `!auth` → `<Login/>`; `hash === '#admin'` → `<Admin/>` only if `auth.admin`; `!charId` → `<CharSelect admin={auth.admin}/>`; otherwise the game layout: `<GameCanvas/>` (Three.js scene from `src/three/scene.js` + `entities.js`) plus `<TopBar/>`, `<TileCard/>`, `<SidePanel/>`, `<Location/>`, `<ChatDock/>`, a panel switch (`faith|mounts|guild|world|actions|capital|account`), a toast (auto-cleared after 3.5 s by an effect) and the account-settings button that dispatches `setPanel('account')`.
+- `src/App.jsx` (the shell): on mount it restores the session — if `hasToken()` it calls `api('/auth/me')` → `d(A.setAuth(m))` (also restoring the admin role) and clears the token on failure — and listens to `hashchange`. Rendering: `!ready` → nothing; `!auth` → `<Login/>`; `hash === '#admin'` → `<Admin/>` only if `auth.admin`; `!charId` → `<CharSelect admin={auth.admin}/>`; otherwise the game layout: `<GameCanvas/>` (Three.js scene from `src/three/scene.js` + `entities.js`) plus `<TopBar/>`, `<TileCard/>`, `<SidePanel/>`, `<Location/>`, `<Compass/>` (new HUD widget, 8-direction cardinal labels), `<ChatDock/>`, a panel switch (`faith|mounts|guild|world|actions|capital|account`), a toast (auto-cleared after 3.5 s by an effect) and the account-settings button that dispatches `setPanel('account')`.
 - `src/lib/api.js` keeps a module-level `token` persisted in `localStorage` (`setToken` / `hasToken`); `api(path, body, method)` does `fetch('/api' + path)` with JSON + `Authorization: Bearer` when a token exists, POST by default when a body is present, and throws `Error` with the backend's `error` string (or `Erreur <status>`, or `Serveur injoignable` on network failure).
 - `vite.config.js`: `@vitejs/plugin-react`, dev server proxy `/api` → `process.env.API_URL ?? http://localhost:3000` with `ws: true` and a rewrite that strips the `/api` prefix (the backend routes are `/auth/...`, not `/api/auth/...`); Vitest runs in a `node` environment.
 - Pure game helpers live in `src/lib/` (`terrain.js`, `energy.js`, `relief.js`) and the 3D layer in `src/three/` — both consumed by `GameCanvas` and the panels.
