@@ -183,6 +183,11 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   // En-tête liste des sujets : crayon btnlike « Éditer » à côté du titre de catégorie (comme la vue sujet)
   expect(src).toContain("pencil('f', folder.id, folder)");
   expect(src).toContain("title={ed?.id === folder.id ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'}");
+  // Vue sujet : la séparation .fsep (centrée) est remise après .fhead2, .fdesc reste absente
+  expect(src).toContain('<div className="fsep">-----</div>\n      {ed?.id === topic.id && TopicEditBlock()}');
+  // Édition complète de la catégorie depuis l'en-tête liste sujets (titre + description + droits)
+  expect(src).toContain('{ed?.id === folder.id && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}');
+  expect(src).toContain('{ed?.id === folder.id && <><FmtField fm={fmEd} bar={false} value={draft.desc}');
   // Réponse : bouton pvbtn « Aperçu du rendu formaté » (bascule .fmtprev), FPrev statique retiré
   expect(src).toContain('className="pvbtn"'); expect(src).toContain('title="Aperçu du rendu formaté"');
   expect(src).toContain('setPv'); expect(src).not.toContain('<FPrev text={reply} />');

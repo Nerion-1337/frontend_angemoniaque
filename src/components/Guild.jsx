@@ -264,6 +264,7 @@ function Forum({ g, me, run, load }) {
       {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
     </div>}
     {folder && tid === null && <div className="fview">
+      {ed?.id === folder.id && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button>
         {ed?.id === folder.id
           ? <FmtField fm={fmEd} bar={false} value={draft.title} onChange={v => setD({ title: v })} placeholder="Nom de la catégorie…" />
@@ -273,6 +274,8 @@ function Forum({ g, me, run, load }) {
           <button className="btnlike" title={ed?.id === folder.id ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('f', folder.id, folder)}><Pencil size={13} /></button></span>}
         <span /></div>
       <div className="fsep">-----</div>
+      {ed?.id === folder.id && <><FmtField fm={fmEd} bar={false} value={draft.desc} onChange={v => setD({ desc: v })} multiline placeholder="Description…" />
+        {lead && <Perks g={g} kind="folders" value={draft} onChange={setDraft} />}</>}
       <DndList rows={tRowsP} onReorder={(a, b) => persistT(dropRankRow(tIds, tIds.length, startT + a, startT + Math.min(b, tRealP.length)))} renderRow={(row, i, dnd) => {
         if (row.add) return <AddCard i={i} len={tRowsP.length} onOpen={() => setNtopic(true)} dnd={null} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" />;
         const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id), editing = ed?.id === x.id;
@@ -304,6 +307,7 @@ function Forum({ g, me, run, load }) {
         {canEditTopic(topic, folder, g.me, me.id) && <span className="vstack">
           {ed?.id === topic.id && <button title="Annuler les changements" onClick={closeEdit}><X size={13} /></button>}
           <button className="btnlike" title={ed?.id === topic.id ? 'Sauvegarder les modifications' : 'Éditer'} onClick={() => pencil('t', topic.id, topic, folder)}><Pencil size={13} /></button></span>}</div>
+      <div className="fsep">-----</div>
       {ed?.id === topic.id && TopicEditBlock()}
       <div className="posts">{postsP.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
       {posts.length > 0 && <PageNav page={ppg} total={posts.length} onPage={setPgP} size={PMSG} />}
