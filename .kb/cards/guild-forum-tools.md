@@ -2,7 +2,7 @@
 title: Guilde (UI) : formatage par balises texte ([g]/[i]/[rgb]), édition unifiée titre+description+droits, suppression/transfert
 slug: guild-forum-tools
 status: done
-updated: 2026-10-20
+updated: 2026-10-21
 files:
   - src/components/Guild.jsx
   - src/components/fmtbar.jsx
@@ -15,7 +15,7 @@ files:
 symbols:
   - src/components/fmtbar.jsx:FmtBar
   - src/components/fmtbar.jsx:FmtField
-  - src/components/fmtbar.jsx:FPrev
+  - src/components/fmtbar.jsx:PrevToggle
   - src/components/fmtbar.jsx:useFmt
   - src/components/Confirm.jsx:Confirm
   - src/components/Guild.jsx:Forum
@@ -54,14 +54,14 @@ Forum v2 UX pass — édition et gestion :
 - **Droits d'édition d'affichage** — `canEditTopic(t, f, gme, uid)` (`src/lib/guild.js`, pure, unit-tested) = Chef ∪ auteur (`t.author_id === uid`) ∪ `create_topics` ∪ rang dans `f.write_ranks` : miroir exact de la porte back (card `guild-forum-edit`) ; les crayons (liste + vue sujet) l'utilisent, le crayon catégorie reste `create_topics`-only.
 
 ## Entry points
-- `src/components/fmtbar.jsx` — `FmtBar` / `FmtField` / `FPrev` / `useFmt` (la toolbar, le champ générique, l'aperçu, la sélection du dernier champ focalisé).
+- `src/components/fmtbar.jsx` — `FmtBar` / `FmtField` / `PrevToggle` / `useFmt` (la toolbar, le champ générique, la bascule d'aperçu in place réutilisable, la sélection du dernier champ focalisé).
 - `src/components/Confirm.jsx` — l'écran de confirmation (enregistrement / suppression).
 - `Guild.jsx:Forum` (+ `Perks`, `MoveModal`, `NewFolderModal`, `NewTopicModal` — ces deux dernières utilisent `FmtField` pour titre/description/corps).
 - `src/lib/fmt.js` — `fmt` (rendu sûr, marqueurs) + `wrapSel` (pure, importable partout).
 - Back API : `POST /guilds/{folders,topics}/{id}/edit` (card `guild-forum-edit`), `POST /guilds/{folders,topics}/{id}/perms` (Chef, card `guild-forum-perms`), `POST /guilds/{folders,topics}/{id}/delete` + `POST /guilds/topics/{id}/move` (card `guild-forum-manage`).
 
 ## Data flow
-- **Formatage** : B/I/nuancier → `useFmt` (champ focalisé) → `wrapSel` (pure) → `set(text)` → re-render ; le rendu passe TOUJOURS par `fmt` (échappement d'abord) dans `FPrev` et les balises d'affichage — aucun HTML brut, jamais.
+- **Formatage** : B/I/nuancier → `useFmt` (champ focalisé) → `wrapSel` (pure) → `set(text)` → re-render ; le rendu passe TOUJOURS par `fmt` (échappement d'abord) dans `PrevToggle` et les balises d'affichage — aucun HTML brut, jamais.
 - **Édition** : crayon #1 → brouillon pré-rempli (état useState du `Forum`) → `FmtField`/`Perks` mutent le brouillon → crayon #2 → `dirty()` ? `Confirm` : fermeture ; **Valider** → `saveAll` (edit + perms si Chef) → `load()` → fermeture ; **Annuler** → brouillon abandonné, fermeture.
 - **Suppression** : corbeille (Chef) → `Confirm` → `POST …/delete` (cascade back : messages, sujets, états de lecture, sujets, catégorie) → `load()`.
 - **Transfert** : `MoveRight` (create_topics) → modal radio → `POST /guilds/topics/{id}/move` → fin de liste de la cible → `load()`.

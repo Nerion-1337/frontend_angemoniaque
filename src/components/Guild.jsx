@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, Fragment } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Trash2, MoveRight, X } from 'lucide-react';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt } from '../lib/fmt'; import { FmtBar, FmtField, useFmt } from './fmtbar'; import Confirm from './Confirm';
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt } from '../lib/fmt'; import { FmtBar, FmtField, PrevToggle, useFmt } from './fmtbar'; import Confirm from './Confirm';
 const PERMS = [['accept_applicants', 'Accepter des postulants'], ['send_invites', 'Envoyer des invitations'], ['create_topics', 'Créer catégories et sujets'], ['assign_ranks', 'Attribuer des rangs']], words = t => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.map(r => <button type="button" key={r.id} className={'pill' + (value.includes(r.name) ? ' on' : '')} onClick={() => onChange(value.includes(r.name) ? value.filter(x => x !== r.name) : [...value, r.name])}>{r.name}</button>)}</div>;
 const PAGE = 10; // éléments par page — listes (postulants/membres)
@@ -312,10 +312,11 @@ function Forum({ g, me, run, load }) {
       <div className="posts">{postsP.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
       {posts.length > 0 && <PageNav page={ppg} total={posts.length} onPage={setPgP} size={PMSG} />}
       {lead || effWrite(topic, folder).includes(g.me.rank)
-        ? <div className="replywrap"><FmtBar onFmt={fmRep.fmt} onColor={fmRep.color} />
-            <textarea className="rtext" rows={4} {...fmRep.bind(setReply)} value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… ([g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])" />
-            {pv && <div className="fmtprev"><small>Aperçu</small><div dangerouslySetInnerHTML={{ __html: fmt(reply) }} /></div>}
-            <div className="rrow"><button className="pvbtn" title="Aperçu du rendu formaté" type="button" onClick={() => setPv(x => !x)}><Eye size={13} /></button><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); setPv(false); })}>Envoyer</button></div>
+        ? <div className="replywrap"><FmtBar onFmt={fmRep.fmt} onColor={fmRep.color} disabled={pv} />
+            <div className="fmtf-body rbox"><PrevToggle
+              body={<textarea className="rtext" rows={4} {...fmRep.bind(setReply)} value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… ([g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])" />}
+              text={reply} on={pv} setOn={setPv} /></div>
+            <div className="rrow"><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); setPv(false); open(topic); })}>Envoyer</button></div>
           </div>
         : <small>Votre rang ne permet pas de répondre dans ce sujet.</small>}
     </div>}

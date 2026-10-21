@@ -47,7 +47,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/SidePanel.jsx` — Silhouette en étoile (bras tendus, jambes écartées) : coordonnées dans un repère 120 × 100. Chaque emplacement — (header), DEFAULT, LABEL, RACES, kindOf, History, SLOTS, LEADERS, GROUP, TYPE, statLine, fmtLock, Inventory, SidePanel
 - `src/components/TileCard.jsx` — (header), cache, useCell, Entity, InfoModal, TileCard
 - `src/components/TopBar.jsx` — (header), DIRS, Wheel, Gauge, Chip, TopBar
-- `src/components/fmtbar.jsx` — Barre d'outils de formatage compacte (Gras / Italique / Nuancier) : agit sur la sélection du — (header), rgbOf, FmtBar, FPrev, FmtField, useFmt
+- `src/components/fmtbar.jsx` — Barre d'outils de formatage compacte (Gras / Italique / Nuancier) : agit sur la sélection du — (header), rgbOf, FmtBar, PrevToggle, FmtField, useFmt
 - `src/lib/api.js` — token, setToken, hasToken, api
 - `src/lib/drag.js` — Drag & drop des lignes d'affichage (appui + glissement, seuil 8 px pour préserver les clics). — useDrag
 - `src/lib/energy.js` — Énergie d'un trajet (8 directions) jusqu'à stopAt cases de la cible. Miroir de game/movement.ts : — (header), water, pathEnergy, COLORS

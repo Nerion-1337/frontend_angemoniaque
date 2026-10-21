@@ -143,6 +143,7 @@ test('présentation : colonne centrée, emblème en tête ; rang par défaut au-
 test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 listes', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../src/styles.css', import.meta.url), 'utf8');
+  const fmtSrc = readFileSync(new URL('../src/components/fmtbar.jsx', import.meta.url), 'utf8');
   expect(src).toContain('function PageNav');
   // Flèches icones seules (ChevronLeft/Right) + input modifiable + /total
   expect(src).toContain('<ChevronLeft size={16} />'); expect(src).toContain('<ChevronRight size={16} />');
@@ -188,10 +189,15 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   // Édition complète de la catégorie depuis l'en-tête liste sujets (titre + description + droits)
   expect(src).toContain('{ed?.id === folder.id && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}');
   expect(src).toContain('{ed?.id === folder.id && <><FmtField fm={fmEd} bar={false} value={draft.desc}');
-  // Réponse : bouton pvbtn « Aperçu du rendu formaté » (bascule .fmtprev), FPrev statique retiré
-  expect(src).toContain('className="pvbtn"'); expect(src).toContain('title="Aperçu du rendu formaté"');
+  // Réponse : composant réutilisable PrevToggle (fmtbar.jsx, partagé avec FmtField) —
+  // pvbtn « Aperçu du rendu formaté » à DROITE du .rtext, aperçu IN PLACE (même slot,
+  // pas de nouvelle balise), FPrev statique retiré
+  expect(src).toContain('<PrevToggle'); expect(fmtSrc).toContain('export function PrevToggle');
+  expect(fmtSrc).toContain('className="pvbtn"'); expect(fmtSrc).toContain('Aperçu du rendu formaté');
   expect(src).toContain('setPv'); expect(src).not.toContain('<FPrev text={reply} />');
-  expect(css).toContain('.pvbtn{'); expect(css).toContain('.fmtprev{');
+  expect(fmtSrc).toContain('<PrevToggle'); // FmtField utilise le même composant
+  expect(css).toContain('.pvbtn{'); expect(css).toContain('.replywrap .fmtf-body{max-width:none');
+  expect(css).toContain('.replywrap .fmtprev{min-height');
 });
 test('messages : div auteur à gauche + div message à droite, date bas-droite, fond alterné', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');

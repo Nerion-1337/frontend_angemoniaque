@@ -16,12 +16,6 @@ export function FmtBar({ onFmt, onColor, disabled }) {
       <input type="color" value={hex} onChange={e => { setHex(e.target.value); onColor(e.target.value); }} /></label>
   </span>;
 }
-/** Aperçu live du rendu `fmt` (gras / italique / couleur) : rend le RÉSULTAT, pas seulement
- *  les balises. Sûr : le texte passe par `fmt` (échappement HTML d'abord). Utilisé par le
- *  composeur de réponse (la bascule d'aperçu des champs est intégrée à FmtField). */
-export function FPrev({ text }) {
-  return (text ?? '').trim() ? <div className="fprev"><small>Aperçu</small><div dangerouslySetInnerHTML={{ __html: fmt(text) }} /></div> : null;
-}
 /** Champ modifiable avec formatage, pré-rempli (composant contrôlé générique : value/onChange
  *  portés par le parent) :
  *  - le groupe d'icônes (`FmtBar`, 3 icônes) est affiché UNIQUEMENT une fois par formulaire,
@@ -33,20 +27,29 @@ export function FPrev({ text }) {
  *  - en mode aperçu le groupe d'icônes est inactif (la sélection serait perdue avec le
  *    champ démonté) — basculer de nouveau pour formater.
  *  `inrow` = aligné à gauche (variant des lignes de liste, coordonnées du <b> d'affichage). */
+/** Système RÉUTILISABLE de bascule « aperçu in place » : le corps (input/textarea, ou tout
+ *  nœud) et le panneau d'aperçu `fmt` alternent DANS LE MÊME SLOT (aucune balise d'aperçu
+ *  ajoutée à côté), le bouton `.pvbtn` (œil/crayon, à droite) bascule. L'état est contrôlé
+ *  (on/setOn) : partageable à une session (ex. `useFmt`) ou local. Utilisé par `FmtField`
+ *  (édition des titres/descriptions) et par le composeur de réponse du forum. */
+export function PrevToggle({ body, text, on, setOn }) {
+  return <>{on
+    ? <div className="fmtprev" dangerouslySetInnerHTML={{ __html: fmt(text ?? '') }} />
+    : body}
+    <button type="button" className="pvbtn" title={on ? 'Revenir à la saisie' : 'Aperçu du rendu formaté'} onClick={() => setOn(!on)}>{on ? <Pencil size={13} /> : <Eye size={13} />}</button></>;
+}
+
 export function FmtField({ value, onChange, multiline, rows = 3, placeholder, bar = true, fm: fmProp, inrow }) {
   const own = useFmt(); const fm = fmProp ?? own; // instance partagée ou privée (règle des hooks : toujours appelée)
   const [preview, setPreview] = useState(false);
   const bind = fm.bind(onChange);
   return <div className={'fmtf' + (inrow ? ' inrow' : '')}>
     {bar && <FmtBar onFmt={fm.fmt} onColor={fm.color} disabled={preview} />}
-    <div className="fmtf-body">
-      {preview
-        ? <div className="fmtprev" dangerouslySetInnerHTML={{ __html: fmt(value ?? '') }} />
-        : multiline
-          ? <textarea rows={rows} value={value ?? ''} {...bind} placeholder={placeholder} />
-          : <input value={value ?? ''} {...bind} placeholder={placeholder} />}
-      <button type="button" className="pvbtn" title={preview ? 'Revenir à la saisie' : 'Aperçu du rendu formaté'} onClick={() => setPreview(p => !p)}>{preview ? <Pencil size={13} /> : <Eye size={13} />}</button>
-    </div>
+    <div className="fmtf-body"><PrevToggle
+      body={multiline
+        ? <textarea rows={rows} value={value ?? ''} {...bind} placeholder={placeholder} />
+        : <input value={value ?? ''} {...bind} placeholder={placeholder} />}
+      text={value ?? ''} on={preview} setOn={setPreview} /></div>
   </div>;
 }
 /** `bind(setter)` se répand sur le <input>/<textarea> cible : `onFocus` retient le champ pour
