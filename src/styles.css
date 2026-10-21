@@ -117,7 +117,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .postbody{line-height:1.55}
 /* Réponse : textarea à 80 % de la largeur, centré ; bouton Envoyer centré juste dessous */
 .rtext{width:80%;margin:0 auto;resize:vertical;text-align:left}
-.rrow{display:flex;justify-content:center;margin-top:6px}
+.rrow{display:flex;justify-content:center;gap:8px;margin-top:6px}
 /* ---- Gestion des rangs : titre centré, carte d'ajout (placeholder), réorganisation ---- */
 .ranks{align-items:stretch}
 .rhead{text-align:center;font-size:1.4rem;font-family:var(--serif);margin:4px 0 14px}

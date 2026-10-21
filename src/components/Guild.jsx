@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, Fragment } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { ShieldCheck, Users, MessageSquare, Settings, Upload, UserPlus, Eye, Shield, Plus, Pencil, ArrowLeft, ChevronLeft, ChevronRight, ChevronUp, ChevronDown, Trash2, MoveRight, X } from 'lucide-react';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt } from '../lib/fmt'; import { FmtBar, FmtField, FPrev, useFmt } from './fmtbar'; import Confirm from './Confirm';
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { lastChef, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic } from '../lib/guild'; import { useDrag } from '../lib/drag'; import { fmt } from '../lib/fmt'; import { FmtBar, FmtField, useFmt } from './fmtbar'; import Confirm from './Confirm';
 const PERMS = [['accept_applicants', 'Accepter des postulants'], ['send_invites', 'Envoyer des invitations'], ['create_topics', 'Créer catégories et sujets'], ['assign_ranks', 'Attribuer des rangs']], words = t => (t.trim() ? t.trim().split(/\s+/).length : 0);
 const RankPick = ({ ranks, value, onChange }) => <div className="gear">{ranks.map(r => <button type="button" key={r.id} className={'pill' + (value.includes(r.name) ? ' on' : '')} onClick={() => onChange(value.includes(r.name) ? value.filter(x => x !== r.name) : [...value, r.name])}>{r.name}</button>)}</div>;
 const PAGE = 10; // éléments par page — listes (postulants/membres)
@@ -129,7 +129,7 @@ function DndList({ rows, onReorder, renderRow, className = 'dlist' }) {
 }
 function Forum({ g, me, run, load }) {
   const can = g.me.permissions.create_topics, lead = g.me.leader;
-  const [fid, setFid] = useState(null), [tid, setTid] = useState(null), [posts, setPosts] = useState([]), [reply, setReply] = useState('');
+  const [fid, setFid] = useState(null), [tid, setTid] = useState(null), [posts, setPosts] = useState([]), [reply, setReply] = useState(''), [pv, setPv] = useState(false);
   const [nfold, setNfold] = useState(false), [ntopic, setNtopic] = useState(false);
   const [fBelow, setFBelow] = useState(false);
   const [tBelow, setTBelow] = useState(false);
@@ -265,7 +265,13 @@ function Forum({ g, me, run, load }) {
     </div>}
     {folder && tid === null && <div className="fview">
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button>
-        <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(folder.name) }} /><span /></div>
+        {ed?.id === folder.id
+          ? <FmtField fm={fmEd} bar={false} value={draft.title} onChange={v => setD({ title: v })} placeholder="Nom de la catégorie…" />
+          : <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(folder.name) }} />}
+        {can && <span className="vstack">
+          {ed?.id === folder.id && <button title="Annuler les changements" onClick={closeEdit}><X size={13} /></button>}
+          <button className="btnlike" title={ed?.id === folder.id ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'} onClick={() => pencil('f', folder.id, folder)}><Pencil size={13} /></button></span>}
+        <span /></div>
       <div className="fsep">-----</div>
       <DndList rows={tRowsP} onReorder={(a, b) => persistT(dropRankRow(tIds, tIds.length, startT + a, startT + Math.min(b, tRealP.length)))} renderRow={(row, i, dnd) => {
         if (row.add) return <AddCard i={i} len={tRowsP.length} onOpen={() => setNtopic(true)} dnd={null} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" />;
@@ -298,17 +304,15 @@ function Forum({ g, me, run, load }) {
         {canEditTopic(topic, folder, g.me, me.id) && <span className="vstack">
           {ed?.id === topic.id && <button title="Annuler les changements" onClick={closeEdit}><X size={13} /></button>}
           <button className="btnlike" title={ed?.id === topic.id ? 'Sauvegarder les modifications' : 'Éditer'} onClick={() => pencil('t', topic.id, topic, folder)}><Pencil size={13} /></button></span>}</div>
-      {ed?.id === topic.id
-        ? TopicEditBlock()
-        : <>{topic.description && <div className="fsep">-----</div>}
-          {topic.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(topic.description) }} />}</>}
+      {ed?.id === topic.id && TopicEditBlock()}
       <div className="posts">{postsP.map((p, i) => <Post key={p.id ?? i} p={p} />)}{!posts.length && <small>Aucun message pour l'instant.</small>}</div>
       {posts.length > 0 && <PageNav page={ppg} total={posts.length} onPage={setPgP} size={PMSG} />}
       {lead || effWrite(topic, folder).includes(g.me.rank)
         ? <div className="replywrap"><FmtBar onFmt={fmRep.fmt} onColor={fmRep.color} />
             <textarea className="rtext" rows={4} {...fmRep.bind(setReply)} value={reply} onChange={e => setReply(e.target.value)} placeholder="Répondre… ([g]gras[/g] · [i]italique[/i] · [rgb:R.G.B]couleur[/rgb])" />
-            <div className="rrow"><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); })}>Envoyer</button></div>
-            <FPrev text={reply} /></div>
+            {pv && <div className="fmtprev"><small>Aperçu</small><div dangerouslySetInnerHTML={{ __html: fmt(reply) }} /></div>}
+            <div className="rrow"><button className="pvbtn" title="Aperçu du rendu formaté" type="button" onClick={() => setPv(x => !x)}><Eye size={13} /></button><button className="primary" onClick={() => run(() => api('/guilds/posts', { characterId: me.id, topicId: topic.id, body: reply }), () => { setReply(''); open(topic); setPv(false); })}>Envoyer</button></div>
+          </div>
         : <small>Votre rang ne permet pas de répondre dans ce sujet.</small>}
     </div>}
     {nfold && <NewFolderModal g={g} me={me} run={run} load={load} onCreated={afterFold} onClose={() => setNfold(false)} />}

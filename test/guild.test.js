@@ -122,7 +122,7 @@ test('liste de guilde : invitations en tête, puces de postulants, membres 2 par
   expect(css).toContain('.member .minfo{display:flex;align-items:center;justify-content:center;gap:12px');
   expect(css).not.toContain('.fcol');
   // Vue liste des sujets : titre + .fsep (centrée, enfant directe de .fview) et AUCUNE description
-  expect(src).toMatch(/Retour aux catégories[\s\S]{0,500}?<div className="fsep">/);
+  expect(src).toMatch(/Retour aux catégories[\s\S]{0,1100}?<div className="fsep">/);
   expect(src).not.toMatch(/Retour aux catégories[\s\S]{0,400}?fdesc/);
   // .fsep par défaut NON centrée (cartes .item.fcard : 25 % depuis la gauche), centrée uniquement en .fview > .fsep
   expect(css).toContain('.fsep{width:25%;height:0;margin:4px 0 8px');
@@ -177,7 +177,16 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   // .post à pleine largeur comme .item.fcard : width:100% (jamais de « margin:0 auto » — en flex-column ça rétrécit à la largeur de contenu)
   expect(css).toContain('text-align:left;width:100%;padding:10px 12px;border-radius:12px}');
   expect(css).not.toContain('margin:0 auto;padding:10px 12px');
-  expect(src).toContain('className="rtext"'); expect(css).toContain('.rtext{width:80%'); expect(css).toContain('.rrow{display:flex;justify-content:center');
+  expect(src).toContain('className="rtext"'); expect(css).toContain('.rtext{width:80%'); expect(css).toContain('.rrow{display:flex;justify-content:center;gap:8px');
+  // Vue sujet : plus de .fsep/.fdesc en mode lecture après .fhead2 (cartes .fcard conservées)
+  expect(src).not.toContain('<small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(topic.description) }} />');
+  // En-tête liste des sujets : crayon btnlike « Éditer » à côté du titre de catégorie (comme la vue sujet)
+  expect(src).toContain("pencil('f', folder.id, folder)");
+  expect(src).toContain("title={ed?.id === folder.id ? 'Sauvegarder les modifications' : 'Éditer (titre, description, droits)'}");
+  // Réponse : bouton pvbtn « Aperçu du rendu formaté » (bascule .fmtprev), FPrev statique retiré
+  expect(src).toContain('className="pvbtn"'); expect(src).toContain('title="Aperçu du rendu formaté"');
+  expect(src).toContain('setPv'); expect(src).not.toContain('<FPrev text={reply} />');
+  expect(css).toContain('.pvbtn{'); expect(css).toContain('.fmtprev{');
 });
 test('messages : div auteur à gauche + div message à droite, date bas-droite, fond alterné', () => {
   const src = readFileSync(new URL('../src/components/Guild.jsx', import.meta.url), 'utf8');
