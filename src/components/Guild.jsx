@@ -260,7 +260,7 @@ function Forum({ g, me, run, load }) {
           {can && <Arrows i={i} len={fRowsP.length} onMove={(a, d) => persistF(moveRankRow(fIds, fIds.length, startF + a, d))} />}
         </div>;
       }} />
-      <PageNav page={fpg} total={fRows.length} onPage={setPgF} size={PFOLDER} />
+      <PageNav page={fpg} total={fIds.length} onPage={setPgF} size={PFOLDER} />
       {!g.folders.length && <small>Aucune catégorie : créez-en une avec la carte +.</small>}
     </div>}
     {folder && tid === null && <div className="fview">
@@ -286,7 +286,7 @@ function Forum({ g, me, run, load }) {
           {can && <Arrows i={i} len={tRowsP.length} onMove={(a, d) => persistT(moveRankRow(tIds, tIds.length, startT + a, d))} />}
         </div>;
       }} />
-      <PageNav page={tpg} total={tRows.length} onPage={setPgT} size={PFOLDER} />
+      <PageNav page={tpg} total={tIds.length} onPage={setPgT} size={PFOLDER} />
       {!(folder.topics?.length) && <small>Aucun sujet dans cette catégorie.</small>}
     </div>}
     {topic && <div className="fview">

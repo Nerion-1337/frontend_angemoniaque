@@ -167,6 +167,9 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   // 8 éléments/page (catégories + sujets), 20 messages/page, listes à 10
   expect(src).toContain('const PFOLDER = 8'); expect(src).toContain('const PMSG = 20'); expect(src).toContain('const PAGE = 10');
   expect(src).toContain('onPage={setPgF} size={PFOLDER}'); expect(src).toContain('onPage={setPgP} size={PMSG}');
+  // Totaux = items RÉELS (carte d'ajout non comptée) ; aucun identifiant mort (fRows/tRows supprimés)
+  expect(src).toContain('total={fIds.length}'); expect(src).toContain('total={tIds.length}');
+  expect(src).not.toMatch(/\bfRows\b/); expect(src).not.toMatch(/\btRows\b/);
   expect(src).toContain('useEffect(() => setPgT(1), [fid])'); expect(src).toContain('useEffect(() => setPgP(1), [tid])');
   expect(css).toContain('.pagenav{display:flex');
   // .post pleine largeur (comme les .item.fcard) ; textarea de réponse 80 % centré + bouton dessous
