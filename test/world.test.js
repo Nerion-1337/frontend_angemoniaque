@@ -1,0 +1,5 @@
+import { test, expect } from 'vitest'; import { terrain, noiseAt, inSafeZone, FEATURES, setWorld } from '../src/lib/terrain'; import { RESOURCES, GROUPS } from '../src/lib/resources'; import { pathEnergy } from '../src/lib/energy';
+test('hôtel au centre, zone sacrée de rayon 10', () => { expect(FEATURES.hotel).toEqual({ x: 100, y: 100 }); expect(inSafeZone(1, 110, 110)).toBe(true); expect(inSafeZone(1, 111, 110)).toBe(false); });
+test('monde courant : le terrain par défaut suit setWorld', () => { setWorld(1); const a = terrain(100, 100); setWorld(2); expect(terrain(10, 10)).toEqual(terrain(10, 10, 2)); setWorld(1); expect(terrain(100, 100)).toEqual(a); });
+test('énergie de trajet en plaine (monde 1) = 1 par case', () => { setWorld(1); expect(pathEnergy({ x: 98, y: 100 }, { x: 101, y: 100 })).toBe(3); });
+test('légende : chaque ressource appartient à un groupe et a un emplacement', () => { for (const r of RESOURCES) { expect(GROUPS.some(g => g.id === r.group)).toBe(true); expect(r.where.length).toBeGreaterThan(5); } });

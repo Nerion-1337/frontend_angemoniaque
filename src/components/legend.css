@@ -1,0 +1,7 @@
+.reslegend{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04)}
+.reslegend summary{cursor:pointer;font-family:var(--serif);font-weight:500}
+.reslegend section{margin-top:8px}.reslegend h4{margin:0 0 4px;color:var(--halo)}
+.resrow{display:flex;gap:9px;align-items:flex-start;padding:3px 0}.resrow i{flex:none;width:12px;height:12px;margin-top:4px;border-radius:3px;border:1px solid rgba(0,0,0,.5)}
+.resrow div{display:flex;flex-direction:column;gap:1px}.resrow .pill{margin-left:8px}
+.resnote{display:block;margin-top:8px}
+@media (min-width:760px){.reslegend{columns:2;column-gap:22px}.reslegend summary{column-span:all}.reslegend section{break-inside:avoid}}

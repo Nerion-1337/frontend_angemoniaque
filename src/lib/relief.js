@@ -1,4 +1,4 @@
-import * as THREE from 'three'; import { noiseAt } from './terrain';
+import * as THREE from 'three'; import { noiseAt, terrain } from './terrain';
 // Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué.
 const base = v => (v < 0.22 ? (0.22 - 0.34) * 1.6 - (0.22 - v) * 5.5 : (v - 0.34) * 1.6 + Math.max(0, v - 0.58) ** 2 * 34);
 export const WATER_Y = base(0.22);
@@ -10,10 +10,17 @@ export const heightAt = (x, y) => { const v = noiseAt(x, y); return base(v) + mi
 const C = (r, g, b) => new THREE.Color().setRGB(r, g, b, THREE.SRGBColorSpace);
 const DEEP = C(.03, .09, .18), SHALLOW = C(.2, .5, .55), SAND = C(.74, .66, .45), GRASS = C(.25, .43, .15), GRASS2 = C(.37, .5, .18), FOREST = C(.1, .24, .09), ROCK = C(.42, .4, .39), ROCK2 = C(.3, .29, .3), SNOW = C(.93, .95, .98);
 const g2 = new THREE.Color();
+// Teintes par type de case (fondues entre cases voisines) : terres arides, glaces, pics d'éther, volcan.
+const ZT = { arid: [C(.76, .6, .34), 0.9], snow: [C(.9, .94, .98), 0.95], ether: [C(.16, .14, .22), 0.9], volcano: [C(.62, .13, .04), 0.92] }, zw = { arid: 0, snow: 0, ether: 0, volcano: 0 };
+function zoneTint(x, y, out) {
+  const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0; zw.arid = zw.snow = zw.ether = zw.volcano = 0;
+  for (let i = 0; i < 4; i++) { const dx = i & 1, dy = i >> 1, w = (dx ? fx : 1 - fx) * (dy ? fy : 1 - fy), k = terrain(x0 + dx, y0 + dy).kind; if (k in zw) zw[k] += w; }
+  for (const k in ZT) if (zw[k] > 0.002) out.lerp(ZT[k][0], Math.min(1, zw[k]) * ZT[k][1]);
+}
 /** Couleur de sol : eau profonde → eau peu profonde → sable → herbe → forêt → roche → neige. */
 export function groundColor(x, y, h, out) {
   const v = noiseAt(x, y), m = micro(x, y);
   out.copy(DEEP); out.lerp(SHALLOW, ss(0.1, 0.16, v)); out.lerp(SAND, ss(0.2, 0.225, v)); out.lerp(g2.copy(GRASS).lerp(GRASS2, ss(-0.05, 0.07, m)), ss(0.235, 0.27, v));
-  out.lerp(FOREST, ss(0.56, 0.62, v)); out.lerp(g2.copy(ROCK).lerp(ROCK2, ss(0.4, 0.75, ridge(x, y))), ss(0.72, 0.78, v)); out.lerp(SNOW, ss(2.4, 3.2, h)); out.multiplyScalar(0.9 + m * 1.2); return out;
+  out.lerp(FOREST, ss(0.56, 0.62, v)); out.lerp(g2.copy(ROCK).lerp(ROCK2, ss(0.4, 0.75, ridge(x, y))), ss(0.72, 0.78, v)); out.lerp(SNOW, ss(2.4, 3.2, h)); zoneTint(x, y, out); out.multiplyScalar(0.9 + m * 1.2); return out;
 }
 export const hash = (x, y) => { const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return n - Math.floor(n); };
