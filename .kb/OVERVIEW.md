@@ -15,7 +15,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (10)
+## Features (11)
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
 - **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage par balises texte ([g]/[i]/[rgb]), édition unifiée titre+description+droits, suppression/transfert — Forum v2 UX pass — édition et gestion : 1. — files: src/components/Guild.jsx, src/components/fmtbar.jsx, src/components/Confirm.jsx, src/lib/fmt.js (+4)
 - **guild-forum-ui** [done] (.kb/cards/guild-forum-ui.md) Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage — The "Forum" tab of the guild modal is a three-level drilldown (categories → topics → messages), with a back icon at each level. — files: src/components/Guild.jsx, src/lib/fmt.js, src/styles.css
@@ -26,6 +26,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **guild-ranks-manage** [done] (.kb/cards/guild-ranks-manage.md) Guilde (UI) : section Rangs & privilèges (titre centré, carte ajout, réorganisation, label Chef éditable) — Front half of the "Rangs & privilèges" revamp in the manage tab (leader only): the section title is centered and larger; the inline "create rank" form is replaced by an **add-rank placeholder card** ( — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
 - **guild-ranks-ui** [done] (.kb/cards/guild-ranks-ui.md) Guilde (UI) : dernier Chef, renommage des rangs, création de rang en modale — Front half of the guild-rank feature: the guild modal (Manage tab, Chef only) creates ranks through a small "+" icon that opens a dedicated `NewRankModal` instead of the old inline form, offers a penc — files: src/components/Guild.jsx, src/lib/guild.js
 - **react-redux-base** [done] (.kb/cards/react-redux-base.md) React + Redux base: store, app shell, API client, Vite config — The React 18 + Redux Toolkit base that boots the SPA: a single `game` slice holds auth/session, selected character, entities, active panel, hover/selection and toasts. — files: src/main.jsx, src/store/index.js, src/App.jsx, src/lib/api.js (+1)
+- **terrain-map-3d** [done] (.kb/cards/terrain-map-3d.md) 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions — The visual world: the same procedural map the backend simulates, rendered as continuous 3D relief (Three.js) with day/night sky, water, instanced vegetation and glowing ore, plus the cell-based intera — files: src/lib/terrain.js, src/lib/energy.js, src/lib/relief.js, src/three/scene.js (+4)
 
 ## File map
 - `index.html`
@@ -63,5 +64,5 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/three/scene.js` — Scène réaliste : terrain en relief continu, ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, v — noiseTex, createScene
 - `test/fmt.test.js` — Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
 - `test/guild.test.js` — Affichage [1,2,3,ADD] : l’item 1 est déposé devant l’item 3 → [2,1,3], la carte reste en fin — (header), R, g, NOBODY
-- `test/lib.test.js`
+- `test/lib.test.js` — Ressources : le miroir de back/src/game/terrain.ts (chaque case porte une ressource récoltable) — (header), RES, find, stepInto
 - `vite.config.js`
