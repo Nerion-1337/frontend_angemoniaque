@@ -153,9 +153,17 @@ test('pagination commune (PageNav « ‹ [page] /total › ») appliquée aux 5 
   expect(src.split('<PageNav').length - 1).toBeGreaterThanOrEqual(5);
   expect(src).toContain('fRowsP'); expect(src).toContain('tRowsP'); expect(src).toContain('postsP');
   expect(src).toContain('applicantsP'); expect(src).toContain('membersP');
-  // Les indices locaux de page sont traduits en indices globaux (off) pour drag & drop / flèches
-  expect(src).toContain('const offF = i => (fpg - 1) * PFOLDER + i');
-  expect(src).toContain('offT = i => (tpg - 1) * PFOLDER + i');
+  // La carte d'ajout .radd est présente à CHAQUE page (dernière ligne, non draggée dnd={null}) ;
+  // les indices locaux (startF/startT) sont traduits en globaux ; opération sur l'ordre complet (addPos = ids.length)
+  expect(src).toContain('[...fRealP.map(id => ({ id })), { add: true }]');
+  expect(src).toContain('dropRankRow(fIds, fIds.length, startF + a, startF + Math.min(b, fRealP.length))');
+  expect(src).toContain('moveRankRow(fIds, fIds.length, startF + a, d)');
+  expect(src).toContain('dnd={null}'); expect(src).toContain('...(dnd ? dnd.rowProps(i) : {})'); expect(src).toContain('dnd?.justDrag.current');
+  expect(src).not.toContain('setFAdd'); expect(src).not.toContain('setTAdd');
+  // Une seule page → pas de pagination affichée
+  expect(src).toContain('if (pages <= 1) return null;');
+  // .pmsg occupe l'espace restant de .post (corps à 100 %)
+  expect(css).toContain('.post .postbody{width:100%;'); expect(css).toContain('.pmsg{flex:1;min-width:0');
   // 8 éléments/page (catégories + sujets), 20 messages/page, listes à 10
   expect(src).toContain('const PFOLDER = 8'); expect(src).toContain('const PMSG = 20'); expect(src).toContain('const PAGE = 10');
   expect(src).toContain('onPage={setPgF} size={PFOLDER}'); expect(src).toContain('onPage={setPgP} size={PMSG}');

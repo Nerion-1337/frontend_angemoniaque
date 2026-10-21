@@ -12,6 +12,7 @@ function PageNav({ page, total, onPage, size = PAGE }) {
   const pages = Math.max(1, Math.ceil(total / size)), p = Math.min(page, pages);
   const [v, setV] = useState(String(p));
   useEffect(() => setV(String(p)), [p]); // resynchronise l'input quand la page change (flèches, donnes)
+  if (pages <= 1) return null; // une seule page → pas de pagination affichée
   const go = n => { const q = Math.min(pages, Math.max(1, Math.round(n))); if (!Number.isNaN(q)) onPage(q); };
   const commit = () => { const n = +v; if (v.trim() === '' || Number.isNaN(n)) setV(String(p)); else go(n); };
   return <div className="pagenav">
@@ -104,7 +105,8 @@ function Perks({ g, kind, value, onChange }) {
  *  cercle bordé ; le toggle d'insertion (au-dessus par défaut) est sur la même ligne, à côté des
  *  boutons d'action, conformément au layout de la section Rangs. */
 function AddCard({ i, len, onOpen, dnd, below, setBelow, label, canMove, onMove }) {
-  return <div className={'item radd' + (dnd.drag?.from === i ? ' rkdr' : '')} title={label} onClick={() => { if (dnd.justDrag.current) return; onOpen(); }} {...dnd.rowProps(i)}>
+  // dnd = null → la carte n'est PAS un corps de drag & drop (pas de ref/pointer : « à chaque page »)
+  return <div className={'item radd' + (dnd?.drag?.from === i ? ' rkdr' : '')} title={label} onClick={() => { if (dnd?.justDrag.current) return; onOpen(); }} {...(dnd ? dnd.rowProps(i) : {})}>
     <span />
     <button className="plus" aria-label={label} onClick={onOpen}><Plus size={26} strokeWidth={2.5} /></button>
     <span className="aacts">
@@ -129,8 +131,8 @@ function Forum({ g, me, run, load }) {
   const can = g.me.permissions.create_topics, lead = g.me.leader;
   const [fid, setFid] = useState(null), [tid, setTid] = useState(null), [posts, setPosts] = useState([]), [reply, setReply] = useState('');
   const [nfold, setNfold] = useState(false), [ntopic, setNtopic] = useState(false);
-  const [fAdd, setFAdd] = useState(null), [fBelow, setFBelow] = useState(false);
-  const [tAdd, setTAdd] = useState(null), [tBelow, setTBelow] = useState(false);
+  const [fBelow, setFBelow] = useState(false);
+  const [tBelow, setTBelow] = useState(false);
   /** Édition unifiée (titre + description + droits) : le crayon REMPLACE les balises
    *  d'affichage par des champs pré-remplis (useState portés ici) ; 1er clic = ouvrir,
    *  2e clic = enregistrer — avec l'écran de confirmation si des modifications existent
@@ -150,20 +152,25 @@ function Forum({ g, me, run, load }) {
   const open = async x => { setTid(x.id); setEd(null); setDraft(null); setPosts(await api(`/guilds/topics/${me.id}/${x.id}`).catch(() => [])); load(); }; // ouverture → messages marqués lus (back) + résync des badges
   const back = () => { if (tid !== null) setTid(null); else setFid(null); setEd(null); setDraft(null); };
   const fIds = g.folders.map(f => f.id), tIds = (folder?.topics ?? []).map(t => t.id);
-  const fRows = displayRanks(fIds, fAdd), tRows = displayRanks(tIds, tAdd);
-  const fpg = Math.min(pgF, Math.max(1, Math.ceil(fRows.length / PFOLDER))), tpg = Math.min(pgT, Math.max(1, Math.ceil(tRows.length / PFOLDER))), ppg = Math.min(pgP, Math.max(1, Math.ceil((posts.length || 1) / PMSG)));
-  const fRowsP = fRows.slice((fpg - 1) * PFOLDER, fpg * PFOLDER), tRowsP = tRows.slice((tpg - 1) * PFOLDER, tpg * PFOLDER), postsP = posts.slice((ppg - 1) * PMSG, ppg * PMSG);
-  const offF = i => (fpg - 1) * PFOLDER + i, offT = i => (tpg - 1) * PFOLDER + i; // index local (page) → index global d'affichage
-  const persistF = n => { setFAdd(n.addPos); if (n.ids.join() !== fIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'folders', ids: n.ids }), load); };
-  const persistT = n => { setTAdd(n.addPos); if (n.ids.join() !== tIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'topics', folderId: fid, ids: n.ids }), load); };
+  // Pagination sur les items RÉELS ; la carte d'ajout (.radd) est présente à CHAQUE page :
+  // dernière ligne de la page, NON draggée (dnd = null) ; les indices locaux sont traduits en
+  // indices globaux via startF/startT (items réels contigus) et les opérations s'effectuent sur
+  // l'ordre complet avec la carte d'ajout en fin de liste (addPos = ids.length).
+  const fpg = Math.min(pgF, Math.max(1, Math.ceil(fIds.length / PFOLDER))), tpg = Math.min(pgT, Math.max(1, Math.ceil(tIds.length / PFOLDER))), ppg = Math.min(pgP, Math.max(1, Math.ceil((posts.length || 1) / PMSG)));
+  const startF = (fpg - 1) * PFOLDER, startT = (tpg - 1) * PFOLDER;
+  const fRealP = fIds.slice(startF, startF + PFOLDER), tRealP = tIds.slice(startT, startT + PFOLDER);
+  const fRowsP = [...fRealP.map(id => ({ id })), { add: true }], tRowsP = [...tRealP.map(id => ({ id })), { add: true }], postsP = posts.slice((ppg - 1) * PMSG, ppg * PMSG);
+  const insertF = startF + fRealP.length, insertT = startT + tRealP.length; // ancrage d'insertion = fin de la page courante
+  const persistF = n => { if (n.ids.join() !== fIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'folders', ids: n.ids }), load); };
+  const persistT = n => { if (n.ids.join() !== tIds.join()) run(() => api('/guilds/reorder', { characterId: me.id, kind: 'topics', folderId: fid, ids: n.ids }), load); };
   const afterFold = () => api(`/guilds/${me.id}`).then(s2 => {
     const newId = s2.folders[s2.folders.length - 1].id, prev = s2.folders.slice(0, -1).map(x => x.id);
-    const target = insertRankTarget(prev, fAdd, newId, fBelow);
+    const target = insertRankTarget(prev, insertF, newId, fBelow);
     if (target.join() !== s2.folders.map(x => x.id).join()) return api('/guilds/reorder', { characterId: me.id, kind: 'folders', ids: target }).then(load).catch(load);
     return load(); }).catch(() => load());
   const afterTopic = () => api(`/guilds/${me.id}`).then(s2 => {
     const fl = s2.folders.find(f => f.id === fid), newId = fl.topics[fl.topics.length - 1].id, prev = fl.topics.slice(0, -1).map(x => x.id);
-    const target = insertRankTarget(prev, tAdd, newId, tBelow);
+    const target = insertRankTarget(prev, insertT, newId, tBelow);
     if (target.join() !== fl.topics.map(x => x.id).join()) return api('/guilds/reorder', { characterId: me.id, kind: 'topics', folderId: fid, ids: target }).then(load).catch(load);
     return load(); }).catch(() => load());
   const unread = g.unread ?? { topics: {}, folders: {} };
@@ -233,8 +240,8 @@ function Forum({ g, me, run, load }) {
   return <div className="forum">
     {!folder && <div className="fview">
       <div className="row2 fhead2"><span /><h4 className="rhead">Catégories</h4><span /></div>
-      <DndList rows={fRowsP} onReorder={(a, b) => persistF(dropRankRow(fIds, fAdd, offF(a), offF(b)))} renderRow={(row, i, dnd) => {
-        if (row.add) return <AddCard i={i} len={fRowsP.length} onOpen={() => setNfold(true)} dnd={dnd} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" canMove={can} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, offF(a), d))} />;
+      <DndList rows={fRowsP} onReorder={(a, b) => persistF(dropRankRow(fIds, fIds.length, startF + a, startF + Math.min(b, fRealP.length)))} renderRow={(row, i, dnd) => {
+        if (row.add) return <AddCard i={i} len={fRowsP.length} onOpen={() => setNfold(true)} dnd={null} below={fBelow} setBelow={setFBelow} label="Ajouter une catégorie" />;
         const f = g.folders.find(x => x.id === row.id), u = unread.folders[f.id] ?? 0, editing = ed?.id === f.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} onClick={e => { if (editing || dnd.justDrag.current || e.target.closest('button,select,input,textarea,label,a')) return; setFid(f.id); setTid(null); }} {...dnd.rowProps(i)}>
           {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
@@ -250,7 +257,7 @@ function Forum({ g, me, run, load }) {
               {lead && <Perks g={g} kind="folders" value={draft} onChange={setDraft} />}</>
             : <>{f.description && <div className="fsep">-----</div>}
               {f.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(f.description) }} />}</>}
-          {can && <Arrows i={i} len={fRowsP.length} onMove={(a, d) => persistF(moveRankRow(fIds, fAdd, offF(a), d))} />}
+          {can && <Arrows i={i} len={fRowsP.length} onMove={(a, d) => persistF(moveRankRow(fIds, fIds.length, startF + a, d))} />}
         </div>;
       }} />
       <PageNav page={fpg} total={fRows.length} onPage={setPgF} size={PFOLDER} />
@@ -260,8 +267,8 @@ function Forum({ g, me, run, load }) {
       <div className="row2 fhead2"><button className="backbtn" onClick={back} title="Retour aux catégories"><ArrowLeft size={15} /> Catégories</button>
         <h4 className="rhead" dangerouslySetInnerHTML={{ __html: fmt(folder.name) }} /><span /></div>
       <div className="fsep">-----</div>
-      <DndList rows={tRowsP} onReorder={(a, b) => persistT(dropRankRow(tIds, tAdd, offT(a), offT(b)))} renderRow={(row, i, dnd) => {
-        if (row.add) return <AddCard i={i} len={tRowsP.length} onOpen={() => setNtopic(true)} dnd={dnd} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" canMove={can} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, offT(a), d))} />;
+      <DndList rows={tRowsP} onReorder={(a, b) => persistT(dropRankRow(tIds, tIds.length, startT + a, startT + Math.min(b, tRealP.length)))} renderRow={(row, i, dnd) => {
+        if (row.add) return <AddCard i={i} len={tRowsP.length} onOpen={() => setNtopic(true)} dnd={null} below={tBelow} setBelow={setTBelow} label="Ajouter un sujet" />;
         const x = folder.topics.find(t => t.id === row.id), un = unread.topics[x.id] ?? 0, editable = canEditTopic(x, folder, g.me, me.id), editing = ed?.id === x.id;
         return <div className={'item fcard' + (dnd.drag?.from === i ? ' rkdr' : '')} onClick={e => { if (editing || dnd.justDrag.current || e.target.closest('button,select,input,textarea,label,a')) return; open(x); }} {...dnd.rowProps(i)}>
           {editing && <FmtBar onFmt={fmEd.fmt} onColor={fmEd.color} />}
@@ -276,7 +283,7 @@ function Forum({ g, me, run, load }) {
           {editing ? TopicEditBlock()
             : <>{x.description && <div className="fsep">-----</div>}
               {x.description && <small className="fdesc" dangerouslySetInnerHTML={{ __html: fmt(x.description) }} />}</>}
-          {can && <Arrows i={i} len={tRowsP.length} onMove={(a, d) => persistT(moveRankRow(tIds, tAdd, offT(a), d))} />}
+          {can && <Arrows i={i} len={tRowsP.length} onMove={(a, d) => persistT(moveRankRow(tIds, tIds.length, startT + a, d))} />}
         </div>;
       }} />
       <PageNav page={tpg} total={tRows.length} onPage={setPgT} size={PFOLDER} />

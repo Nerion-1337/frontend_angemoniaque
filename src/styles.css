@@ -178,7 +178,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .pmsg{flex:1;min-width:0;position:relative;padding-bottom:24px}
 .post .avatar{width:40px;height:40px;font-size:16px}
 .prank{font-size:.62rem;letter-spacing:.4px;text-transform:uppercase;color:var(--halo);border:1px solid rgba(240,210,138,.4);border-radius:8px;padding:0 7px}
-.post .postbody{max-width:92%;margin:0 auto;text-align:center;padding:4px 0}
+/* le corps OCCUPE l'espace restant de .pmsg (plus de contrainte 92 % — la div pmsg flex:1 tient la largeur restante de .post) */
+.post .postbody{width:100%;text-align:center;padding:4px 0}
 .ptime{position:absolute;right:10px;bottom:5px;font-size:.65rem;opacity:.6}
 /* Pagination commune des listes : « ‹ [page] /total › » (flèches icones seules, en bas de page) */
 .pagenav{display:flex;align-items:center;justify-content:center;gap:8px;margin:10px 0 2px}
