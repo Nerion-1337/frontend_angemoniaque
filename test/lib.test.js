@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest'; import { terrain, setWorld } from '../src/lib/terrain'; import { pathEnergy } from '../src/lib/energy';
-import { RES_BY_ID } from '../src/lib/resources';
+import { RES_BY_ID } from '../src/lib/resources'; import { RES2_BY_ID } from '../src/lib/resources2';
 test('terrain déterministe (les 3 mondes)', () => { for (const m of [1, 2, 3]) expect(terrain(12, 34, m)).toEqual(terrain(12, 34, m)); });
 test('énergie : ligne droite = somme des coûts (volant)', () => { setWorld(2); expect(pathEnergy({ x: 0, y: 0 }, { x: 3, y: 0 }, { flying: true })).toBe(3); });
 test('stopAt réduit le trajet', () => { setWorld(2); expect(pathEnergy({ x: 0, y: 0 }, { x: 4, y: 0 }, { flying: true, stopAt: 1 })).toBe(3); });
@@ -9,7 +9,7 @@ test('stopAt réduit le trajet', () => { setWorld(2); expect(pathEnergy({ x: 0, 
 test('carte v2 : le nom de la ressource vient du catalogue (nom stable, 3 mondes)', () => {
   for (const mapId of [1, 2, 3]) for (let x = 0; x < 60; x++) for (let y = 0; y < 60; y++) {
     const t = terrain(x, y, mapId);
-    expect(t.resourceId ? RES_BY_ID[t.resourceId].name : null).toBe(t.resource);
+    expect(t.resourceId ? (RES_BY_ID[t.resourceId] ?? RES2_BY_ID[t.resourceId]).name : null).toBe(t.resource);
   }
 });
 // Miroir de stepCost (back/src/game/movement.ts) : 1 pas depuis la case de l'est = coût de la case cible uniquement.

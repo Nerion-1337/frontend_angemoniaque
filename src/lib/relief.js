@@ -12,10 +12,13 @@ const DEEP = C(.03, .09, .18), SHALLOW = C(.2, .5, .55), SAND = C(.74, .66, .45)
 const g2 = new THREE.Color();
 // Teintes par type de case (fondues entre cases voisines) : terres arides, glaces, pics d'éther, volcan.
 const ZT = { arid: [C(.76, .6, .34), 0.9], snow: [C(.9, .94, .98), 0.95], ether: [C(.16, .14, .22), 0.9], volcano: [C(.62, .13, .04), 0.92] }, zw = { arid: 0, snow: 0, ether: 0, volcano: 0 };
+const ZC = new Map(), tc = new THREE.Color();
+// Teinte de sol d'une case : sa zone si elle en définit une (monde Anges & Démons), sinon son type (arides, glaces, éther, volcan).
+const cellTint = t => { if (t.ground != null) { let c = ZC.get(t.ground); if (!c) ZC.set(t.ground, c = new THREE.Color().setHex(t.ground, THREE.SRGBColorSpace)); return [c, 0.88]; } return ZT[t.kind]; };
 function zoneTint(x, y, out) {
-  const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0; zw.arid = zw.snow = zw.ether = zw.volcano = 0;
-  for (let i = 0; i < 4; i++) { const dx = i & 1, dy = i >> 1, w = (dx ? fx : 1 - fx) * (dy ? fy : 1 - fy), k = terrain(x0 + dx, y0 + dy).kind; if (k in zw) zw[k] += w; }
-  for (const k in ZT) if (zw[k] > 0.002) out.lerp(ZT[k][0], Math.min(1, zw[k]) * ZT[k][1]);
+  const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0; let r = 0, g = 0, b = 0, s = 0;
+  for (let i = 0; i < 4; i++) { const dx = i & 1, dy = i >> 1, w = (dx ? fx : 1 - fx) * (dy ? fy : 1 - fy), z = cellTint(terrain(x0 + dx, y0 + dy)); if (z) { const k = w * z[1]; r += z[0].r * k; g += z[0].g * k; b += z[0].b * k; s += k; } }
+  if (s > 0.002) { tc.setRGB(r / s, g / s, b / s); out.lerp(tc, Math.min(1, s)); }
 }
 /** Couleur de sol : eau profonde → eau peu profonde → sable → herbe → forêt → roche → neige. */
 export function groundColor(x, y, h, out) {

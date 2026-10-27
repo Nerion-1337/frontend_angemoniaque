@@ -10,7 +10,7 @@ function Entity({ e }) {   // joueur : pseudo, race, guilde (jamais PV ni armure
   return <div className="ent"><b>{e.name}</b> <small>Structure</small></div>;
 }
 function InfoModal({ cell, close }) {
-  const e = cell.entity; return <Modal onClose={close} className="inv small" label=""><h3>Case ({cell.x}, {cell.y}) — {KIND[cell.terrain.kind]}</h3>
+  const e = cell.entity; return <Modal onClose={close} className="inv small" label=""><h3>Case ({cell.x}, {cell.y}) — {cell.terrain.zone ?? KIND[cell.terrain.kind]}</h3>
     {e?.kind === 'character' ? <><p><b>{e.name}</b> · {e.race} · {e.rank_name}<br />Guilde : {e.guild ?? 'Aucune guilde'}</p><p>État de forme : <b style={{ color: HEALTH[e.health] }}>{e.health}</b></p>
       <h4>Équipements visibles</h4><div className="gear">{(e.visibleGear?.length ? e.visibleGear : ['Aucun équipement visible']).map(g => <span key={g} className="pill">{g}</span>)}</div></>
       : e ? <p><b>{e.name}</b>{e.kind === 'monster' && <><br />PV : {e.mhp}/{e.mhpmax} · Armure : {e.marmor}/{e.mmarmor ?? 0}</>}</p> : <p>Case libre. Ressource : {cell.terrain.resource ?? 'aucune'}.</p>}</Modal>;
@@ -40,12 +40,12 @@ export default function TileCard() {
       if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital')); else msg = r.name; }
       if (msg) d(A.toast(msg)); await refresh(); d(A.setSelected(null)); } catch (er) { d(A.toast(er.message)); } };
     return <><div className="card" style={{ left: selected.sx + 14, top: selected.sy + 14 }}><button className="x" aria-label="Fermer" onClick={() => d(A.setSelected(null))}>×</button>
-      <div><b>{KIND[res?.kind] ?? '…'}</b> <small>({t.x}, {t.y})</small> · <small>⚡ {res ? (res.cost >= 99 ? '∞' : res.cost) : '…'}/case · {res?.resource ?? 'aucune ressource'}</small></div><Entity e={e} />
+      <div><b>{res?.zone ?? KIND[res?.kind] ?? '…'}</b> <small>({t.x}, {t.y})</small> · <small>⚡ {res ? (res.cost >= 99 ? '∞' : res.cost) : '…'}/case · {res?.resource ?? 'aucune ressource'}</small></div><Entity e={e} />
       {e && dist === 1 && !attackable && e.kind !== 'building' && <div className="note"><Ban size={14} /> Case occupée (vous êtes juste à côté).</div>}
       {prev?.hitChance != null && <div className="hit"><Dices size={14} /> Chance de toucher (agilité) : <b>{prev.hitChance}%</b> <small>esquive {prev.dodge}%</small></div>}
       <select value={act} onChange={x => setAct(x.target.value)}><option value="">— Actions possibles —</option>{acts.map(([k, l, mv, ac, mc]) => <option key={k} value={k} disabled={mv === Infinity}>{l}{k !== 'info' ? ` — ${mc ? `⚡${mc} monture` + (mv ? ` + ${E(mv)}` : '') : E(mv, ac)}` : ''}</option>)}</select>
       {act === 'build' && <select value={kinds.includes(kind) ? kind : kinds[0]} onChange={x => setKind(x.target.value)}>{[['wall', 'Muraille de pierre'], ['tower', 'Tour de garde'], ['factory', 'Usine de production'], ['totem', 'Totem de zone']].filter(([k]) => kinds.includes(k)).map(([k, l]) => <option key={k} value={k}>{l} (×{me.scrolls[k]})</option>)}</select>}
       <button className="primary" disabled={!act} onClick={run}>{act === 'info' ? <><Info size={14} /> Voir</> : 'Valider'}</button></div>{info && <InfoModal cell={info} close={() => setInfo(null)} />}</>;
   }
-  return hover ? <div className="card hover" style={{ left: hover.sx + 14, top: hover.sy + 14 }}>{hc ? <><div><b>{KIND[hc.terrain.kind]}</b> <small>({hc.x}, {hc.y}) · ⚡ {hc.terrain.cost >= 99 ? '∞' : hc.terrain.cost}/case · {hc.terrain.resource ?? 'aucune ressource'}</small></div><Entity e={hc.entity} /><small>Trajet : {E(pe(hover))}</small></> : '…'}</div> : null;
+  return hover ? <div className="card hover" style={{ left: hover.sx + 14, top: hover.sy + 14 }}>{hc ? <><div><b>{hc.terrain.zone ?? KIND[hc.terrain.kind]}</b> <small>({hc.x}, {hc.y}) · ⚡ {hc.terrain.cost >= 99 ? '∞' : hc.terrain.cost}/case · {hc.terrain.resource ?? 'aucune ressource'}</small></div><Entity e={hc.entity} /><small>Trajet : {E(pe(hover))}</small></> : '…'}</div> : null;
 }

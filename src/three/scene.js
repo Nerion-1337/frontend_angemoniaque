@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Sky } from 'three/examples/jsm/objects/Sky.js'; import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'; import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'; import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { noiseAt, terrain, setWorld, FEATURES } from '../lib/terrain'; import { heightAt, groundColor, hash, WATER_Y } from '../lib/relief'; import { makeEntity } from './entities';
+import { noiseAt, terrain, setWorld, FEATURES } from '../lib/terrain'; import { heightAt, groundColor, hash, WATER_Y } from '../lib/relief'; import { makeEntity } from './entities'; import { RESOURCES2 } from '../lib/resources2'; import { waterTint } from '../lib/world2';
 const noiseTex = () => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#d8d8d8'; g.fillRect(0, 0, 256, 256);
   for (const [n, a] of [[8, .3], [32, .25], [128, .15], [256, .1]]) { const s = document.createElement('canvas'); s.width = s.height = n; const sg = s.getContext('2d'), id = sg.createImageData(n, n);
     for (let i = 0; i < n * n; i++) { const v = Math.random() * 255; id.data.set([v, v, v, 255], i * 4); } sg.putImageData(id, 0, 0); g.globalAlpha = a; g.drawImage(s, 0, 0, 256, 256); }
@@ -37,7 +37,7 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
 
   // ---- terrain (maillage continu), eau, végétation
   let R = 0, N = 0, geo, terr, ox, oz, last = null; const tex = noiseTex(), tmat = new THREE.MeshStandardMaterial({ vertexColors: true, map: tex, roughness: 0.95, metalness: 0 });
-  const wgeo = new THREE.PlaneGeometry(1, 1, 56, 56).rotateX(-Math.PI / 2), water = new THREE.Mesh(wgeo, new THREE.MeshPhysicalMaterial({ color: 0x2a7fa3, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.6, clearcoat: 1, envMapIntensity: 1.3 })); water.receiveShadow = true; scene.add(water);
+  const wgeo = new THREE.PlaneGeometry(1, 1, 56, 56).rotateX(-Math.PI / 2), water = new THREE.Mesh(wgeo, new THREE.MeshPhysicalMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.04, metalness: 0, transparent: true, opacity: 0.6, clearcoat: 1, envMapIntensity: 1.3 })); water.receiveShadow = true; wgeo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(wgeo.attributes.position.count * 3).fill(1), 3)); scene.add(water);
   const IM = (g, m, n) => { const o = new THREE.InstancedMesh(g, m, n); o.castShadow = o.receiveShadow = true; o.frustumCulled = false; o.count = 0; scene.add(o); return o; };      // frustumCulled=false : la sphère englobante initiale devient fausse dès qu'on se déplace
   const std = (c, o = {}) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, ...o });
   const trunk = IM(new THREE.CylinderGeometry(0.05, 0.085, 0.55, 6).translate(0, 0.27, 0), std(0x4a3322, { roughness: 1 }), 6000), pine1 = IM(new THREE.ConeGeometry(0.34, 0.8, 8).translate(0, 0.85, 0), std(0x1d4a22), 6000), pine2 = IM(new THREE.ConeGeometry(0.24, 0.6, 8).translate(0, 1.3, 0), std(0x2a5d28), 6000);
@@ -46,12 +46,14 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   // minerais (un maillage émissif par type), flore des ressources (plantes) et teintes d'arbres par essence
   let world = 1;
   const ORE_FX = { adamantine: [0x8fa4b8, 0x2b4a73], mithril: [0xcfe8ff, 0x5aa0ff], uru: [0xd9a04a, 0xb86a10], ebonite: [0x2b2733, 0x7a3aba], verre_dragon: [0x140606, 0xff3a10], cristal_givre: [0xd8f4ff, 0x6fd8ff], prisme_ether: [0xe8c4ff, 0xa060ff] };
+  for (const r of RESOURCES2) if (r.look?.k === 'ore') ORE_FX[r.id] = [r.look.c, r.look.e];
   const oreGeo = new THREE.OctahedronGeometry(0.12).scale(1, 1.9, 1).translate(0, 0.12, 0), ores = {};
   for (const k in ORE_FX) ores[k] = IM(oreGeo, std(ORE_FX[k][0], { emissive: ORE_FX[k][1], emissiveIntensity: 1.7, roughness: 0.25 }), 1500);
   const FLORA_FX = { pissenlit_tempete: [0xf2e04a, 0], tresle_six_feuilles: [0x5fd06a, 1], lavande_crepusculaire: [0x8a63d8, 2], chardon_sang: [0xc02a3a, 2], rose_sables: [0xe8c9a0, 1], nenuphar_spectres: [0x7fe0c0, 1], gingembre_marees: [0xe0a050, 2] };
+  for (const r of RESOURCES2) if (r.look?.k === 'plant') FLORA_FX[r.id] = [r.look.c, r.look.shape];
   const FGEO = [new THREE.SphereGeometry(0.07, 8, 6).translate(0, 0.22, 0), new THREE.CylinderGeometry(0.16, 0.16, 0.02, 8).translate(0, 0.02, 0), new THREE.ConeGeometry(0.05, 0.3, 5).translate(0, 0.15, 0)], flora = {};
   for (const k in FLORA_FX) flora[k] = IM(FGEO[FLORA_FX[k][1]], std(FLORA_FX[k][0], { emissive: FLORA_FX[k][0], emissiveIntensity: 0.25 }), 6000);
-  [trunk, pine1, pine2, oak, spires, boulders].forEach(m => m.material.color.set(0xffffff));      // teintes appliquées par instance
+  [trunk, pine1, pine2, oak, spires, boulders, grass].forEach(m => m.material.color.set(0xffffff));      // teintes appliquées par instance
   const ALL = [trunk, pine1, pine2, oak, grass, boulders, spires, ...Object.values(ores), ...Object.values(flora)];
   // Yggdrasil : l'arbre unique de 8 cases (4x2), dessiné une seule fois
   const ygg = new THREE.Group(); {
@@ -64,13 +66,15 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   function allocate(s) { see = s; R = Math.min(s + 3, 22); N = R * 2 * 3; geo?.dispose(); geo = new THREE.PlaneGeometry(R * 2, R * 2, N, N).rotateX(-Math.PI / 2); ox = geo.attributes.position.array.slice(); oz = null;
     geo.setAttribute('color', new THREE.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3)); if (terr) scene.remove(terr); terr = new THREE.Mesh(geo, tmat); terr.receiveShadow = true; terr.castShadow = true; scene.add(terr); wgeo.scale(1, 1, 1); water.scale.set(R * 2 + 8, 1, R * 2 + 8); }
   const ss = (a, b, x) => THREE.MathUtils.smoothstep(x, a, b);
+  function tintWater() { const wp = wgeo.attributes.position, S = R * 2 + 8, col = wgeo.attributes.color; for (let i = 0; i < wp.count; i++) { tmpC.set(waterTint(world, wp.getX(i) * S + cur.x)); col.setXYZ(i, tmpC.r, tmpC.g, tmpC.b); } col.needsUpdate = true; }   // eau teintée selon la moitié (démons / anges)
   function buildTerrain() {
     const p = geo.attributes.position.array, c = geo.attributes.color.array, uv = geo.attributes.uv.array;
     for (let i = 0, k = 0; i < p.length; i += 3, k += 2) { const x = cur.x + ox[i], z = cur.y + ox[i + 2], h = heightAt(x, z); p[i] = x; p[i + 1] = h; p[i + 2] = z; uv[k] = x * 0.35; uv[k + 1] = z * 0.35;
       groundColor(x, z, h, tmpC); const d = Math.max(Math.abs(x - cur.x), Math.abs(z - cur.y)); tmpC.lerp(fog.color, ss(see + 0.4, see + 2.4, d)); c[i] = tmpC.r; c[i + 1] = tmpC.g; c[i + 2] = tmpC.b; }
-    geo.attributes.position.needsUpdate = geo.attributes.color.needsUpdate = geo.attributes.uv.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere(); geo.computeBoundingBox(); water.position.set(cur.x, WATER_Y, cur.y);
+    geo.attributes.position.needsUpdate = geo.attributes.color.needsUpdate = geo.attributes.uv.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere(); geo.computeBoundingBox(); water.position.set(cur.x, WATER_Y, cur.y); tintWater();
   }
   const WOOD = { lorien: [0xe0b93d, 0x7a5a30], shinju: [0xf2a0c0, 0x4a2f28], adam: [0xa84a2a, 0x3a2418], weirwood: [0xb3262e, 0xf0ece4] }, GREEN = [0x2f6d2a, 0x4a3322], ROCK = { mountain: 0x77736d, snow: 0xeef4fb, ether: 0x3a3448, volcano: 0x241512 };
+  for (const r of RESOURCES2) if (r.look?.k === 'tree') WOOD[r.id] = [r.look.leaf, r.look.bark, !!r.look.bare];
   function buildVegetation(occ) {
     const cnt = new Map(), put = (m, x, y, z, sx, ry, sy = sx, c) => { const i = cnt.get(m) ?? 0; if (i >= m.instanceMatrix.count) return; cnt.set(m, i + 1); dum.position.set(x, y, z); dum.rotation.set(0, ry, 0); dum.scale.set(sx, sy, sx); dum.updateMatrix(); m.setMatrixAt(i, dum.matrix); if (c !== undefined) m.setColorAt(i, tmpC.set(c)); };
     for (let dx = -see - 1; dx <= see + 1; dx++) for (let dy = -see - 1; dy <= see + 1; dy++) {
@@ -81,21 +85,23 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
       if (k === 'shallow') { if (fl && hash(cx, cy * 3) < 0.7) { const x = cx + jit(1, 1), z = cy + jit(2, 2); put(fl, x, WATER_Y + 0.03, z, fade, hash(x, z) * 6); } continue; }
       if (fl) for (let i = 0; i < 2; i++) { const x = cx + jit(i, 6), z = cy + jit(i, 7); put(fl, x, heightAt(x, z), z, (0.8 + hash(x, z) * 0.6) * fade, hash(z, x) * 6); }   // plante récoltable visible sur la case
       if (k === 'forest') { if (id === 'yggdrasil') continue;       // l'arbre unique est dessiné à part
-        const [leaf, bark] = WOOD[id] ?? GREEN;
+        const [leaf, bark, bare] = WOOD[id] ?? GREEN;
         for (let i = 0; i < 5; i++) { const x = cx + jit(i, 1), z = cy + jit(i, 2), h = heightAt(x, z), sc = (0.7 + hash(cx + i, cy * 7) * 0.8) * fade;
-          put(trunk, x, h, z, sc, hash(x, z) * 6, sc, bark); if (hash(cx + i * 9, cy) < 0.7) { put(pine1, x, h, z, sc, 0, sc, leaf); put(pine2, x, h, z, sc, 0, sc, leaf); } else put(oak, x, h, z, sc * 1.1, hash(z, x) * 6, sc * 1.1, leaf); }
+          put(trunk, x, h, z, sc, hash(x, z) * 6, sc, bark); if (bare) put(pine2, x, h - 0.25 * sc, z, sc * 0.5, 0, sc * 0.8, leaf); else if (hash(cx + i * 9, cy) < 0.7) { put(pine1, x, h, z, sc, 0, sc, leaf); put(pine2, x, h, z, sc, 0, sc, leaf); } else put(oak, x, h, z, sc * 1.1, hash(z, x) * 6, sc * 1.1, leaf); }
         continue; }
-      if (k === 'plain') { for (let i = 0; i < 3; i++) { const x = cx + jit(i, 3), z = cy + jit(i, 4); put(grass, x, heightAt(x, z), z, (0.7 + hash(x, z) * 0.8) * fade, hash(z, x) * 6, (0.8 + hash(x, z * 2)) * fade); }
-        if (hash(cx, cy) < 0.07) { const x = cx + jit(0, 1), z = cy + jit(0, 2), h = heightAt(x, z), sc = (0.7 + hash(cx, cy * 7) * 0.8) * fade; put(trunk, x, h, z, sc, hash(x, z) * 6, sc, GREEN[1]); put(pine1, x, h, z, sc, 0, sc, GREEN[0]); put(pine2, x, h, z, sc, 0, sc, GREEN[0]); }
+      if (k === 'plain') { if (t.grass !== false) for (let i = 0; i < 3; i++) { const x = cx + jit(i, 3), z = cy + jit(i, 4); put(grass, x, heightAt(x, z), z, (0.7 + hash(x, z) * 0.8) * fade, hash(z, x) * 6, (0.8 + hash(x, z * 2)) * fade, t.grass ?? 0x5f9a35); }
+        if (t.lone !== false && hash(cx, cy) < 0.07) { const [ll, lb] = t.lone ?? GREEN; const x = cx + jit(0, 1), z = cy + jit(0, 2), h = heightAt(x, z), sc = (0.7 + hash(cx, cy * 7) * 0.8) * fade; put(trunk, x, h, z, sc, hash(x, z) * 6, sc, lb); put(pine1, x, h, z, sc, 0, sc, ll); put(pine2, x, h, z, sc, 0, sc, ll); }
         continue; }
-      if (k === 'arid') { if (hash(cx + 4, cy) < 0.08) { const x = cx + jit(0, 7), z = cy + jit(1, 8); put(boulders, x, heightAt(x, z) + 0.08, z, (0.4 + hash(x, z) * 0.5) * fade, hash(z, x) * 6, undefined, 0xa08a62); } continue; }
+      if (k === 'arid') { if (hash(cx + 4, cy) < 0.08) { const x = cx + jit(0, 7), z = cy + jit(1, 8); put(boulders, x, heightAt(x, z) + 0.08, z, (0.4 + hash(x, z) * 0.5) * fade, hash(z, x) * 6, undefined, t.rock ?? 0xa08a62); }
+        const ao = ores[id]; if (ao && hash(cx, cy * 2) < 0.6) { const x = cx + jit(1, 9) * 0.6, z = cy + jit(2, 9) * 0.6, h = heightAt(x, z); for (let i = 0; i < 3; i++) put(ao, x + (i - 1) * 0.1, h, z + (i % 2 ? 0.08 : -0.08), (0.8 + hash(i, cx) * 0.8) * fade, i); }
+        continue; }
       // massifs, glaces, pics d'éther, volcan : aiguilles + rochers teintés, et cristaux du minerai de la case
-      const rock = ROCK[k], hk = 1 + Math.max(0, noiseAt(cx, cy) - 0.74) * 7;
-      for (let i = 0; i < 2; i++) { const x = cx + jit(i, 5) * 0.8, z = cy + jit(i, 6) * 0.8, sc = (0.7 + hash(cx + i, cy + 3) * 0.9) * fade; put(spires, x, heightAt(x, z) - 0.1, z, sc, hash(x, z) * 6, sc * (1.1 + hash(z, x) * 1.3) * hk, rock); }
+      const rock = t.rock ?? ROCK[k], hk = 1 + Math.max(0, noiseAt(cx, cy) - 0.74) * 7;
+      if (!t.flat) for (let i = 0; i < 2; i++) { const x = cx + jit(i, 5) * 0.8, z = cy + jit(i, 6) * 0.8, sc = (0.7 + hash(cx + i, cy + 3) * 0.9) * fade; put(spires, x, heightAt(x, z) - 0.1, z, sc, hash(x, z) * 6, sc * (1.1 + hash(z, x) * 1.3) * hk, rock); }
       for (let i = 0; i < 2; i++) { const x = cx + jit(i, 7), z = cy + jit(i, 8); put(boulders, x, heightAt(x, z) + 0.1, z, (0.5 + hash(x, z) * 1.1) * fade, hash(z, x) * 6, undefined, rock); }
       const ore = ores[id]; if (ore && hash(cx, cy * 2) < (k === 'volcano' ? 0.95 : 0.6)) { const x = cx + jit(1, 9) * 0.6, z = cy + jit(2, 9) * 0.6, h = heightAt(x, z); for (let i = 0; i < 3; i++) put(ore, x + (i - 1) * 0.1, h, z + (i % 2 ? 0.08 : -0.08), (0.8 + hash(i, cx) * 0.8) * fade, i); }
     }
-    for (const m of ALL) { m.count = cnt.get(m) ?? 0; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
+    for (const m of ALL) { m.count = cnt.get(m) ?? 0; m.visible = m.count > 0; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
     const g = FEATURES.ygg, gx = g.x + (g.w - 1) / 2, gz = g.y + (g.h - 1) / 2;
     ygg.visible = world === 1 && Math.max(Math.abs(gx - cur.x), Math.abs(gz - cur.y)) <= see + 5; if (ygg.visible) ygg.position.set(gx, Math.max(heightAt(gx, gz), WATER_Y), gz);
   }
