@@ -15,7 +15,8 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (11)
+## Features (13)
+- **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+5)
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
 - **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage par balises texte ([g]/[i]/[rgb]), édition unifiée titre+description+droits, suppression/transfert — Forum v2 UX pass — édition et gestion : 1. — files: src/components/Guild.jsx, src/components/fmtbar.jsx, src/components/Confirm.jsx, src/lib/fmt.js (+4)
 - **guild-forum-ui** [done] (.kb/cards/guild-forum-ui.md) Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage — The "Forum" tab of the guild modal is a three-level drilldown (categories → topics → messages), with a back icon at each level. — files: src/components/Guild.jsx, src/lib/fmt.js, src/styles.css
@@ -27,13 +28,20 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **guild-ranks-ui** [done] (.kb/cards/guild-ranks-ui.md) Guilde (UI) : dernier Chef, renommage des rangs, création de rang en modale — Front half of the guild-rank feature: the guild modal (Manage tab, Chef only) creates ranks through a small "+" icon that opens a dedicated `NewRankModal` instead of the old inline form, offers a penc — files: src/components/Guild.jsx, src/lib/guild.js
 - **react-redux-base** [done] (.kb/cards/react-redux-base.md) React + Redux base: store, app shell, API client, Vite config — The React 18 + Redux Toolkit base that boots the SPA: a single `game` slice holds auth/session, selected character, entities, active panel, hover/selection and toasts. — files: src/main.jsx, src/store/index.js, src/App.jsx, src/lib/api.js (+1)
 - **terrain-map-3d** [done] (.kb/cards/terrain-map-3d.md) 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions — The client-side world renderer: a mirror of the back's world model — **map 1 (Human) is a hand-drawn grid** (`humanMap.js`, byte-equivalent to the back's generated copy) and the other worlds are the o — files: src/lib/terrain.js, src/lib/humanMap.js, src/lib/resources.js, src/lib/energy.js (+8)
+- **world2-angel-demon** [done] (.kb/cards/world2-angel-demon.md) Monde Anges & Démons (UI) : sol par zone, ressources visibles, eau teintée, légende — Rendu du monde 2 (copie exacte de la logique back, voir fiche back `world2-angel-demon`) avec une règle : **ce qui est dessiné sur une case est ce qu'on y récolte**. — files: src/lib/world2.js, src/lib/resources2.js, src/lib/angelDemonMap.js, src/lib/relief.js (+3)
 
 ## File map
 - `index.html`
 - `package.json`
 - `src/App.jsx` — App
+- `src/admin/Dashboard.jsx` — Pilotage : compteurs, répartition par race, simulation du tick, dernières actions d'audit. — Dashboard
+- `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
+- `src/admin/Entities.jsx` — Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. — Entities
+- `src/admin/EntityRules.jsx` — Éditeur des règles transverses d'une entité : coûts, plafonds (caps), modificateurs bonus/malus & effets. — RuleForms, RulesList
+- `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
+- `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
+- `src/admin/index.jsx` — (header), SECTIONS, Admin
 - `src/components/Account.jsx` — Account
-- `src/components/Admin.jsx` — Admin
 - `src/components/Backdrop.jsx` — Fond 3D vivant (même moteur que le jeu) : la caméra orbite lentement au-dessus du monde. — (header), Backdrop
 - `src/components/Capital.jsx` — (header), CAP, Capital
 - `src/components/ChatDock.jsx` — (header), TABS, ChatDock
@@ -44,7 +52,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/Info.jsx` — Petite icône « i » : l'infobulle s'affiche au survol (ou au focus / clic sur mobile). Rendue dans <body> pour  — Info
 - `src/components/Location.jsx` — (header), WORLDS, Location
 - `src/components/Login.jsx` — (header), Logo, Login, RACES, CharSelect
-- `src/components/MapLegend.jsx` — Légende des ressources : où trouver quoi. Les emplacements précis ne valent que pour le Monde des Hommes (cart — MapLegend
+- `src/components/MapLegend.jsx` — Monde Anges & Démons : une ligne par ZONE de sol (même couleur que sur la carte) et ce qu'on y récolte — le so — (header), hex, LegendAngDem, MapLegend
 - `src/components/Modal.jsx` — Fenêtre modale rendue dans <body> : indépendante des parents (un ancêtre avec backdrop-filter/transform devien — Modal
 - `src/components/Panels.jsx` — (header), Panel, KV, FaithPanel, MountsPanel, OFFS, ActionsPanel, WorldPanel
 - `src/components/SidePanel.jsx` — Silhouette en étoile (bras tendus, jambes écartées) : coordonnées dans un repère 120 × 100. Chaque emplacement — (header), DEFAULT, LABEL, RACES, kindOf, History, SLOTS, LEADERS, GROUP, TYPE, statLine, fmtLock, Inventory, SidePanel
@@ -53,6 +61,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/compass.css`
 - `src/components/fmtbar.jsx` — Barre d'outils de formatage compacte (Gras / Italique / Nuancier) : agit sur la sélection du — (header), rgbOf, FmtBar, PrevToggle, FmtField, useFmt
 - `src/components/legend.css`
+- `src/lib/angelDemonMap.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — monde Anges & Démons : ne pas éditer à la main. — W2, ROWS2, FEATURES2
 - `src/lib/api.js` — token, setToken, hasToken, api
 - `src/lib/drag.js` — Drag & drop des lignes d'affichage (appui + glissement, seuil 8 px pour préserver les clics). — useDrag
 - `src/lib/energy.js` — Énergie d'un trajet (8 directions) jusqu'à stopAt cases de la cible. Miroir de game/movement.ts : — (header), water, pathEnergy, COLORS
@@ -60,16 +69,21 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/guild.js` — Intégrité des rangs (miroir de back/src/routes/guilds.ts) : le dernier porteur du rang Chef — lastChef, ADD, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic
 - `src/lib/hooks.js` — (header), useData, useDo, pct
 - `src/lib/humanMap.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py à partir de la carte de référence — ne pas éditer à la main. — W, ROWS, CODES, FEATURES
-- `src/lib/relief.js` — Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué. — (header), base, WATER_Y, ss, micro, ridge, heightAt, C, DEEP, g2, ZT, zoneTint, groundColor, hash
+- `src/lib/relief.js` — Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué. — (header), base, WATER_Y, ss, micro, ridge, heightAt, C, DEEP, g2, ZT, ZC, cellTint, zoneTint, groundColor, hash
 - `src/lib/resources.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — catalogue des ressources et légende de la carte. — RESOURCES, GROUPS, RES_BY_ID
+- `src/lib/resources2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — catalogue du monde Anges & Démons (zones, ressources, apparence 3D — SIDES, RESOURCES2, ZONES2, RES2_BY_ID
 - `src/lib/terrain.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — copie identique dans backend/src/game/terrain.ts et frontend/src/lib/ter — (header), MAP_HUMAN, WORLD, setWorld, BURN_DAMAGE, KIND_COST, KIND_LABEL, mk, hash, CELLS, BY_CODE, VOID, inMap, humanCell, VR, V, vAt, h0, procNoise, POOL, PROC, noiseAt, terrain, SAFE_ZONES, inSafeZone
+- `src/lib/world2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — copie identique dans backend/src/game/world2.ts et frontend/src/li — (header), MAP_ANGDEM, COST, ihash, CELLS, mk, ZBY, VOID, inMap, pick, terrain2, VR, V, vAt, noise2, lerpHex, FRONTIER_X, waterTint
 - `src/main.jsx`
+- `src/store/admin.js` — État de l'espace administrateur : section active, entité en cours, message de statut. — (header), admin, Ad
 - `src/store/index.js` — game, A
 - `src/styles.css` — {box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 var(--sans);-webkit-
 - `src/three/entities.js` — (header), M, stone, label, person, BEAST, beast, building, mountModel, golem, RACE_COL, makeEntity
 - `src/three/scene.js` — Scène réaliste : terrain en relief continu, ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, v — noiseTex, createScene
+- `test/admin.test.js`
 - `test/fmt.test.js` — Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
 - `test/guild.test.js` — Affichage [1,2,3,ADD] : l’item 1 est déposé devant l’item 3 → [2,1,3], la carte reste en fin — (header), R, g, NOBODY
 - `test/lib.test.js` — Catalogue (miroir de back/src/game/resources.ts) : le nom affiché d'une ressource est celui du catalogue — — (header), find, stepInto
 - `test/world.test.js`
+- `test/world2.test.js`
 - `vite.config.js`
