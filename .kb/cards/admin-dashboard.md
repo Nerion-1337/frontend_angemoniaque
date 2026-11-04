@@ -2,7 +2,7 @@
 title: Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques
 slug: admin-dashboard
 status: done
-updated: 2026-11-03
+updated: 2026-11-04
 files:
   - src/admin/index.jsx
   - src/admin/Dashboard.jsx
@@ -31,7 +31,9 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 
 ## How it works
 - **Shell** (`src/admin/index.jsx`): reads the active section from the Redux `admin` slice, renders the matching
-  panel; a shared `msg` toast shows API errors/success. Gated by `auth.admin` in `App.jsx` (`#admin`).
+  panel; a shared `msg` toast shows API errors/success. Gated by `auth.admin` in `App.jsx` (`#admin`). Phase 2:
+  the monster tab renders the generic `Entities` CRUD **plus** the `Bestiary` panel below it
+  (`<><Entities kind="monster" /><Bestiary /></>`) — see the `bestiaire` card.
 - **Field descriptors** (`entityFields.js` `FIELDS`): one array per entity type — `[column, label, type?]`
   where type is `number|check|json`. JSON fields (behaviour, effects, multipliers, base_stats, prerequisites,
   production/collection) are edited as textareas and parsed with `jsonOr` (default on empty, undefined on

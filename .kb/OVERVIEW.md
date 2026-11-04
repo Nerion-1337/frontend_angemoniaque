@@ -15,8 +15,9 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (13)
+## Features (14)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+5)
+- **bestiaire** [done] (.kb/cards/bestiaire.md) Bestiaire admin panel (phase 2): loot tables, spawn rules, map presence dashboard — Admin UI (Étape 2 phase 2, "Bestiaire" tab of `src/admin/index.jsx`, rendered after the generic `Entities kind="monster"` CRUD): manage per-monster loot tables (classical items, resources, divine item — files: src/admin/Bestiary.jsx, src/admin/bestiary.js
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
 - **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage par balises texte ([g]/[i]/[rgb]), édition unifiée titre+description+droits, suppression/transfert — Forum v2 UX pass — édition et gestion : 1. — files: src/components/Guild.jsx, src/components/fmtbar.jsx, src/components/Confirm.jsx, src/lib/fmt.js (+4)
 - **guild-forum-ui** [done] (.kb/cards/guild-forum-ui.md) Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage — The "Forum" tab of the guild modal is a three-level drilldown (categories → topics → messages), with a back icon at each level. — files: src/components/Guild.jsx, src/lib/fmt.js, src/styles.css
@@ -34,11 +35,13 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `index.html`
 - `package.json`
 - `src/App.jsx` — App
+- `src/admin/Bestiary.jsx` — Bestiaire (Étape 2 phase 2) : tables de butin par monstre (objets, ressources, objets — Bestiary
 - `src/admin/Dashboard.jsx` — Pilotage : compteurs, répartition par race, simulation du tick, dernières actions d'audit. — Dashboard
 - `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
 - `src/admin/Entities.jsx` — Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. — Entities
 - `src/admin/EntityRules.jsx` — Éditeur des règles transverses d'une entité : coûts, plafonds (caps), modificateurs bonus/malus & effets. — RuleForms, RulesList
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
+- `src/admin/bestiary.js` — Bestiaire (Étape 2 phase 2) : aides pures du panneau (affichage du butin, corps de spawn). — lootLabel, spawnBody
 - `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
 - `src/admin/index.jsx` — (header), SECTIONS, Admin
 - `src/components/Account.jsx` — Account
@@ -81,6 +84,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/three/entities.js` — (header), M, stone, label, person, BEAST, beast, building, mountModel, golem, RACE_COL, makeEntity
 - `src/three/scene.js` — Scène réaliste : terrain en relief continu, ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, v — noiseTex, createScene
 - `test/admin.test.js`
+- `test/bestiary.test.js`
 - `test/fmt.test.js` — Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
 - `test/guild.test.js` — Affichage [1,2,3,ADD] : l’item 1 est déposé devant l’item 3 → [2,1,3], la carte reste en fin — (header), R, g, NOBODY
 - `test/lib.test.js` — Catalogue (miroir de back/src/game/resources.ts) : le nom affiché d'une ressource est celui du catalogue — — (header), find, stepInto
