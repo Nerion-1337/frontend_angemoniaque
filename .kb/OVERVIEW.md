@@ -15,7 +15,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (15)
+## Features (16)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+5)
 - **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une **connexion ou une inscription réussie**, un compte admin doit pouvoir accéder directement à l'interface admin : la SPA le redirige sur `#admin` (l'écran d'admin s'ouvre immédiatement, avec  — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
 - **bestiaire** [done] (.kb/cards/bestiaire.md) Bestiaire admin panel (phase 2): loot tables, spawn rules, map presence dashboard — Admin UI (Étape 2 phase 2, "Bestiaire" tab of `src/admin/index.jsx`, rendered after the generic `Entities kind="monster"` CRUD): manage per-monster loot tables (classical items, resources, divine item — files: src/admin/Bestiary.jsx, src/admin/bestiary.js
@@ -28,6 +28,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **guild-ranks-insert-dnd** [done] (.kb/cards/guild-ranks-insert-dnd.md) Guilde (UI) : toggle d'insertion + drag & drop des rangs (Gestion) — Evolution of the "Rangs & privilèges" manage section: (1) a **toggle switch on the add-rank card** chooses whether a newly created rank is inserted **above** the add card (default) or **below** it, wi — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
 - **guild-ranks-manage** [done] (.kb/cards/guild-ranks-manage.md) Guilde (UI) : section Rangs & privilèges (titre centré, carte ajout, réorganisation, label Chef éditable) — Front half of the "Rangs & privilèges" revamp in the manage tab (leader only): the section title is centered and larger; the inline "create rank" form is replaced by an **add-rank placeholder card** ( — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
 - **guild-ranks-ui** [done] (.kb/cards/guild-ranks-ui.md) Guilde (UI) : dernier Chef, renommage des rangs, création de rang en modale — Front half of the guild-rank feature: the guild modal (Manage tab, Chef only) creates ranks through a small "+" icon that opens a dedicated `NewRankModal` instead of the old inline form, offers a penc — files: src/components/Guild.jsx, src/lib/guild.js
+- **monster-details-ui** [done] (.kb/cards/monster-details-ui.md) Panneau Détails de monstre (phase 3) : compétences, équipement 7 slots, auras, plafonds, placements — Partie UI de l'étape 2 phase 3 : dans l'onglet « Monstres » du dashboard admin, la liste des monstres (noms cliquables, filtrable) ouvre une fiche par onglets — compétences/sorts (menu déroulant avec  — files: src/admin/MonsterDetails.jsx, src/admin/monsterDetails.js, src/admin/Pick.jsx, src/admin/index.jsx (+1)
 - **react-redux-base** [done] (.kb/cards/react-redux-base.md) React + Redux base: store, app shell, API client, Vite config — The React 18 + Redux Toolkit base that boots the SPA: a single `game` slice holds auth/session, selected character, entities, active panel, hover/selection and toasts. — files: src/main.jsx, src/store/index.js, src/App.jsx, src/lib/api.js (+1)
 - **terrain-map-3d** [done] (.kb/cards/terrain-map-3d.md) 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions — The client-side world renderer: a mirror of the back's world model — **map 1 (Human) is a hand-drawn grid** (`humanMap.js`, byte-equivalent to the back's generated copy) and the other worlds are the o — files: src/lib/terrain.js, src/lib/humanMap.js, src/lib/resources.js, src/lib/energy.js (+8)
 - **world2-angel-demon** [done] (.kb/cards/world2-angel-demon.md) Monde Anges & Démons (UI) : sol par zone, ressources visibles, eau teintée, légende — Rendu du monde 2 (copie exacte de la logique back, voir fiche back `world2-angel-demon`) avec une règle : **ce qui est dessiné sur une case est ce qu'on y récolte**. — files: src/lib/world2.js, src/lib/resources2.js, src/lib/angelDemonMap.js, src/lib/relief.js (+3)
@@ -41,10 +42,13 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
 - `src/admin/Entities.jsx` — Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. — Entities
 - `src/admin/EntityRules.jsx` — Éditeur des règles transverses d'une entité : coûts, plafonds (caps), modificateurs bonus/malus & effets. — RuleForms, RulesList
+- `src/admin/MonsterDetails.jsx` — Détails de monstre (Étape 2 phase 3) : liste des monstres (noms cliquables) puis onglets — TABS, MonsterDetails
+- `src/admin/Pick.jsx` — Menu déroulant avec recherche (catalogues du jeu) : une case de filtre + la liste filtrée — Pick
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
 - `src/admin/bestiary.js` — Bestiaire (Étape 2 phase 2) : aides pures du panneau (affichage du butin, corps de spawn). — lootLabel, spawnBody
 - `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
 - `src/admin/index.jsx` — (header), SECTIONS, Admin
+- `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3) : aides pures du panneau `MonsterDetails` (UI dans MonsterDetails.jsx). — SLOTS, SLOT_LABEL, pickFilter, spellLabel, equipLabel, auraLabel, capsToMaxCaps, placeBody, respawnIn
 - `src/components/Account.jsx` — Account
 - `src/components/Backdrop.jsx` — Fond 3D vivant (même moteur que le jeu) : la caméra orbite lentement au-dessus du monde. — (header), Backdrop
 - `src/components/Capital.jsx` — (header), CAP, Capital
@@ -81,13 +85,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/world2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — copie identique dans backend/src/game/world2.ts et frontend/src/li — (header), MAP_ANGDEM, COST, ihash, CELLS, mk, ZBY, VOID, inMap, pick, terrain2, VR, V, vAt, noise2, lerpHex, FRONTIER_X, waterTint
 - `src/main.jsx`
 - `src/store/admin.js` — État de l'espace administrateur : section active, entité en cours, message de statut. — (header), admin, Ad
-- `src/store/index.js` — game, A
-- `src/styles.css` — {box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 var(--sans);-webkit-
-- `src/three/entities.js` — (header), M, stone, label, person, BEAST, beast, building, mountModel, golem, RACE_COL, makeEntity
-- `src/three/scene.js` — Scène réaliste : terrain en relief continu, ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, v — noiseTex, createScene
-- `test/admin.test.js`
-- `test/adminDom.test.js` — Régression — warning « validateDOMNesting: <tr> cannot appear as a child of <table> » — raw
-- `test/adminEffects.test.js` — Régression — crash au changement d'onglet du dashboard admin (« destroy is not a function »). — raw, PANELS
-- `test/bestiary.test.js`
-- `test/fmt.test.js` — Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
-- … 6 autres fichiers (utiliser `kb search`)
+- … 16 autres fichiers (utiliser `kb search`)

@@ -33,7 +33,13 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 - **Shell** (`src/admin/index.jsx`): reads the active section from the Redux `admin` slice, renders the matching
   panel; a shared `msg` toast shows API errors/success. Gated by `auth.admin` in `App.jsx` (`#admin`). Phase 2:
   the monster tab renders the generic `Entities` CRUD **plus** the `Bestiary` panel below it
-  (`<><Entities kind="monster" /><Bestiary /></>`) — see the `bestiaire` card.
+  (`<><Entities kind="monster" /><Bestiary /></>`) — see the `bestiaire` card. Phase 3: the
+  monster section also stacks `MonsterDetails` between the CRUD and the `Bestiary` panel
+  (`<><Entities kind="monster" /><MonsterDetails /><Bestiary /></>`) — per-monster spells /
+  equipment (7 slots) / auras / caps + the all-monsters placement dashboard; card
+  `monster-details-ui`. Section headers (`.headrow`) re-styled: baseline alignment, optional
+  `.sub` subtitle, `.grow` spacer for right-aligned actions, bottom border separator —
+  backward-compatible with the unchanged `Entities`/`Races`/`Bestiary` markup.
 - **Field descriptors** (`entityFields.js` `FIELDS`): one array per entity type — `[column, label, type?]`
   where type is `number|check|json`. JSON fields (behaviour, effects, multipliers, base_stats, prerequisites,
   production/collection) are edited as textareas and parsed with `jsonOr` (default on empty, undefined on

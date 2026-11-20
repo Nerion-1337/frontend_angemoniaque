@@ -286,8 +286,15 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin.shell nav button{text-align:left;padding:9px 12px;border-radius:10px;cursor:pointer}
 .admin.shell nav button.on{background:var(--accent,#c9a24a);color:#14100a;font-weight:600}
 .admin.shell .back{margin-top:auto;padding:8px 12px}
-.admin .headrow{display:flex;align-items:center;gap:10px;margin:6px 0}
-.admin .headrow h2{margin:0}
+.admin .headrow{display:flex;align-items:baseline;gap:10px;margin:16px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.admin .headrow h2{margin:0;font-size:20px}
+.admin .headrow .sub{color:var(--mute);font-size:12px}
+.admin .headrow .grow{flex:1;min-width:8px}
+.admin .pick{position:relative;display:inline-flex;gap:6px;align-items:center;min-width:220px}
+.admin .pick input{width:100%}
+.admin .pickv{color:var(--mute);white-space:nowrap}
+.admin .picklist{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0;max-width:460px}
+.admin .picklist button{display:inline-flex;gap:6px;align-items:baseline;flex-wrap:wrap}
 .admin .list{display:grid;gap:6px;margin:10px 0}
 .admin .list .item{width:100%;text-align:left}
 .admin .list .item.on{background:var(--accent,#c9a24a);color:#14100a}
