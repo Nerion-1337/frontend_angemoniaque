@@ -15,8 +15,9 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (14)
+## Features (15)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+5)
+- **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une **connexion ou une inscription réussie**, un compte admin doit pouvoir accéder directement à l'interface admin : la SPA le redirige sur `#admin` (l'écran d'admin s'ouvre immédiatement, avec  — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
 - **bestiaire** [done] (.kb/cards/bestiaire.md) Bestiaire admin panel (phase 2): loot tables, spawn rules, map presence dashboard — Admin UI (Étape 2 phase 2, "Bestiaire" tab of `src/admin/index.jsx`, rendered after the generic `Entities kind="monster"` CRUD): manage per-monster loot tables (classical items, resources, divine item — files: src/admin/Bestiary.jsx, src/admin/bestiary.js
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
 - **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage par balises texte ([g]/[i]/[rgb]), édition unifiée titre+description+droits, suppression/transfert — Forum v2 UX pass — édition et gestion : 1. — files: src/components/Guild.jsx, src/components/fmtbar.jsx, src/components/Confirm.jsx, src/lib/fmt.js (+4)
@@ -72,6 +73,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/guild.js` — Intégrité des rangs (miroir de back/src/routes/guilds.ts) : le dernier porteur du rang Chef — lastChef, ADD, displayRanks, moveRankRow, dropRankRow, insertRankTarget, effWrite, canEditTopic
 - `src/lib/hooks.js` — (header), useData, useDo, pct
 - `src/lib/humanMap.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py à partir de la carte de référence — ne pas éditer à la main. — W, ROWS, CODES, FEATURES
+- `src/lib/postAuth.js` — Suite d'une réponse /auth/login ou /auth/register réussie : — (header), postAuth
 - `src/lib/relief.js` — Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué. — (header), base, WATER_Y, ss, micro, ridge, heightAt, C, DEEP, g2, ZT, ZC, cellTint, zoneTint, groundColor, hash
 - `src/lib/resources.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — catalogue des ressources et légende de la carte. — RESOURCES, GROUPS, RES_BY_ID
 - `src/lib/resources2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — catalogue du monde Anges & Démons (zones, ressources, apparence 3D — SIDES, RESOURCES2, ZONES2, RES2_BY_ID
@@ -88,6 +90,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `test/fmt.test.js` — Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
 - `test/guild.test.js` — Affichage [1,2,3,ADD] : l’item 1 est déposé devant l’item 3 → [2,1,3], la carte reste en fin — (header), R, g, NOBODY
 - `test/lib.test.js` — Catalogue (miroir de back/src/game/resources.ts) : le nom affiché d'une ressource est celui du catalogue — — (header), find, stepInto
-- `test/world.test.js`
-- `test/world2.test.js`
-- `vite.config.js`
+- … 4 autres fichiers (utiliser `kb search`)

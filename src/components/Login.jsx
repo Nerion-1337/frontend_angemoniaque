@@ -1,4 +1,4 @@
-import { useState } from 'react'; import { useDispatch } from 'react-redux'; import { Flame, Feather, User, Lock } from 'lucide-react'; import { api, setToken } from '../lib/api'; import { A } from '../store'; import Backdrop from './Backdrop';
+import { useState } from 'react'; import { useDispatch } from 'react-redux'; import { Flame, Feather, User, Lock } from 'lucide-react'; import { api } from '../lib/api'; import { postAuth } from '../lib/postAuth'; import { A } from '../store'; import Backdrop from './Backdrop';
 const Logo = () => <h1 className="wordmark">Angemoniaque</h1>;
 export function Login() {
   const d = useDispatch(), [mode, setMode] = useState('login'), [f, set] = useState({ email: '', password: '', confirm: '' }), [err, setErr] = useState(''), [busy, setBusy] = useState(false), reg = mode === 'register';
@@ -8,7 +8,7 @@ export function Login() {
     if (reg && f.password.length < 8) return setErr('Mot de passe : 8 caractères minimum');
     if (reg && f.password !== f.confirm) return setErr('Les mots de passe ne correspondent pas');
     setBusy(true);
-    try { const r = await api(reg ? '/auth/register' : '/auth/login', { email: f.email, password: f.password }); setToken(r.token); d(A.setAuth({ admin: r.admin, email: f.email })); }
+    try { const r = await api(reg ? '/auth/register' : '/auth/login', { email: f.email, password: f.password }); const p = postAuth(r, f.email); d(A.setAuth(p.auth)); if (p.hash) location.hash = p.hash; }
     catch (er) { setErr(er.message); } finally { setBusy(false); }
   };
   const field = k => ({ value: f[k], onChange: e => set({ ...f, [k]: e.target.value }) }), tab = m => () => { setMode(m); setErr(''); };

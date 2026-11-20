@@ -52,8 +52,9 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 
 
 ## Entry points
-- `App.jsx` renders `<Admin />` when `hash === '#admin'` and `auth.admin` (import `./admin/index.jsx`).
+- `App.jsx` renders `<Admin />` when `hash === '#admin'` and `auth.admin` (import `./admin/index.jsx`). Auto-reached after a successful admin login/registration (`postAuth`, card `admin-login-nav`); otherwise via the `#admin` links in `CharSelect` / `Account` or by hand.
 - `Account.jsx` links to `#admin` for admin users; `Login.jsx` `CharSelect` shows the admin link.
+- After a **successful** login/registration an admin account is auto-navigated to `#admin` via `src/lib/postAuth.js` `postAuth` (card `admin-login-nav`); the two links above stay as the access points once in-game / after a session reload.
 - Redux: `store/admin.js` slice, actions `Ad.*`.
 
 
