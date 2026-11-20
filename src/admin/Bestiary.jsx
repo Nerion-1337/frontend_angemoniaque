@@ -97,17 +97,17 @@ export default function Bestiary() {
       <div className="editor"><h3>Présence sur les cartes ({status.instances.length})</h3>
         {status.instances.length === 0 && <p className="note">Aucun monstre placé.</p>}
         {status.instances.length > 0 && <table>
-          <tr><th>Monstre</th><th>Carte</th><th>Case</th><th>PV</th><th>Type</th></tr>
-          {status.instances.map(i => <tr key={i.id}>
+          <thead><tr><th>Monstre</th><th>Carte</th><th>Case</th><th>PV</th><th>Type</th></tr></thead>
+          <tbody>{status.instances.map(i => <tr key={i.id}>
             <td>{i.name}</td><td>{i.map_id}</td><td>{i.x},{i.y}</td><td>{i.hp_current}/{i.hp_max}</td>
-            <td>{i.spawned ? 'sauvage (spawn)' : 'ancré'}</td></tr>)}
+            <td>{i.spawned ? 'sauvage (spawn)' : 'ancré'}</td></tr>)}</tbody>
         </table>}
         <h3>Gardiens d'objets divins ({status.guardians.length})</h3>
         <table>
-          <tr><th>Kind</th><th>N°</th><th>Gardien (monstre)</th><th>Détenteur</th></tr>
-          {status.guardians.map(g => <tr key={g.id}>
+          <thead><tr><th>Kind</th><th>N°</th><th>Gardien (monstre)</th><th>Détenteur</th></tr></thead>
+          <tbody>{status.guardians.map(g => <tr key={g.id}>
             <td>{g.kind}</td><td>n°{g.id}</td><td>{g.guardian ?? '—'}</td>
-            <td>{g.holder || <b>libre</b>}</td></tr>)}
+            <td>{g.holder || <b>libre</b>}</td></tr>)}</tbody>
         </table>
       </div>
     )}

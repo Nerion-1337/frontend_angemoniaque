@@ -2,7 +2,7 @@
 title: "Bestiaire admin panel (phase 2): loot tables, spawn rules, map presence dashboard"
 slug: bestiaire
 status: done
-updated: 2026-11-04
+updated: 2026-11-20
 files:
   - src/admin/Bestiary.jsx
   - src/admin/bestiary.js
@@ -12,6 +12,7 @@ symbols:
   - src/admin/Bestiary.jsx:Bestiary
 tests:
   - test/bestiary.test.js
+  - test/adminDom.test.js
 ---
 ## Purpose
 Admin UI (Étape 2 phase 2, "Bestiaire" tab of `src/admin/index.jsx`, rendered after the generic
@@ -56,8 +57,14 @@ back; "sauvage (spawn)" vs "ancré" rows in the presence table come from
 - `test/bestiary.test.js` (Vitest, pure helpers): `lootLabel` for the three entry kinds —
   `objet Épée`, `divin relique n°3`, `divin arcane n°7`, `ressource bois`; and `spawnBody`
   numeric conversion of the whole form state.
+- `test/adminDom.test.js` (Vitest, source guard): every admin `<table>` keeps `<thead>` + `<tbody>`
+  wrappers — a bare `<tr>` directly under `<table>` triggers React's `validateDOMNesting`
+  warning on the Monstres tab (the browser's implicit `<tbody>` diverges from React's tree).
 
 ## Gotchas
+- **DOM nesting**: the two `<table>`s (instances / guardians) wrap their header row in `<thead>` and
+  their data rows in `<tbody>` — React logs `validateDOMNesting: <tr> cannot appear as a child of
+  <table>` when a `<tr>` is a direct child of `<table>` (guard: `test/adminDom.test.js`).
 - **`lootLabel` depends on the back GET field names** (`item_name`, `divine_kind`,
   `divine_ref`): if the back SELECT changes (e.g. someone reintroduces `divine_name`), the
   labels silently degrade — keep the two in sync (see the back `bestiaire` card).
