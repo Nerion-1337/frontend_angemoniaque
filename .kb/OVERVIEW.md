@@ -42,13 +42,14 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
 - `src/admin/Entities.jsx` — Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. — Entities
 - `src/admin/EntityRules.jsx` — Éditeur des règles transverses d'une entité : coûts, plafonds (caps), modificateurs bonus/malus & effets. — RuleForms, RulesList
-- `src/admin/MonsterDetails.jsx` — Détails de monstre (Étape 2 phase 3) : liste des monstres (noms cliquables) puis onglets — TABS, MonsterDetails
+- `src/admin/MiniMap.jsx` — Mini-carte admin (onglet Liste du détail de monstre) : grille colorée par type de terrain — (header), COLORS, MiniMap
+- `src/admin/MonsterDetails.jsx` — Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets : — TABS, EMPTY, MonsterDetails
 - `src/admin/Pick.jsx` — Menu déroulant avec recherche (catalogues du jeu) : une case de filtre + la liste filtrée — Pick
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
 - `src/admin/bestiary.js` — Bestiaire (Étape 2 phase 2) : aides pures du panneau (affichage du butin, corps de spawn). — lootLabel, spawnBody
 - `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
 - `src/admin/index.jsx` — (header), SECTIONS, Admin
-- `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3) : aides pures du panneau `MonsterDetails` (UI dans MonsterDetails.jsx). — SLOTS, SLOT_LABEL, pickFilter, spellLabel, equipLabel, auraLabel, capsToMaxCaps, placeBody, respawnIn
+- `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3b) : aides pures du panneau (liste de types + onglets). — SLOTS, SLOT_LABEL, SLOT_POS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn
 - `src/components/Account.jsx` — Account
 - `src/components/Backdrop.jsx` — Fond 3D vivant (même moteur que le jeu) : la caméra orbite lentement au-dessus du monde. — (header), Backdrop
 - `src/components/Capital.jsx` — (header), CAP, Capital
@@ -83,6 +84,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/resources2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — catalogue du monde Anges & Démons (zones, ressources, apparence 3D — SIDES, RESOURCES2, ZONES2, RES2_BY_ID
 - `src/lib/terrain.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — copie identique dans backend/src/game/terrain.ts et frontend/src/lib/ter — (header), MAP_HUMAN, WORLD, setWorld, BURN_DAMAGE, KIND_COST, KIND_LABEL, mk, hash, CELLS, BY_CODE, VOID, inMap, humanCell, VR, V, vAt, h0, procNoise, POOL, PROC, noiseAt, terrain, SAFE_ZONES, inSafeZone
 - `src/lib/world2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — copie identique dans backend/src/game/world2.ts et frontend/src/li — (header), MAP_ANGDEM, COST, ihash, CELLS, mk, ZBY, VOID, inMap, pick, terrain2, VR, V, vAt, noise2, lerpHex, FRONTIER_X, waterTint
-- `src/main.jsx`
-- `src/store/admin.js` — État de l'espace administrateur : section active, entité en cours, message de statut. — (header), admin, Ad
-- … 16 autres fichiers (utiliser `kb search`)
+- … 18 autres fichiers (utiliser `kb search`)

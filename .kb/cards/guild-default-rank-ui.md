@@ -2,7 +2,7 @@
 title: Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion)
 slug: guild-default-rank-ui
 status: done
-updated: 2026-10-20
+updated: 2026-11-20
 files:
   - src/components/Guild.jsx
   - src/styles.css

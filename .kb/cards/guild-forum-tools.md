@@ -2,7 +2,7 @@
 title: Guilde (UI) : formatage par balises texte ([g]/[i]/[rgb]), édition unifiée titre+description+droits, suppression/transfert
 slug: guild-forum-tools
 status: done
-updated: 2026-10-21
+updated: 2026-11-20
 files:
   - src/components/Guild.jsx
   - src/components/fmtbar.jsx

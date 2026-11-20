@@ -2,7 +2,7 @@
 title: Guilde (UI) : toggle d'insertion + drag & drop des rangs (Gestion)
 slug: guild-ranks-insert-dnd
 status: done
-updated: 2026-10-20
+updated: 2026-11-20
 files:
   - src/components/Guild.jsx
   - src/lib/guild.js

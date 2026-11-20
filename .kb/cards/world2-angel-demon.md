@@ -2,7 +2,7 @@
 title: Monde Anges & Démons (UI) : sol par zone, ressources visibles, eau teintée, légende
 slug: world2-angel-demon
 status: done
-updated: 2026-10-21
+updated: 2026-11-20
 files:
   - src/lib/world2.js
   - src/lib/resources2.js

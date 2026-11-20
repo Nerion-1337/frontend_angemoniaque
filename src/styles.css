@@ -315,3 +315,12 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .tabs button{padding:6px 14px;border-radius:999px}
 .admin .tabs button.on{background:var(--accent,#c9a24a);color:#14100a}
 .admin .toastline{position:fixed;bottom:18px;right:18px;background:var(--glass2,#1c1428);border:1px solid var(--line);padding:10px 14px;border-radius:12px;z-index:30;cursor:pointer}
+
+/* Détail de monstre : silhouette des parties équipables (style personnage) + mini-carte admin */
+.admin .body{position:relative;width:150px;height:150px;border:1px dashed var(--line);border-radius:14px;margin:10px 0}
+.admin .body .chip{position:absolute;transform:translate(-50%,-50%);display:inline-flex;gap:4px;align-items:center;
+  padding:2px 7px;font-size:10px;white-space:nowrap;background:var(--glass2);border:1px solid var(--line);
+  border-radius:9px;cursor:pointer;color:inherit}
+.admin .body .chip.on{border-color:var(--halo,#ffb347);color:var(--halo,#ffb347)}
+.admin .body .chip input{margin:0}
+.admin .minimap{width:100%;max-width:420px;border:1px solid var(--line);border-radius:10px;cursor:crosshair;display:block}

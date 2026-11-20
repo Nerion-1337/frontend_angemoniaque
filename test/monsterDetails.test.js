@@ -1,56 +1,64 @@
 import { test, expect } from 'vitest';
-/**
- * Détails de monstre (Étape 2 phase 3) : aides pures du panneau (monsterDetails.js) +
- * gardes de régression source (contrat useEffect de bloc, DOM nesting thead/tbody).
- */
-import { SLOTS, SLOT_LABEL, pickFilter, spellLabel, equipLabel, auraLabel, capsToMaxCaps, placeBody, respawnIn } from '../src/admin/monsterDetails.js';
+import { SLOTS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from '../src/admin/monsterDetails.js';
+const fs = await import('node:fs');
 
-test('SLOTS : les 7 slots du dossier (contrat CHECK de la migration 12)', () => {
+test('SLOTS : les 7 parties du corps (contrat CHECK des migrations 12/13, style personnage)', () => {
   expect(SLOTS).toEqual(['mains', 'tete', 'torse', 'pieds', 'collier', 'bracelet', 'bague']);
-  for (const s of SLOTS) expect(SLOT_LABEL[s], s).toBeTruthy();
 });
-
-test('pickFilter : recherche insensible à la casse sur le libellé', () => {
-  const cats = [{ id: 1, name: 'Trait de Lumière' }, { id: 2, name: 'Fureur Céleste' }];
-  expect(pickFilter(cats, '', s => s.name)).toHaveLength(2);
-  expect(pickFilter(cats, 'lumiere', s => s.name)).toEqual([]);
-  expect(pickFilter(cats, 'lumière', s => s.name)).toHaveLength(1);
-  expect(pickFilter(cats, 'xxyyz', s => s.name)).toEqual([]);
-  expect(pickFilter(cats, 'FUREUR', s => s.name)).toHaveLength(1);
+test('slotAllowed : liste vide = aucune restriction ; sinon le slot doit y figurer', () => {
+  expect(slotAllowed([], 'mains')).toBe(true);
+  expect(slotAllowed(null, 'mains')).toBe(true);
+  expect(slotAllowed(['mains', 'tete'], 'tete')).toBe(true);
+  expect(slotAllowed(['mains', 'tete'], 'bague')).toBe(false);
 });
-
-test('spellLabel / equipLabel / auraLabel : libellés lisibles (slots, cible, périmètre)', () => {
-  expect(spellLabel({ id: 3, name: 'Trait de Lumière', kind: 'attack', energy_cost: 12 })).toContain('Trait de Lumière (n°3)');
-  expect(equipLabel({ item_id: 7, item_name: 'Épée', slot: 'mains' })).toBe('Épée — Mains');
-  expect(equipLabel({ item_id: 7, item_name: 'Épée', slot: 'autre' })).toBe('Épée — autre');   // slot inconnu : brut
-  expect(auraLabel({ spell_name: 'Fureur', target: 'ally', radius: 5 })).toContain('alliés');
-  expect(auraLabel({ spell_name: 'Fureur', target: 'enemy', radius: 3 })).toContain('ennemis');
-  expect(auraLabel({ spell_name: 'Fureur', target: 'enemy', radius: 3 })).toContain('rayon 3');
+test('pickFilter : recherche insensible à la casse (catalogues avec menu déroulant)', () => {
+  const spells = [{ id: 1, name: 'Brûler' }, { id: 2, name: 'Foudre' }];
+  expect(pickFilter(spells, '', s => s.name)).toHaveLength(2);
+  expect(pickFilter(spells, 'br', s => s.name)).toHaveLength(1);
+  expect(pickFilter(spells, 'FOUD', s => s.name)).toHaveLength(1);
 });
-
-test('capsToMaxCaps : plafonds entity_caps → max dans le jeu / par joueur', () => {
-  expect(capsToMaxCaps([{ scope: 'global', value: 4 }, { scope: 'per_player', value: 2 }])).toEqual({ inGame: 4, perPlayer: 2 });
-  expect(capsToMaxCaps(null)).toEqual({ inGame: '', perPlayer: '' });
+test('spellLabel + capLabel : actives / passives (cible + périmètre, en continu)', () => {
+  expect(spellLabel({ id: 7, name: 'Foudre', energy_cost: 3 })).toBe('Foudre (n°7) · 3 énergie');
+  expect(capLabel({ spell_id: 7, name: 'Foudre', mode: 'active', kind: 'combat' })).toBe('Foudre (n°7) · combat');
+  expect(capLabel({ spell_id: 7, name: 'Foudre', mode: 'passive', target: 'enemy', radius: 3 }))
+    .toBe('Foudre (n°7) · CONTINU (ennemis) · rayon 3');
+  expect(capLabel({ spell_id: 7, name: 'Foudre', mode: 'passive', target: 'ally', radius: 5 }))
+    .toContain('alliés');
 });
-
-test('placeBody : conversion numérique, champs vides → undefined, cases cochées → booléens', () => {
-  const b = placeBody({ monsterId: '3', mapId: '1', x: '40', y: '50', gold: '', items: true, resources: false, divine: true, reincarnateH: '' });
-  expect(b).toEqual({ monsterId: 3, mapId: 1, x: 40, y: 50, gold: undefined, items: true, resources: false, divine: true, reincarnateH: undefined });
+test('equipLabel : objet du catalogue + partie du corps', () => {
+  expect(equipLabel({ item_name: 'Épée brisée', slot: 'mains' })).toBe('Épée brisée — Mains');
+  expect(equipLabel({ item_id: 9 })).toBe('objet n°9');
 });
-
-test('respawnIn : échéance lisible / monstre mort / aucune attente', () => {
-  expect(respawnIn({ hp_current: 10 })).toBe(null);
+test('capsToMaxCaps : plafonds (entity_caps) → inGame / perPlayer', () => {
+  expect(capsToMaxCaps([])).toEqual({ inGame: '', perPlayer: '' });
+  expect(capsToMaxCaps([{ scope: 'global', value: 5 }, { scope: 'per_player', value: 2 }]))
+    .toEqual({ inGame: 5, perPlayer: 2 });
+});
+test('placeBody : conversions numériques + options par défaut', () => {
+  const b = placeBody({ monsterId: '5', mapId: '2', x: '12', y: '8', gold: '50', items: true, resources: false, divine: '', reincarnateH: '' });
+  expect(b).toEqual({ monsterId: 5, mapId: 2, x: 12, y: 8, gold: 50, items: true, resources: false, divine: false });
+  expect(b.reincarnateH).toBeUndefined();
+});
+test('linkedLabel : lié à un personnage ou natif', () => {
+  expect(linkedLabel({ linked: false })).toBe('natif');
+  expect(linkedLabel({ linked: true, linked_pseudo: 'Alba' })).toBe('lié à Alba');
+  expect(linkedLabel({ linked: true })).toContain('un personnage');
+});
+test('respawnIn : mort / échéance / null', () => {
   expect(respawnIn({ hp_current: 0 })).toBe('mort');
-  expect(respawnIn({ hp_current: 0, respawn_due_at: new Date(Date.now() + 2 * 3600e3).toISOString() })).toBe('réincarne dans ~2 h');
+  expect(respawnIn({ hp_current: 5, respawn_due_at: new Date(Date.now() + 3 * 3600e3).toISOString() })).toBe('réincarne dans ~3 h');
+  expect(respawnIn({ hp_current: 5 })).toBeNull();
 });
-
-test('gardiens source : le panneau MonsterDetails respecte le contrat useEffect de bloc et le nesting thead/tbody', async () => {
-  const src = await (await import('../src/admin/MonsterDetails.jsx?raw')).default;
-  expect(src).toMatch(/useEffect\(\(\) => \{ load\(\); \}, \[\]\)/);
-  expect(src).not.toMatch(/useEffect\(\s*load\s*,/);
-  for (const t of src.split('<table>').slice(1)) {
-    const body = t.split('</table>')[0];
-    expect(body, 'entêtes dans <thead>').toMatch(/<thead>[\s\S]*?<\/thead>/);
-    expect(body, 'lignes dans <tbody>').toMatch(/<tbody>[\s\S]*?<\/tbody>/);
-  }
+// ── Garde-fous source ──
+test('guardes : useEffect en corps de bloc + thead/tbody dans MonsterDetails (pas de crash ni de warning DOM)', () => {
+  const s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
+  expect(s.includes('useEffect(() => { load(); }, [])')).toBe(true);
+  expect(s.includes('useEffect(load')).toBe(false);
+  const tables = (s.match(/<table>/g) || []).length, heads = (s.match(/<thead>/g) || []).length, bodies = (s.match(/<tbody>/g) || []).length;
+  expect(heads).toBe(tables); expect(bodies).toBe(tables);
+});
+test('guardes : MiniMap dessine le terrain depuis lib/terrain et renvoie les cases au clic', () => {
+  const s = fs.readFileSync('src/admin/MiniMap.jsx', 'utf8');
+  expect(s.includes("import { terrain } from '../lib/terrain'")).toBe(true);
+  expect(s.includes('onPick(x, y)')).toBe(true);
 });

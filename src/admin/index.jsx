@@ -10,7 +10,7 @@ export default function Admin() {
     {msg && <p className="toastline" onClick={() => d(Ad.msg(''))}>{msg}</p>}
     {t === 'dashboard' && <Dashboard />}
     {t === 'races' && <Races />}
-    {t === 'monster' && <><Entities kind="monster" /><MonsterDetails /><Bestiary /></>}
+    {t === 'monster' && <><MonsterDetails /><Bestiary /></>}
     {t === 'item' && <><Entities kind="item" /><Divine /></>}
     {t === 'mount' && <Entities kind="mount" />}
     {t === 'building' && <Entities kind="building" />}

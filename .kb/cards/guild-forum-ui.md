@@ -2,7 +2,7 @@
 title: Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage
 slug: guild-forum-ui
 status: done
-updated: 2026-10-21
+updated: 2026-11-20
 files:
   - src/components/Guild.jsx
   - src/lib/fmt.js
