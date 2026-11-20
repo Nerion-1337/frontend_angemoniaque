@@ -4,7 +4,7 @@ import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js
 export default function Divine() {
   const d = useDispatch(), [rows, setRows] = useState(null), [n, setN] = useState({ kind: 'relique', nb: 1 });
   const load = () => api('/admin/content/divine').then(setRows).catch(e => d(Ad.msg(e.message)));
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
   const create = async () => { try { await api('/admin/content/divine', { kind: n.kind, n: +n.nb }, 'POST'); d(Ad.msg('Créé (dans la limite du plafond)')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   return <div className="divine">
     <h3>Arcanes · Reliques · Artefacts</h3>

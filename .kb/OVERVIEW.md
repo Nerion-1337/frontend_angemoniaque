@@ -86,8 +86,8 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/three/entities.js` — (header), M, stone, label, person, BEAST, beast, building, mountModel, golem, RACE_COL, makeEntity
 - `src/three/scene.js` — Scène réaliste : terrain en relief continu, ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, v — noiseTex, createScene
 - `test/admin.test.js`
+- `test/adminEffects.test.js` — Régression — crash au changement d'onglet du dashboard admin (« destroy is not a function »). — raw, PANELS
 - `test/bestiary.test.js`
 - `test/fmt.test.js` — Marqueur texte-coloré WYSIWYG `#rrggbb:text#` (édit. riche) + rétro-compat du code isolé historique
 - `test/guild.test.js` — Affichage [1,2,3,ADD] : l’item 1 est déposé devant l’item 3 → [2,1,3], la carte reste en fin — (header), R, g, NOBODY
-- `test/lib.test.js` — Catalogue (miroir de back/src/game/resources.ts) : le nom affiché d'une ressource est celui du catalogue — — (header), find, stepInto
-- … 4 autres fichiers (utiliser `kb search`)
+- … 5 autres fichiers (utiliser `kb search`)

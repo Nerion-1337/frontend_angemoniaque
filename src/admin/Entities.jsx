@@ -7,7 +7,7 @@ export default function Entities({ kind }) {
   const d = useDispatch(), [rows, setRows] = useState(null), [sel, setSel] = useState(null), [draft, setDraft] = useState(null), [tab, setTab] = useState('data');
   const url = URL_KIND[kind];
   const list = () => api(`/admin/content/${url}`).then(setRows).catch(e => d(Ad.msg(e.message)));
-  useEffect(list, [kind]);
+  useEffect(() => { list(); }, [kind]);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
   const open = async id => { const det = await api(`/admin/content/${url}/${id}`).catch(e => { d(Ad.msg(e.message)); return null; }); if (!det) return; setSel(det); setDraft({ ...det }); setTab('data'); };
   const save = async () => {
     const body = {};

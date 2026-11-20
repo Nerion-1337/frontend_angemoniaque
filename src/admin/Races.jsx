@@ -5,7 +5,7 @@ import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 export default function Races() {
   const d = useDispatch(), [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
   const load = () => api('/admin/content/races').then(setRaces).catch(e => d(Ad.msg(e.message)));
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
   const openRace = r => { setSel(r.key); setRaceDraft({ id: r.id, key: r.key, name: r.name, color: r.color ?? '', active: r.active, base_stats: jsonText(r.base_stats ?? null) }); };
   const newRace = () => { setSel(null); setRaceDraft({ id: null, key: '', name: '', color: '', active: true, base_stats: '' }); };
   const delRace = async id => { try { await api(`/admin/content/races/${id}`, undefined, 'DELETE'); d(Ad.msg('Race supprimée')); load(); } catch (e) { d(Ad.msg(e.message)); } };
