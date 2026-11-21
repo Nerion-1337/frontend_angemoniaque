@@ -294,8 +294,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .pick .pickv{width:100%;text-align:left;background:var(--glass2);border:1px solid var(--line);border-radius:8px;
   padding:5px 8px;color:inherit;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .admin .picklist{position:absolute;z-index:30;top:calc(100% + 2px);left:0;right:0;background:var(--glass);border:1px solid var(--line);
-  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);padding:6px;display:none}
-.admin .picklist[style]{display:block}
+  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);padding:6px}
 .admin .picklist input{width:100%;margin-bottom:4px}
 .admin .pickscroll{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
 .admin .pickscroll button{text-align:left;font-size:12px}
@@ -336,3 +335,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 
 /* Onglet Monstres : ligne d'action simple (le bandeau headrow du titre a ete retire) */
 .admin .actions{display:flex;justify-content:flex-end;margin:4px 0 10px}
+.admin .actions .back{border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+/* Spécificités : parties du corps sélectionnables en ligne simple (retour à la ligne si besoin) */
+.admin .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.admin .chips .chip{padding:4px 12px;font-size:12px;border:1px solid var(--line);border-radius:14px;background:var(--glass2);color:inherit}
+.admin .chips .chip.on{border-color:var(--halo,#ffb347);color:var(--halo,#ffb347)}

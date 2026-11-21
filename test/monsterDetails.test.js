@@ -70,8 +70,27 @@ test('guardes : le panneau n\'a plus de « règles transverses » ; l\'onglet Li
   expect(s.includes('RuleForms')).toBe(false);
   expect(s.includes('mine.length')).toBe(true);                       // liste des instances du type sélectionné
 });
-test('guardes : Pick paginé (20 éléments / page) + recherche', () => {
+test('guardes : Pick paginé (20 éléments / page) + recherche + fermeture au clic extérieur', () => {
   const s = fs.readFileSync('src/admin/Pick.jsx', 'utf8');
   expect(s.includes('perPage = 20')).toBe(true);
   expect(s.includes('pickpg')).toBe(true);                            // pieds de page ‹ ›
+  expect(s.includes("document.addEventListener('mousedown'")).toBe(true);
+});
+test('guardes : le dropdown Pick est visible (pas de display:none sur .picklist)', () => {
+  const css = fs.readFileSync('src/styles.css', 'utf8');
+  const m = css.match(/\.admin \.picklist\{[^}]*\}/);
+  expect(m).toBeTruthy();
+  expect(m[0]).not.toContain('display:none');
+});
+test('guardes : Spécificités = puce de sélection en ligne (pas de grille silhouette) + retour à la liste des types', () => {
+  const s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
+  expect(s.includes('className="chips"')).toBe(true);
+  expect(s.includes('SLOT_POS')).toBe(false);
+  expect(s.includes('Retour à la liste des types')).toBe(true);
+  expect(s.includes('setPend')).toBe(false);                          // plus de crash au clic sur un type
+});
+test('guardes : équipement d\'instance borné par la grille du type (grille vide = impossible)', () => {
+  const s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
+  expect(s.includes("iGrid.length > 0 && <div className=\"form\">")).toBe(true);
+  expect(s.includes('iGrid.length === 0')).toBe(true);
 });

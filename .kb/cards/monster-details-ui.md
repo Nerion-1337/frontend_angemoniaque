@@ -27,16 +27,20 @@ Onglet « Monstres » du dashboard admin (étape 2, phases 3b/3c). Vue d'entrée
 2. **Capacité** — sorts **actifs** (lancés à la demande) et **passifs** (possédés par défaut,
    appliqués en continu, sans énergie ; cible alliés/ennemis + périmètre) ; l'ancien concept
    « aura » y est fusionné (catalogue de sorts global, menu avec recherche),
-3. **Spécificités** — quantité max (jeu / joueur) + **parties du corps équipables** (grille
-   silhouette 7 parties, style personnage — `monster_slots` ; vide = aucune restriction),
+3. **Spécificités** — quantité max (jeu / joueur) + **parties du corps équipables** : 7 puces
+   de sélection affichées **sur une simple ligne** (retour à la ligne si besoin, `monster_slots`) —
+   **sans partie cochée, aucun équipement ne peut être ajouté** aux monstres de ce type,
 4. **Liste** — **uniquement les instances du type sélectionné** (coordonnées, carte, PV,
    lié à un pseudo / natif, réincarnation). Un bouton « + Ajouter » à côté du titre ouvre UNE
    SEULE section partagée **édition / création** : en mode création on choisit le type + carte +
    x/y ; en édition on déplace l'instance (**x/y saisis manuellement** et/ou **mini-carte avec
    zoom molette/boutons + pan** — un clic sans glisser remplit x/y), on édite le **butin donné
-   au tueur** (objet / ressource — recherche paginée 20/page dans les catalogues — / **or**,
-   l'or détenu n'étant plus un champ à part) et l'**équipement** (parties bornées par la grille
-   du type). L'ancien onglet « Règles transverses » a été retiré (phase 3c).
+   au tueur** (objet / ressource — menus déroulants avec **recherche paginée 20/page** — / **or**,
+   l'or détenu n'étant plus un champ à part) et l'**équipement** : le choix de partie est
+   **borné par la grille du type** (côté UI **et côté serveur** — grille vide = ajout impossible),
+   les pièces déjà portées restent supprimables. L'ancien onglet « Règles transverses » a été
+   retiré (phase 3c). Le bouton « ← Retour à la liste des types » remonte depuis la fiche d'un
+   type.
 La logique (tables, endpoints, mort/réincarnation, or du butin) est au dépôt back — carte
 `monster-details`.
 
@@ -89,16 +93,27 @@ la sous-collection concernée (pas de cache côté client).
 ## Gotchas
 - **`SLOTS` doit rester à 7 et coïncider avec le CHECK `monster_equips.slot`** (migration 12
   back) : ajouter une partie = migrer le back + la constante + `SLOT_POS` ensemble.
-- **Grille des parties équipables** : liste vide = aucune restriction (l'équipement d'instance
-  retombe sur les 7 `SLOTS`) ; le bornage est appliqué côté UI, pas par l'API.
+- **Grille des parties équipables (phase 3d)** : la liste des parties cochées borne
+  l'équipement des instances — **côté UI** (le formulaire ne propose que les parties cochées,
+  masqué si la grille est vide) **et côté serveur** (`POST /equips` vérifie la grille du type :
+  vide → 400 ; slot hors grille → 400). Une pièce déjà portée reste supprimable même si sa
+  partie n'est plus cochée.
 - **L'or du butin = `monster_loot.resource='or'`** : la ressource spéciale créditée en or du
   tueur par `rollLoot` (back) — ne pas la confondre avec le JSONB `characters.resources` ;
   l'affichage (`lootTag`) et l'ajout (type « Or ») du panneau passent par cette valeur.
 - **`Pick` ne se souvient de rien** (recherche/page réinitialisées) : le panneau rechargue les
-  catalogues à chaque sélection — pas de cache qui désynchroniserait.
+  catalogues à chaque sélection — pas de cache qui désynchroniserait. Le menu est rendu
+  **conditionnellement** (`open`) : ne pas le faire réapparaître via `display` (la règle
+  `display:none` cachait tout le menu, phase 3d) ; la fermeture passe par un écouteur
+  `mousedown` global.
 - **`MiniMap` : le clic = selection, le glisser = pan** (seuil 4 px) ; le `wheel` doit rester
   un écouteur natif non-passif (React rend `preventDefault` impossible en passif).
 - **La section édition/création est une seule et même zone** : « + Ajouter » en mode édition
   la bascule en création (et inversement) — ne pas ajouter de 2e zone d'ajout.
+- **Le changement de carte de la section (mode création) passe par `setNw({ ...nw, mapId })`** :
+  la forme `setNw(v => updater)(valeur)` appelle l'updater avec la valeur — état corrompu.
+- **Le `open(id)` du panneau ne doit jamais faire référence à un setter supprimé**
+  (`setPend` a fait planter le chargement des fiches — les onglets restaient vides/à 0,
+  phase 3d) : vérifier les setters utilisés dans `open()`.
 - **Le tableau de l'onglet Liste est filtré par type** (`mine`) : afficher « tous les
   monstres » serait contredit par la demande — le titre le précise (« du type … »).

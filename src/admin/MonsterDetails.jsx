@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import Pick from './Pick.jsx'; import MiniMap from './MiniMap.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { SLOTS, SLOT_LABEL, SLOT_POS, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
+import { SLOTS, SLOT_LABEL, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
 /**
  * Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets :
  *  1. Caractéristiques (édition des champs du type),
@@ -35,7 +35,7 @@ export default function MonsterDetails() {
   };
   useEffect(() => { load(); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader
   const open = async id => {
-    setSel(id); setTab('data'); setInstSel(null); setPend(null);
+    setSel(id); setTab('data'); setInstSel(null);
     const det = await api(`/admin/content/monsters/${id}`).catch(e => { d(Ad.msg(e.message)); return null; });
     if (!det) return;
     setDraft({ ...det }); setCaps(det.caps ?? []); setMaxCaps(capsToMaxCaps(det.caps ?? []));
@@ -93,7 +93,9 @@ export default function MonsterDetails() {
     setInstSel(i); setInstMap(i.map_id); setMx(i.x); setMy(i.y); setLMode('edit'); setILoot([]); setIEquips([]);
     setIEquips(await api(`/admin/content/monsters/${id}/equips`).catch(() => []));
     setILoot(await api(`/admin/content/monsters/${id}/loot`).catch(() => []));
-    setIGrid((await api(`/admin/content/monsters/${i.prototype ?? id}/slots`).catch(() => [])).map(x => x.slot));
+    const grid = (await api(`/admin/content/monsters/${i.prototype ?? id}/slots`).catch(() => [])).map(x => x.slot);
+    setIGrid(grid);
+    setNe(n => ({ ...n, slot: grid[0] ?? n.slot }));
   });
   // Déplacement : case saisie manuellement (x, y) OU cliquée sur la mini-carte (le clic remplit x, y).
   const moveTo = run(async () => {
@@ -143,7 +145,7 @@ export default function MonsterDetails() {
         <small>{m.guards_item ? `garde ${m.guards_item} · ` : ''}PV {m.hp_max} · n°{m.id}{(status?.instances ?? []).some(i => i.prototype === m.id || i.id === m.id) ? ' · sur map(s)' : ''}</small></button>)}
       {monsters.length === 0 && <p className="note">Aucun type de monstre.</p>}</div>}
     {sel !== '' && <div className="editor">
-      <div className="actions"><button className="sm" onClick={() => setSel('')}>← Liste</button></div>
+      <div className="actions"><button className="sm back" onClick={() => setSel('')}>← Retour à la liste des types</button></div>
       <div className="tabs">{TABS.map(([k, label]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>)}</div>
 
       {tab === 'data' && <div className="form">{F.map(([k, label, t]) =>
@@ -183,11 +185,11 @@ export default function MonsterDetails() {
         </div>
         {(caps ?? []).map(c => <span key={c.scope} className="tag"><b>{c.scope === 'global' ? `jeu ≤ ${c.value}` : c.scope === 'per_player' ? `joueur ≤ ${c.value}` : `${c.scope} ≤ ${c.value}`}</b>
           <button className="sm danger" onClick={() => delCapScope(c.scope)}>×</button></span>)}
-        <div className="body">{SLOTS.map(s =>
-          <button key={s} className={`chip${slots.includes(s) ? ' on' : ''}`} style={{ left: `${SLOT_POS[s][0]}%`, top: `${SLOT_POS[s][1]}%` }} onClick={() => toggleSlot(s)}>
-            <input type="checkbox" checked={slots.includes(s)} readOnly /> {SLOT_LABEL[s]}</button>)}
+        <div className="chips">{SLOTS.map(s =>
+          <button key={s} className={`chip${slots.includes(s) ? ' on' : ''}`} onClick={() => toggleSlot(s)}>{SLOT_LABEL[s]}</button>)}
         </div>
-        <p className="note">Ces parties bornent l'équipement des instances (onglet Liste) : une pièce ne peut être portée que sur une partie cochée.</p>
+        <p className="note">Ces parties bornent l'équipement des instances (onglet Liste) : une pièce ne peut être portée que sur une partie cochée.
+          Sans partie cochée, aucun équipement ne pourra être ajouté aux monstres de ce type sur les maps.</p>
       </div>}
 
       {tab === 'list' && <div>
@@ -212,7 +214,7 @@ export default function MonsterDetails() {
           <div className="form">
             <div className="cell"><small>Carte</small>
               <select value={lMode === 'edit' ? instMap : nw.mapId}
-                onChange={e => { (lMode === 'edit' ? setInstMap : setNw(v => ({ ...v, mapId: e.target.value }))(e.target.value)); setMx('1'); setMy('1'); }}>
+                onChange={e => { if (lMode === 'edit') setInstMap(e.target.value); else setNw({ ...nw, mapId: e.target.value }); setMx('1'); setMy('1'); }}>
                 <option value="">—</option>{(cats?.maps ?? []).map(m => <option key={m.id} value={m.id}>{m.name_file}</option>)}</select></div>
             <div className="cell"><small>x</small><input type="number" value={lMode === 'edit' ? mx : nw.x}
               onChange={e => (lMode === 'edit' ? setMx(e.target.value) : setNw({ ...nw, x: e.target.value }))} /></div>
@@ -250,16 +252,18 @@ export default function MonsterDetails() {
               <div className="cell"><small>Chance (%)</small><input type="number" min="0" max="100" value={nl.dropRate} onChange={e => setNl({ ...nl, dropRate: e.target.value })} /></div>
               <button className="sm" onClick={addLoot}>+ Ajouter au butin</button>
             </div>
-            <h4>Équipement porté (parties : {iGrid.length ? iGrid.map(s => SLOT_LABEL[s]).join(', ') : 'aucune restriction'})</h4>
+            {iGrid.length === 0 && <p className="note">Aucune partie du corps n'est cochée en <b>Spécificités</b> pour ce type : ce monstre ne peut porter aucun équipement
+              (cochez au moins une partie sur ce type pour autoriser l'équipement).</p>}
+            {iGrid.length > 0 && <h4>Équipement porté (parties équipables : {iGrid.map(s => SLOT_LABEL[s]).join(', ')})</h4>}
             {iEquips.map(x => <span key={x.item_id} className="tag"><b>{equipLabel(x)}</b><button className="sm danger" onClick={() => delEquip(x.item_id)}>×</button></span>)}
-            <div className="form">
+            {iGrid.length > 0 && <div className="form">
               <div className="cell"><small>Objet</small>
                 <Pick options={cats?.items ?? []} value={ne.itemId} onPick={v => setNe({ ...ne, itemId: v })} labelOf={o => `${o.name} (n°${o.id})`} perPage={20} /></div>
               <div className="cell"><small>Partie du corps</small>
                 <select value={ne.slot} onChange={e => setNe({ ...ne, slot: e.target.value })}>
-                  {(iGrid.length ? iGrid : SLOTS).map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></div>
+                  {iGrid.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></div>
               <button className="sm" onClick={addEquip}>+ Équiper</button>
-            </div>
+            </div>}
           </>}
         </div>}
       </div>}
