@@ -144,8 +144,7 @@ export default function MonsterDetails() {
         <small>{m.guards_item ? `garde ${m.guards_item} · ` : ''}PV {m.hp_max} · n°{m.id}{(status?.instances ?? []).some(i => i.prototype === m.id || i.id === m.id) ? ' · sur map(s)' : ''}</small></button>)}
       {monsters.length === 0 && <p className="note">Aucun type de monstre.</p>}</div>}
     {sel !== '' && <div className="editor">
-      <div className="headrow"><h2>{sel === 'new' ? 'Nouveau type' : (draft?.name ?? '…')}</h2>
-        <button className="sm" onClick={() => setSel('')}>← Liste</button></div>
+      <div className="actions"><button className="sm" onClick={() => setSel('')}>← Liste</button></div>
       <div className="tabs">{TABS.map(([k, label]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>)}</div>
 
       {tab === 'data' && <div className="form">{F.map(([k, label, t]) =>
@@ -193,9 +192,7 @@ export default function MonsterDetails() {
       </div>}
 
       {tab === 'list' && <div>
-        <div className="headrow"><h3>Monstres du type « {draft?.name ?? '…'} » sur les maps ({mine.length})</h3>
-          <span className="grow"></span>
-          <button className="sm" onClick={() => { setNw({ type: sel, mapId: '', x: 1, y: 1 }); setLMode('new'); }}>+ Ajouter</button></div>
+        <div className="actions"><button className="sm" onClick={() => { setNw({ type: sel, mapId: '', x: 1, y: 1 }); setLMode('new'); }}>+ Ajouter</button></div>
         {mine.length === 0 && <p className="note">Aucun monstre de ce type sur les maps.</p>}
         {mine.length > 0 && <table>
           <thead><tr><th>Monstre</th><th>Type</th><th>Carte</th><th>Position</th><th>PV</th><th>Liaison</th><th>Réincarnation</th><th></th></tr></thead>
