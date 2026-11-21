@@ -1,7 +1,7 @@
 import { test, expect } from 'vitest';
 /**
  * Régression — warning « validateDOMNesting: <tr> cannot appear as a child of <table> »
- * (onglet Monstres du dashboard admin). Les tableaux de `Bestiary.jsx` mettaient `<tr>`
+ * (onglet Monstres du dashboard admin). Les tableaux admin (ex. `Bestiary.jsx`, retiré en phase 3c, puis `MonsterDetails.jsx`) mettent `<tr>`
  * en enfant direct de `<table>` : le navigateur crée un `<tbody>` implicite, l'arbre React
  * ne correspond plus à l'arbre DOM et React loggue le warning à chaque rendu.
  * Contrat : tout `<table>` du code admin contient un `<thead>` (entêtes) et un `<tbody>`
@@ -9,9 +9,9 @@ import { test, expect } from 'vitest';
  */
 const raw = p => import(p + '?raw').then(m => m.default);
 test('tables admin : <thead> + <tbody> présents (aucun <tr> enfant direct de <table>)', async () => {
-  const s = await raw('../src/admin/Bestiary.jsx');
+  const s = await raw('../src/admin/MonsterDetails.jsx');
   const tables = s.split('<table>').slice(1);
-  expect(tables.length, 'le Bestiaire doit au moins avoir ses deux tableaux').toBeGreaterThanOrEqual(2);
+  expect(tables.length, 'le détail de monstre doit au moins avoir son tableau de liste').toBeGreaterThanOrEqual(1);
   for (const t of tables) {
     const body = t.split('</table>')[0];
     expect(body, 'entêtes dans <thead>').toMatch(/<thead>[\s\S]*?<\/thead>/);

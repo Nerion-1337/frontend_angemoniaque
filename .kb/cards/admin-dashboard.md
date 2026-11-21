@@ -2,7 +2,7 @@
 title: Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques
 slug: admin-dashboard
 status: done
-updated: 2026-11-20
+updated: 2026-11-21
 files:
   - src/admin/index.jsx
   - src/admin/Dashboard.jsx
@@ -32,10 +32,9 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 ## How it works
 - **Shell** (`src/admin/index.jsx`): reads the active section from the Redux `admin` slice, renders the matching
   panel; a shared `msg` toast shows API errors/success. Gated by `auth.admin` in `App.jsx` (`#admin`). Phase 2:
-  the monster tab renders the generic `Entities` CRUD **plus** the `Bestiary` panel below it
-  (`<><Entities kind="monster" /><Bestiary /></>`) — see the `bestiaire` card. Phase 3: the
-  monster section also stacks `MonsterDetails` between the CRUD and the `Bestiary` panel
-  (`<><Entities kind="monster" /><MonsterDetails /><Bestiary /></>`) — per-monster spells /
+  the monster tab renders the `MonsterDetails` panel only (phase 3c removed the generic
+  `Entities` CRUD and the `Bestiary` panel from this tab — the monster panel owns the type
+  list + instances; the `Bestiary` component was deleted). Phase 3: the
   equipment (7 slots) / auras / caps + the all-monsters placement dashboard; card
   `monster-details-ui`. Section headers (`.headrow`) re-styled: baseline alignment, optional
   `.sub` subtitle, `.grow` spacer for right-aligned actions, bottom border separator —

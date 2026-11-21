@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import Pick from './Pick.jsx'; import MiniMap from './MiniMap.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { lootLabel } from './bestiary.js';
 import { SLOTS, SLOT_LABEL, SLOT_POS, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
 /**
  * Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets :

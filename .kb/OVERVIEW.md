@@ -37,7 +37,6 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `index.html`
 - `package.json`
 - `src/App.jsx` — App
-- `src/admin/Bestiary.jsx` — Bestiaire (Étape 2 phase 2) : tables de butin par monstre (objets, ressources, objets — Bestiary
 - `src/admin/Dashboard.jsx` — Pilotage : compteurs, répartition par race, simulation du tick, dernières actions d'audit. — Dashboard
 - `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
 - `src/admin/Entities.jsx` — Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. — Entities
@@ -46,7 +45,6 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/MonsterDetails.jsx` — Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets : — TABS, EMPTY, MonsterDetails
 - `src/admin/Pick.jsx` — Menu déroulant avec recherche (catalogues du bestiaire — sorts / objets / ressources) : — Pick
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
-- `src/admin/bestiary.js` — Bestiaire (Étape 2 phase 2) : aides pures du panneau (affichage du butin, corps de spawn). — lootLabel, spawnBody
 - `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
 - `src/admin/index.jsx` — (header), SECTIONS, Admin
 - `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3b) : aides pures du panneau (liste de types + onglets). — SLOTS, SLOT_LABEL, SLOT_POS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn
@@ -85,4 +83,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/terrain.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — copie identique dans backend/src/game/terrain.ts et frontend/src/lib/ter — (header), MAP_HUMAN, WORLD, setWorld, BURN_DAMAGE, KIND_COST, KIND_LABEL, mk, hash, CELLS, BY_CODE, VOID, inMap, humanCell, VR, V, vAt, h0, procNoise, POOL, PROC, noiseAt, terrain, SAFE_ZONES, inSafeZone
 - `src/lib/world2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — copie identique dans backend/src/game/world2.ts et frontend/src/li — (header), MAP_ANGDEM, COST, ihash, CELLS, mk, ZBY, VOID, inMap, pick, terrain2, VR, V, vAt, noise2, lerpHex, FRONTIER_X, waterTint
 - `src/main.jsx`
-- … 17 autres fichiers (utiliser `kb search`)
+- `src/store/admin.js` — État de l'espace administrateur : section active, entité en cours, message de statut. — (header), admin, Ad
+- `src/store/index.js` — game, A
+- `src/styles.css` — {box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 var(--sans);-webkit-
+- … 13 autres fichiers (utiliser `kb search`)
