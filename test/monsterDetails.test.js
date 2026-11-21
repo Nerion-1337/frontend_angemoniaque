@@ -57,8 +57,21 @@ test('guardes : useEffect en corps de bloc + thead/tbody dans MonsterDetails (pa
   const tables = (s.match(/<table>/g) || []).length, heads = (s.match(/<thead>/g) || []).length, bodies = (s.match(/<tbody>/g) || []).length;
   expect(heads).toBe(tables); expect(bodies).toBe(tables);
 });
-test('guardes : MiniMap dessine le terrain depuis lib/terrain et renvoie les cases au clic', () => {
+test('guardes : MiniMap = terrain du jeu + zoom (molette/boutons) + pan + clic sur case', () => {
   const s = fs.readFileSync('src/admin/MiniMap.jsx', 'utf8');
   expect(s.includes("import { terrain } from '../lib/terrain'")).toBe(true);
-  expect(s.includes('onPick(x, y)')).toBe(true);
+  expect(s.includes("addEventListener('wheel'")).toBe(true);        // zoom molette (écouteur non-passif)
+  expect(s.includes('minimapctl')).toBe(true);                       // boutons + / − / vue complète
+  expect(s.includes('onPick(t)')).toBe(true);                         // un clic (sans glisser) renvoie la case
+});
+test('guardes : le panneau n\'a plus de « règles transverses » ; l\'onglet Liste filtre par type', () => {
+  const s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
+  expect(s.includes("'rules'")).toBe(false);
+  expect(s.includes('RuleForms')).toBe(false);
+  expect(s.includes('mine.length')).toBe(true);                       // liste des instances du type sélectionné
+});
+test('guardes : Pick paginé (20 éléments / page) + recherche', () => {
+  const s = fs.readFileSync('src/admin/Pick.jsx', 'utf8');
+  expect(s.includes('perPage = 20')).toBe(true);
+  expect(s.includes('pickpg')).toBe(true);                            // pieds de page ‹ ›
 });

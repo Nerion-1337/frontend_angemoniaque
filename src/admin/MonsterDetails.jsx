@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import Pick from './Pick.jsx'; import MiniMap from './MiniMap.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { RuleForms, RulesList } from './EntityRules.jsx';
 import { lootLabel } from './bestiary.js';
 import { SLOTS, SLOT_LABEL, SLOT_POS, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
 /**
@@ -14,7 +13,7 @@ import { SLOTS, SLOT_LABEL, SLOT_POS, spellLabel, capLabel, equipLabel, capsToMa
  *     déplacer / éditer or + butin + équipement, ou ajouter un nouveau avec les mêmes options),
  *  5. Règles transverses (coûts / plafonds / modificateurs — phase 1, conservées).
  */
-const TABS = [['data', 'Caractéristiques'], ['caps', 'Capacité'], ['spec', 'Spécificités'], ['list', 'Liste'], ['rules', 'Règles transverses']];
+const TABS = [['data', 'Caractéristiques'], ['caps', 'Capacité'], ['spec', 'Spécificités'], ['list', 'Liste']];
 const EMPTY = () => Object.fromEntries(FIELDS.monster.map(([k, , t]) => [k, t === 'check' ? false : '']));
 export default function MonsterDetails() {
   const d = useDispatch();
@@ -25,10 +24,11 @@ export default function MonsterDetails() {
   const [capF, setCapF] = useState({ spellId: '', mode: 'active', target: 'enemy', radius: 3 });
   const [maxCaps, setMaxCaps] = useState({ inGame: '', perPlayer: '' });
   const [instSel, setInstSel] = useState(null), [iLoot, setILoot] = useState([]), [iEquips, setIEquips] = useState([]), [iGrid, setIGrid] = useState([]);
-  const [iGold, setIGold] = useState(''), [pend, setPend] = useState(null), [instMap, setInstMap] = useState('');
-  const [nl, setNl] = useState({ type: 'item', itemId: '', resource: 'bois', dropRate: 100 });
+  const [instMap, setInstMap] = useState(''), [mx, setMx] = useState(''), [my, setMy] = useState('');
+  const [lMode, setLMode] = useState('');   // '' = section fermée ; 'edit' = édition ; 'new' = création (même section)
+  const [nl, setNl] = useState({ type: 'item', itemId: '', resId: '', dropRate: 100, qty: 1 });
   const [ne, setNe] = useState({ itemId: '', slot: 'mains' });
-  const [nw, setNw] = useState({ type: '', mapId: '', x: 1, y: 1, gold: '' });
+  const [nw, setNw] = useState({ type: '', mapId: '', x: 1, y: 1 });
   const load = () => {
     api('/admin/content/monsters').then(setMonsters).catch(e => d(Ad.msg(e.message)));
     api('/admin/catalog').then(setCats).catch(() => {});
@@ -91,23 +91,27 @@ export default function MonsterDetails() {
   const selectInst = run(async id => {
     const i = ((await api('/admin/bestiary/status').catch(() => null))?.instances ?? []).find(x => x.id === id);
     if (!i) return;
-    setInstSel(i); setIGold(i.gold ?? ''); setInstMap(i.map_id); setPend(null); setILoot([]); setIEquips([]);
+    setInstSel(i); setInstMap(i.map_id); setMx(i.x); setMy(i.y); setLMode('edit'); setILoot([]); setIEquips([]);
     setIEquips(await api(`/admin/content/monsters/${id}/equips`).catch(() => []));
     setILoot(await api(`/admin/content/monsters/${id}/loot`).catch(() => []));
     setIGrid((await api(`/admin/content/monsters/${i.prototype ?? id}/slots`).catch(() => [])).map(x => x.slot));
   });
-  const moveInst = run(async () => {
-    if (!pend || !instSel) return;
-    const body = { x: pend.x, y: pend.y };
+  // Déplacement : case saisie manuellement (x, y) OU cliquée sur la mini-carte (le clic remplit x, y).
+  const moveTo = run(async () => {
+    if (!instSel || mx === '' || my === '') return;
+    const body = { x: Number(mx), y: Number(my) };
     if (String(instMap) !== String(instSel.map_id)) body.mapId = Number(instMap);
     await api(`/admin/bestiary/place/${instSel.pos_id}`, body, 'PUT');
-    d(Ad.msg(`Déplacé en ${pend.x},${pend.y}`)); setPend(null); refresh(); selectInst(instSel.id);
+    d(Ad.msg(`Déplacé en ${mx},${my}`)); refresh();
   });
-  const saveGold = run(async () => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}`, { gold_current: iGold === '' ? 0 : Number(iGold) }, 'PUT'); d(Ad.msg('Or enregistré')); refresh(); });
+  const pickTile = p => { setMx(p.x); setMy(p.y); };
   const addLoot = run(async () => {
     if (!instSel) return;
-    const b = { dropRate: Number(nl.dropRate) };
-    if (nl.type === 'item') b.itemId = Number(nl.itemId); else b.resource = nl.resource;
+    const q = Number(nl.qty) || 1;
+    const b = { dropRate: Number(nl.dropRate), qtyMin: q, qtyMax: q };
+    if (nl.type === 'item') { if (!nl.itemId) return d(Ad.msg('Rechercher et choisir un objet')); b.itemId = Number(nl.itemId); }
+    else if (nl.type === 'resource') { if (!nl.resId) return d(Ad.msg('Rechercher et choisir une ressource')); b.resource = ((cats?.resources ?? []).find(r => String(r.id) === String(nl.resId)) ?? { id: '', name: '' }).id; }
+    else b.resource = 'or';   // « or » : fait partie du butin donné au tueur
     await api(`/admin/content/monsters/${instSel.id}/loot`, b);
     d(Ad.msg('Butin ajouté')); setILoot(await api(`/admin/content/monsters/${instSel.id}/loot`).catch(() => []));
   });
@@ -121,16 +125,18 @@ export default function MonsterDetails() {
   const delEquip = run(async itemId => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}/equips/${itemId}`, undefined, 'DELETE'); d(Ad.msg('Retiré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => [])); });
   const removeInst = run(async () => { if (!instSel) return; await api(`/admin/bestiary/place/${instSel.pos_id}`, undefined, 'DELETE'); d(Ad.msg('Monstre retiré de la map')); setInstSel(null); refresh(); });
   const addNew = async () => {
-    if (!nw.type) return d(Ad.msg('Choisir un type de monstre'));
+    if (!nw.type || !nw.mapId) return d(Ad.msg('Choisir le type et la carte'));
     try {
       const r = await api('/admin/bestiary/place', placeBody({ ...nw, reincarnateH: '' }));
-      d(Ad.msg(`« ${r.name} » ajouté en ${r.x},${r.y} — édition possible ci-dessous`));
-      refresh(); selectInst(r.id);
+      d(Ad.msg(`« ${r.name} » ajouté en ${r.x},${r.y} — édition ouverte ci-dessous`));
+      refresh(); selectInst(r.id);   // la même section repasse en mode édition
     } catch (e) { d(Ad.msg(e.message)); }
   };
-  const mapDim = (cats?.maps ?? []).find(m => m.id === Number(instMap)) ?? (cats?.maps ?? [])[0];
+  const mine = sel !== 'new' ? (status?.instances ?? []).filter(i => i.prototype === Number(sel) || i.id === Number(sel)) : [];   // onglet Liste : le type sélectionné uniquement
+  const mapDim = (cats?.maps ?? []).find(m => m.id === Number(lMode === 'new' ? nw.mapId : instMap)) ?? (cats?.maps ?? [])[0];
   const F = FIELDS.monster;
   const typeOf = i => i.spawned ? 'sauvage (spawn)' : i.placed ? 'placé' : 'ancré (prototype)';
+  const lootTag = l => l.item_name ? `objet ${l.item_name}` : (l.divine_ref || l.divine_kind) ? `divin ${l.divine_kind} n°${l.divine_ref}` : l.resource === 'or' ? `or x${l.qty_min ?? 1}` : `ressource ${l.resource} x${l.qty_min ?? 1}`;
   return <section>
     <div className="headrow"><h2>Monstres</h2><span className="sub">liste des types · capacités · spécificités · positions sur les maps</span>
       <span className="grow"></span>{sel === '' && <button className="sm" onClick={newOne}>+ Nouveau type</button>}</div>
@@ -188,69 +194,81 @@ export default function MonsterDetails() {
       </div>}
 
       {tab === 'list' && <div>
-        <div className="editor"><h3>Tous les monstres sur les maps ({(status?.instances ?? []).length})</h3>
-          {(status?.instances ?? []).length === 0 && <p className="note">Aucun monstre sur les maps.</p>}
-          {(status?.instances ?? []).length > 0 && <table>
-            <thead><tr><th>Monstre</th><th>Type</th><th>Carte</th><th>Position</th><th>PV</th><th>Or</th><th>Liaison</th><th>Réincarnation</th><th></th></tr></thead>
-            <tbody>{status.instances.map(i => <tr key={i.id}>
-              <td>{i.name}</td><td>{typeOf(i)}</td><td>{i.map_id}</td><td>{i.x},{i.y}</td>
-              <td>{i.hp_current}/{i.hp_max}</td><td>{i.gold ?? 0}</td>
-              <td>{linkedLabel(i)}</td>
-              <td>{i.reincarnate_h > 0 ? `${i.reincarnate_h} h${respawnIn(i) ? ` · ${respawnIn(i)}` : ''}` : '—'}</td>
-              <td><button className="sm" onClick={() => selectInst(i.id)}>Sélectionner</button></td></tr>)}</tbody>
-          </table>}
-        </div>
-        {instSel && <div className="editor"><h3>Édition — {instSel.name} (n°{instSel.id})</h3>
-          <p className="note">Modifier sa position sur la map (choisir la carte si besoin, cliquer une case, puis « Déplacer »), l'or qu'il détient et donnera au joueur qui le tue, le butin qu'il porte et son équipement (parties cochées en Spécificités).</p>
+        <div className="headrow"><h3>Monstres du type « {draft?.name ?? '…'} » sur les maps ({mine.length})</h3>
+          <span className="grow"></span>
+          <button className="sm" onClick={() => { setNw({ type: sel, mapId: '', x: 1, y: 1 }); setLMode('new'); }}>+ Ajouter</button></div>
+        {mine.length === 0 && <p className="note">Aucun monstre de ce type sur les maps.</p>}
+        {mine.length > 0 && <table>
+          <thead><tr><th>Monstre</th><th>Type</th><th>Carte</th><th>Position</th><th>PV</th><th>Liaison</th><th>Réincarnation</th><th></th></tr></thead>
+          <tbody>{mine.map(i => <tr key={i.id}>
+            <td>{i.name}</td><td>{typeOf(i)}</td><td>{i.map_id}</td><td>{i.x},{i.y}</td>
+            <td>{i.hp_current}/{i.hp_max}</td>
+            <td>{linkedLabel(i)}</td>
+            <td>{i.reincarnate_h > 0 ? `${i.reincarnate_h} h${respawnIn(i) ? ` · ${respawnIn(i)}` : ''}` : '—'}</td>
+            <td><button className={`sm${instSel?.id === i.id && lMode === 'edit' ? ' on' : ''}`} onClick={() => selectInst(i.id)}>Sélectionner</button></td>
+          </tr>)}</tbody>
+        </table>}
+        {lMode !== '' && <div className="editor">
+          {lMode === 'edit'
+            ? <h3>Édition — {instSel?.name} (n°{instSel?.id})</h3>
+            : <h3>Ajouter un monstre {monsters.find(m => m.id === Number(nw.type))?.name ?? '…'} sur une map</h3>}
+          <p className="note">Position : saisir x / y manuellement, ou zoomer / naviguer sur la mini-carte et cliquer une case (le clic remplit x, y).
+            L'or détenu n'est plus un champ à part : il fait partie du <b>butin donné au tueur</b> (section ci-dessous, type « Or »).</p>
           <div className="form">
-            <div className="cell"><small>Carte</small><select value={instMap} onChange={e => { setInstMap(e.target.value); setPend(null); }}>
-              {(cats?.maps ?? []).map(m => <option key={m.id} value={m.id}>{m.name_file}</option>)}</select></div>
-            <div className="cell"><small>Or détenu</small><input type="number" min="0" value={iGold} onChange={e => setIGold(e.target.value)} />
-              <button className="sm" onClick={saveGold}>OK</button></div>
-            <div className="cell"><small>Déplacer</small>
-              <button className="sm" disabled={!pend} onClick={moveInst}>{pend ? `→ ${pend.x},${pend.y}` : 'Cliquer une case'}</button></div>
-            <button className="sm danger" onClick={removeInst}>Retirer de la map</button>
+            <div className="cell"><small>Carte</small>
+              <select value={lMode === 'edit' ? instMap : nw.mapId}
+                onChange={e => { (lMode === 'edit' ? setInstMap : setNw(v => ({ ...v, mapId: e.target.value }))(e.target.value)); setMx('1'); setMy('1'); }}>
+                <option value="">—</option>{(cats?.maps ?? []).map(m => <option key={m.id} value={m.id}>{m.name_file}</option>)}</select></div>
+            <div className="cell"><small>x</small><input type="number" value={lMode === 'edit' ? mx : nw.x}
+              onChange={e => (lMode === 'edit' ? setMx(e.target.value) : setNw({ ...nw, x: e.target.value }))} /></div>
+            <div className="cell"><small>y</small><input type="number" value={lMode === 'edit' ? my : nw.y}
+              onChange={e => (lMode === 'edit' ? setMy(e.target.value) : setNw({ ...nw, y: e.target.value }))} /></div>
+            {lMode === 'edit' && <button className="sm" onClick={moveTo}>Déplacer en {mx},{my}</button>}
           </div>
-          {mapDim && <MiniMap width={mapDim.width} height={mapDim.height} mapId={instMap}
-            items={(status?.instances ?? []).filter(i => i.map_id === Number(instMap))}
-            selected={instSel.id} pending={pend} onPick={p => setPend(p)} />}
-          <h4>Butin (donné au tueur)</h4>
-          {iLoot.map(l => <span key={l.id} className="tag"><b>{lootLabel(l)}</b> {l.drop_rate} %<button className="sm danger" onClick={() => delLoot(l.id)}>×</button></span>)}
-          {iLoot.length === 0 && <p className="note">Aucun butin.</p>}
-          <div className="form">
-            <div className="cell"><small>Type</small><select value={nl.type} onChange={e => setNl({ ...nl, type: e.target.value })}>
-              <option value="item">Objet</option><option value="resource">Ressource</option></select></div>
-            {nl.type === 'item' && <div className="cell"><small>Objet</small>
-              <Pick options={cats?.items ?? []} value={nl.itemId} onPick={v => setNl({ ...nl, itemId: v })} labelOf={o => `${o.name} (n°${o.id})`} placeholder="Rechercher…" /></div>}
-            {nl.type === 'resource' && <div className="cell"><small>Ressource</small><input value={nl.resource} onChange={e => setNl({ ...nl, resource: e.target.value })} placeholder="bois, fer…" /></div>}
-            <div className="cell"><small>Chance (%)</small><input type="number" min="0" max="100" value={nl.dropRate} onChange={e => setNl({ ...nl, dropRate: e.target.value })} /></div>
-            <button className="sm" onClick={addLoot}>+ Ajouter au butin</button>
-          </div>
-          <h4>Équipement porté (parties : {iGrid.length ? iGrid.map(s => SLOT_LABEL[s]).join(', ') : 'aucune restriction'})</h4>
-          {iEquips.map(x => <span key={x.item_id} className="tag"><b>{equipLabel(x)}</b><button className="sm danger" onClick={() => delEquip(x.item_id)}>×</button></span>)}
-          <div className="form">
-            <div className="cell"><small>Objet</small>
-              <Pick options={cats?.items ?? []} value={ne.itemId} onPick={v => setNe({ ...ne, itemId: v })} labelOf={o => `${o.name} (n°${o.id})`} placeholder="Rechercher…" /></div>
-            <div className="cell"><small>Partie du corps</small><select value={ne.slot} onChange={e => setNe({ ...ne, slot: e.target.value })}>
-              {(iGrid.length ? iGrid : SLOTS).map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></div>
-            <button className="sm" onClick={addEquip}>+ Équiper</button>
-          </div>
-        </div>}
-        <div className="editor"><h3>Ajouter un monstre sur une map</h3>
-          <p className="note">Mêmes options que l'édition ci-dessus : après l'ajout, l'instance s'ouvre en édition (position, or, butin, équipement).</p>
-          <div className="form">
-            <div className="cell"><small>Type</small><Pick options={monsters} value={nw.type} onPick={v => setNw({ ...nw, type: v })} labelOf={m => `${m.name} · n°${m.id}`} placeholder="— Choisir —" /></div>
-            <div className="cell"><small>Carte</small><select value={nw.mapId} onChange={e => setNw({ ...nw, mapId: e.target.value })}>
-              <option value="">—</option>{(cats?.maps ?? []).map(m => <option key={m.id} value={m.id}>{m.name_file}</option>)}</select></div>
-            <div className="cell"><small>x</small><input type="number" value={nw.x} onChange={e => setNw({ ...nw, x: e.target.value })} /></div>
-            <div className="cell"><small>y</small><input type="number" value={nw.y} onChange={e => setNw({ ...nw, y: e.target.value })} /></div>
-            <div className="cell"><small>Or</small><input type="number" min="0" value={nw.gold} onChange={e => setNw({ ...nw, gold: e.target.value })} /></div>
+          {(lMode === 'edit' || nw.mapId) && mapDim && <MiniMap width={mapDim.width} height={mapDim.height}
+            mapId={lMode === 'new' ? nw.mapId : instMap}
+            items={mine.filter(i => i.map_id === Number(lMode === 'edit' ? instMap : nw.mapId))}
+            selected={lMode === 'edit' ? instSel?.id : null}
+            pending={(lMode === 'edit' ? (mx !== '' && my !== '') : nw.mapId !== '') ? { x: Number(lMode === 'edit' ? mx : nw.x), y: Number(lMode === 'edit' ? my : nw.y) } : null}
+            onPick={p => lMode === 'edit' ? pickTile(p) : setNw({ ...nw, x: p.x, y: p.y })} />}
+          {lMode === 'new' && <div className="form">
+            <div className="cell"><small>Type de monstre</small>
+              <Pick options={monsters} value={nw.type} onPick={v => setNw({ ...nw, type: v })} labelOf={m => `${m.name} · n°${m.id}`} placeholder="— Choisir —" /></div>
             <button onClick={addNew}>+ Ajouter</button>
-          </div>
-        </div>
+            <p className="note">Mêmes options que l'édition : après l'ajout, l'instance s'ouvre en mode édition (position, butin, équipement).</p>
+          </div>}
+          {lMode === 'edit' && <>
+            <button className="sm danger" onClick={removeInst}>Retirer de la map</button>
+            <h4>Butin (donné au tueur, or compris)</h4>
+            {iLoot.map(l => <span key={l.id} className="tag"><b>{lootTag(l)}</b> · {l.drop_rate} %
+              <button className="sm danger" onClick={() => delLoot(l.id)}>×</button></span>)}
+            {iLoot.length === 0 && <p className="note">Aucun butin.</p>}
+            <div className="form">
+              <div className="cell"><small>Type</small>
+                <select value={nl.type} onChange={e => setNl({ ...nl, type: e.target.value })}>
+                  <option value="item">Objet</option><option value="resource">Ressource</option><option value="or">Or</option></select></div>
+              {nl.type === 'item' && <div className="cell"><small>Objet (recherche)</small>
+                <Pick options={cats?.items ?? []} value={nl.itemId} onPick={v => setNl({ ...nl, itemId: v })} labelOf={o => `${o.name} (n°${o.id})`} perPage={20} /></div>}
+              {nl.type === 'resource' && <div className="cell"><small>Ressource (recherche)</small>
+                <Pick options={cats?.resources ?? []} value={nl.resId} onPick={v => setNl({ ...nl, resId: v })} labelOf={o => `${o.name} (${o.group})`} perPage={20} /></div>}
+              <div className="cell"><small>Quantité</small><input type="number" min="1" value={nl.qty} onChange={e => setNl({ ...nl, qty: e.target.value })} /></div>
+              <div className="cell"><small>Chance (%)</small><input type="number" min="0" max="100" value={nl.dropRate} onChange={e => setNl({ ...nl, dropRate: e.target.value })} /></div>
+              <button className="sm" onClick={addLoot}>+ Ajouter au butin</button>
+            </div>
+            <h4>Équipement porté (parties : {iGrid.length ? iGrid.map(s => SLOT_LABEL[s]).join(', ') : 'aucune restriction'})</h4>
+            {iEquips.map(x => <span key={x.item_id} className="tag"><b>{equipLabel(x)}</b><button className="sm danger" onClick={() => delEquip(x.item_id)}>×</button></span>)}
+            <div className="form">
+              <div className="cell"><small>Objet</small>
+                <Pick options={cats?.items ?? []} value={ne.itemId} onPick={v => setNe({ ...ne, itemId: v })} labelOf={o => `${o.name} (n°${o.id})`} perPage={20} /></div>
+              <div className="cell"><small>Partie du corps</small>
+                <select value={ne.slot} onChange={e => setNe({ ...ne, slot: e.target.value })}>
+                  {(iGrid.length ? iGrid : SLOTS).map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></div>
+              <button className="sm" onClick={addEquip}>+ Équiper</button>
+            </div>
+          </>}
+        </div>}
       </div>}
 
-      {tab === 'rules' && sel !== 'new' && <div><RuleForms kind="monster" id={sel} onSaved={() => open(sel)} /><RulesList kind="monster" id={sel} extra={{ costs: [], caps, modifiers: [] }} onSaved={() => open(sel)} /></div>}
     </div>}
   </section>;
 }
