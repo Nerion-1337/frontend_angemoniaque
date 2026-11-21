@@ -138,8 +138,7 @@ export default function MonsterDetails() {
   const typeOf = i => i.spawned ? 'sauvage (spawn)' : i.placed ? 'placé' : 'ancré (prototype)';
   const lootTag = l => l.item_name ? `objet ${l.item_name}` : (l.divine_ref || l.divine_kind) ? `divin ${l.divine_kind} n°${l.divine_ref}` : l.resource === 'or' ? `or x${l.qty_min ?? 1}` : `ressource ${l.resource} x${l.qty_min ?? 1}`;
   return <section>
-    <div className="headrow"><h2>Monstres</h2><span className="sub">liste des types · capacités · spécificités · positions sur les maps</span>
-      <span className="grow"></span>{sel === '' && <button className="sm" onClick={newOne}>+ Nouveau type</button>}</div>
+    {sel === '' && <div className="actions"><button className="sm" onClick={newOne}>+ Nouveau type</button></div>}
     {sel === '' && <div className="list">{monsters.map(m =>
       <button key={m.id} className="item row2" onClick={() => open(m.id)}><b>{m.name}</b>
         <small>{m.guards_item ? `garde ${m.guards_item} · ` : ''}PV {m.hp_max} · n°{m.id}{(status?.instances ?? []).some(i => i.prototype === m.id || i.id === m.id) ? ' · sur map(s)' : ''}</small></button>)}

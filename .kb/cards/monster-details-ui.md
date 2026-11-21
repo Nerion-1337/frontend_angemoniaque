@@ -20,7 +20,8 @@ tests:
 ---
 ## Purpose
 Onglet « Monstres » du dashboard admin (étape 2, phases 3b/3c). Vue d'entrée : la liste des
-**types** de monstres (+ « + Nouveau type »). Un clic sur un nom ouvre le panneau du type,
+**types** de monstres + bouton « + Nouveau type » aligné à droite (le bandeau de titre
+`headrow` a été retiré — simple ligne d'action `.actions`). Un clic sur un nom ouvre le panneau du type,
 à 4 onglets :
 1. **Caractéristiques** (édition des champs du type, CRUD `entityFields`),
 2. **Capacité** — sorts **actifs** (lancés à la demande) et **passifs** (possédés par défaut,

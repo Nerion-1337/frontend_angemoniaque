@@ -333,3 +333,6 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .body .chip.on{border-color:var(--halo,#ffb347);color:var(--halo,#ffb347)}
 .admin .body .chip input{margin:0}
 .admin .minimap{width:100%;max-width:420px;border:1px solid var(--line);border-radius:10px;cursor:crosshair;display:block}
+
+/* Onglet Monstres : ligne d'action simple (le bandeau headrow du titre a ete retire) */
+.admin .actions{display:flex;justify-content:flex-end;margin:4px 0 10px}
