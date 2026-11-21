@@ -15,7 +15,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (16)
+## Features (17)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+5)
 - **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une **connexion ou une inscription réussie**, un compte admin doit pouvoir accéder directement à l'interface admin : la SPA le redirige sur `#admin` (l'écran d'admin s'ouvre immédiatement, avec  — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
 - **bestiaire** [done] (.kb/cards/bestiaire.md) Panneau Bestiaire (SUPPRIMÉ phase 3c) : composant retiré de l'onglet Monstres — Le panneau « Bestiaire — butin & apparitions » (`Bestiary.jsx` + helpers `bestiary.js`) a été **supprimé de l'onglet Monstres** (phase 3c, à la demande du propriétaire) : sa section titre (`div.headro — files: src/admin/index.jsx
@@ -28,6 +28,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **guild-ranks-insert-dnd** [done] (.kb/cards/guild-ranks-insert-dnd.md) Guilde (UI) : toggle d'insertion + drag & drop des rangs (Gestion) — Evolution of the "Rangs & privilèges" manage section: (1) a **toggle switch on the add-rank card** chooses whether a newly created rank is inserted **above** the add card (default) or **below** it, wi — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
 - **guild-ranks-manage** [done] (.kb/cards/guild-ranks-manage.md) Guilde (UI) : section Rangs & privilèges (titre centré, carte ajout, réorganisation, label Chef éditable) — Front half of the "Rangs & privilèges" revamp in the manage tab (leader only): the section title is centered and larger; the inline "create rank" form is replaced by an **add-rank placeholder card** ( — files: src/components/Guild.jsx, src/lib/guild.js, src/styles.css
 - **guild-ranks-ui** [done] (.kb/cards/guild-ranks-ui.md) Guilde (UI) : dernier Chef, renommage des rangs, création de rang en modale — Front half of the guild-rank feature: the guild modal (Manage tab, Chef only) creates ranks through a small "+" icon that opens a dedicated `NewRankModal` instead of the old inline form, offers a penc — files: src/components/Guild.jsx, src/lib/guild.js
+- **item-spell-rarity-ui** [done] (.kb/cards/item-spell-rarity-ui.md) Onglets admin Objets & Sorts (phase 4) : rareté + « qui peut s'en équiper / l'apprendre » — Onglets admin « Objets » et « Sorts » (phase 4) : gestion du catalogue par rareté et du paramètre « qui peut s'en équiper / l'apprendre ». — files: src/admin/ItemsTab.jsx, src/admin/SpellsTab.jsx, src/admin/rarity.js, src/admin/index.jsx
 - **monster-details-ui** [done] (.kb/cards/monster-details-ui.md) Onglet Monstres (phase 3b/3c) : types, capacités actives/passives, spécificités, liste & édition des instances — Onglet « Monstres » du dashboard admin (étape 2, phases 3b/3c). — files: src/admin/MonsterDetails.jsx, src/admin/monsterDetails.js, src/admin/Pick.jsx, src/admin/MiniMap.jsx (+2)
 - **react-redux-base** [done] (.kb/cards/react-redux-base.md) React + Redux base: store, app shell, API client, Vite config — The React 18 + Redux Toolkit base that boots the SPA: a single `game` slice holds auth/session, selected character, entities, active panel, hover/selection and toasts. — files: src/main.jsx, src/store/index.js, src/App.jsx, src/lib/api.js (+1)
 - **terrain-map-3d** [done] (.kb/cards/terrain-map-3d.md) 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions — The client-side world renderer: a mirror of the back's world model — **map 1 (Human) is a hand-drawn grid** (`humanMap.js`, byte-equivalent to the back's generated copy) and the other worlds are the o — files: src/lib/terrain.js, src/lib/humanMap.js, src/lib/resources.js, src/lib/energy.js (+8)
@@ -41,13 +42,16 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
 - `src/admin/Entities.jsx` — Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. — Entities
 - `src/admin/EntityRules.jsx` — Éditeur des règles transverses d'une entité : coûts, plafonds (caps), modificateurs bonus/malus & effets. — RuleForms, RulesList
+- `src/admin/ItemsTab.jsx` — Onglet admin « Objets » (phase 4) : sous-onglets par rareté (le sous-onglet Divin — (header), blank, ItemsTab
 - `src/admin/MiniMap.jsx` — Mini-carte admin (détail de monstre — onglet Liste) : grille colorée par le terrain du jeu — (header), COLORS, CSS_W, MiniMap
 - `src/admin/MonsterDetails.jsx` — Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets : — TABS, EMPTY, MonsterDetails
 - `src/admin/Pick.jsx` — Menu déroulant avec recherche (catalogues du bestiaire — sorts / objets / ressources) : — Pick
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
+- `src/admin/SpellsTab.jsx` — Onglet admin « Sorts » (phase 4) : catalogue global des sorts (blessures/bonus/malus — (header), blank, SpellsTab
 - `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
 - `src/admin/index.jsx` — (header), SECTIONS, Admin
 - `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3b) : aides pures du panneau (liste de types + onglets). — SLOTS, SLOT_LABEL, SLOT_POS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn
+- `src/admin/rarity.js` — Onglets admin Objets & Sorts (phase 4) : raretés et « qui peut s'en équiper / l'apprendre ». — (header), RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge
 - `src/components/Account.jsx` — Account
 - `src/components/Backdrop.jsx` — Fond 3D vivant (même moteur que le jeu) : la caméra orbite lentement au-dessus du monde. — (header), Backdrop
 - `src/components/Capital.jsx` — (header), CAP, Capital
@@ -80,10 +84,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/relief.js` — Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué. — (header), base, WATER_Y, ss, micro, ridge, heightAt, C, DEEP, g2, ZT, ZC, cellTint, zoneTint, groundColor, hash
 - `src/lib/resources.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — catalogue des ressources et légende de la carte. — RESOURCES, GROUPS, RES_BY_ID
 - `src/lib/resources2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — catalogue du monde Anges & Démons (zones, ressources, apparence 3D — SIDES, RESOURCES2, ZONES2, RES2_BY_ID
-- `src/lib/terrain.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — copie identique dans backend/src/game/terrain.ts et frontend/src/lib/ter — (header), MAP_HUMAN, WORLD, setWorld, BURN_DAMAGE, KIND_COST, KIND_LABEL, mk, hash, CELLS, BY_CODE, VOID, inMap, humanCell, VR, V, vAt, h0, procNoise, POOL, PROC, noiseAt, terrain, SAFE_ZONES, inSafeZone
-- `src/lib/world2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — copie identique dans backend/src/game/world2.ts et frontend/src/li — (header), MAP_ANGDEM, COST, ihash, CELLS, mk, ZBY, VOID, inMap, pick, terrain2, VR, V, vAt, noise2, lerpHex, FRONTIER_X, waterTint
-- `src/main.jsx`
-- `src/store/admin.js` — État de l'espace administrateur : section active, entité en cours, message de statut. — (header), admin, Ad
-- `src/store/index.js` — game, A
-- `src/styles.css` — {box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.35 var(--sans);-webkit-
-- … 13 autres fichiers (utiliser `kb search`)
+- … 20 autres fichiers (utiliser `kb search`)

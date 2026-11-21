@@ -83,6 +83,10 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 
 
 
+- **Onglets Objets/Sorts (phase 4)** : la section nav « Objets & Divins » est devenue « Objets »
+  (`ItemsTab`) + une section « Sorts » (`SpellsTab`) ; le panneau `Divine` est rendu **sous le
+  sous-onglet Divin** de `ItemsTab` (objets uniques : artefacts/arcanes/reliques). Voir la fiche
+  `item-spell-rarity-ui`.
 ## Gotchas
 - **Plural vs singular**: routes use the PLURAL table name; `URL_KIND` (entityFields.js) must stay in sync with
   the back `common.ts URL_KIND`. A new entity type = add its FIELDS entry AND its URL_KIND key.

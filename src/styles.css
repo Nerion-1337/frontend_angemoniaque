@@ -336,6 +336,15 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* Onglet Monstres : ligne d'action simple (le bandeau headrow du titre a ete retire) */
 .admin .actions{display:flex;justify-content:flex-end;margin:4px 0 10px}
 .admin .actions .back{border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+/* Onglets Objets & Sorts (phase 4) : ligne de filtres, badges de rareté, puces « qui peut… » */
+.admin .filterrow{display:flex;align-items:center;gap:10px;margin:6px 0}
+.admin .ux{display:flex;flex-wrap:wrap;gap:4px}
+.admin .ux .chip{padding:3px 10px;font-size:11px;border:1px solid var(--line);border-radius:12px;background:var(--glass2)}
+.admin .ux .chip.on{border-color:var(--halo,#ffb347);color:var(--halo,#ffb347)}
+.admin .rar{padding:2px 9px;border-radius:10px;font-size:11px;border:1px solid var(--line)}
+.admin .rar.commun{color:#b9c0cc}.admin .rar.rare{color:#59b7ff}.admin .rar.epique{color:#c678f5}
+.admin .rar.legendaire{color:#ffb347}.admin .rar.divin{color:#ff5f7a;border-color:#ff5f7a}
+.admin .form .span2{grid-column:span 2}
 /* Spécificités : parties du corps sélectionnables en ligne simple (retour à la ligne si besoin) */
 .admin .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
 .admin .chips .chip{padding:4px 12px;font-size:12px;border:1px solid var(--line);border-radius:14px;background:var(--glass2);color:inherit}

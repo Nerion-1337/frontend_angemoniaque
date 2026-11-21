@@ -68,6 +68,10 @@ La logique (tables, endpoints, mort/réincarnation, or du butin) est au dépôt 
   positions silhouette), `slotAllowed`, `pickFilter`, `spellLabel/capLabel/equipLabel`,
   `capsToMaxCaps`, `placeBody`, `linkedLabel`, `respawnIn`.
 
+- **Phase 4** : l'onglet Monstres est inchangé, mais la nav admin a changé — la section
+  « Objets & Divins » est devenue « Objets » + « Sorts » (fiche `item-spell-rarity-ui`) ;
+  `SLOTS`/`SLOT_LABEL` restent importés par `ItemsTab` (type d'équipement).
+
 ## Entry points
 - `src/admin/index.jsx` → `MonsterDetails` (section `monster`) ; accès `#admin` (fiche
   `admin-login-nav`). API consommée (back) : `/admin/content/monsters`, `/admin/catalog`
