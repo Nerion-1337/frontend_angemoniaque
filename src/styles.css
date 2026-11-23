@@ -280,6 +280,8 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fprev small{display:block;font-size:.66rem;letter-spacing:.05em;text-transform:uppercase;opacity:.5;margin-bottom:2px}
 .replywrap{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:20px}
 .replywrap .replyrow{margin-top:0}
+/* Carte de case : description + sort passif du type de case (admin « Cases ») */
+.card .tileinfo{display:flex;flex-direction:column;gap:3px;margin:0;font-size:13px}.card .tileinfo .bonus{color:var(--ok)}.card .tileinfo .malus{color:var(--hp)}
 /* ---- Espace administrateur (Étape 2) ---- */
 /* Refonte : application plein écran (barre latérale + en-tête + contenu), panneaux, toasts typés. */
 .admin.shell{--panel:rgba(255,255,255,.035);--panel2:rgba(255,255,255,.06);--gold:var(--halo);--danger:#ff7a7a;
@@ -408,3 +410,9 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
   .admin .grid2,.admin .split{grid-template-columns:1fr}.admin .listpane{position:static;max-height:320px}
   .admin .form .span2{grid-column:1/-1}
 }
+/* Section « Cases » : pastille de couleur du terrain, effet bonus/malus */
+.admin .swatch{display:inline-block;width:18px;height:18px;border-radius:5px;border:1px solid rgba(255,255,255,.25);vertical-align:middle}.admin .swatch.lg{width:24px;height:24px}
+.admin td.desc{max-width:340px;color:var(--mute);font-size:13px}
+.admin .bonus{color:var(--ok)}.admin .malus{color:var(--hp)}
+.admin .seg2{display:flex;gap:6px}.admin .seg2 .chip{padding:6px 16px;border:1px solid var(--line);border-radius:999px;background:var(--glass2);color:var(--mute)}
+.admin .seg2 .chip.on.bonus{color:var(--ok);border-color:var(--ok)}.admin .seg2 .chip.on.malus{color:var(--hp);border-color:var(--hp)}

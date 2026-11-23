@@ -67,6 +67,8 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
   éditeur au-dessus du tableau, `open(r)` (corrige « Éditer » qui ne s'ouvrait pas : `open(r.id)`).
 
 
+- Section **« Cases »** (`tiles`, icône `Grid3x3`) : `TilesTab`, card `admin-tiles-ui`.
+
 ## Entry points
 - `App.jsx` renders `<Admin />` when `hash === '#admin'` and `auth.admin` (import `./admin/index.jsx`). Auto-reached after a successful admin login/registration (`postAuth`, card `admin-login-nav`); otherwise via the `#admin` links in `CharSelect` / `Account` or by hand.
 - `Account.jsx` links to `#admin` for admin users; `Login.jsx` `CharSelect` shows the admin link.

@@ -2,7 +2,7 @@
 title: 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions
 slug: terrain-map-3d
 status: done
-updated: 2026-10-21
+updated: 2026-11-23
 files:
   - src/lib/terrain.js
   - src/lib/humanMap.js
@@ -47,6 +47,8 @@ The client-side world renderer: a mirror of the back's world model — **map 1 (
 - `MapLegend.jsx`: legend of the current map's resource groups + a coordinate box (only shown for map 1: "emplacement précis ne vaut que pour la carte 1").
 - `Compass.jsx`: N/E/S/O labels with `cardinalOf(dir)` for the 8 directions.
 - The mobile tile grid renders one cell per `TileCard`; 3D view uses the camera pan/zoom + `entities` sprites.
+
+- **Types de case admin (2026-11-24, card `admin-tiles-ui`)** : `energy.js` `pathEnergy` utilise `costOf(t)` (`lib/tiles.js`, coûts du monde courant chargés par `TileCard` depuis `/map/{id}/tile-types`) ; `TileCard` affiche `cell.tile` (nom du type, description, effet continu) et son coût.
 
 ## Entry points
 - `GameCanvas` mount + WS `moved` events + 8 s poll → `scene.js` render loop.
