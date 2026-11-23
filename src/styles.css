@@ -281,20 +281,98 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .replywrap{display:flex;flex-direction:column;align-items:center;gap:4px;margin-top:20px}
 .replywrap .replyrow{margin-top:0}
 /* ---- Espace administrateur (Étape 2) ---- */
-.admin.shell{display:grid;grid-template-columns:190px 1fr;gap:14px;max-width:1180px;padding-bottom:40px}
-.admin.shell nav{display:flex;flex-direction:column;gap:6px}
-.admin.shell nav button{text-align:left;padding:9px 12px;border-radius:10px;cursor:pointer}
-.admin.shell nav button.on{background:var(--accent,#c9a24a);color:#14100a;font-weight:600}
-.admin.shell .back{margin-top:auto;padding:8px 12px}
-.admin .headrow{display:flex;align-items:baseline;gap:10px;margin:16px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-.admin .headrow h2{margin:0;font-size:20px}
+/* Refonte : application plein écran (barre latérale + en-tête + contenu), panneaux, toasts typés. */
+.admin.shell{--panel:rgba(255,255,255,.035);--panel2:rgba(255,255,255,.06);--gold:var(--halo);--danger:#ff7a7a;
+  position:fixed;inset:0;margin:0;max-width:none;max-height:none;padding:0;border:0;border-radius:0;overflow:hidden;animation:none;
+  display:grid;grid-template-columns:232px 1fr;background:radial-gradient(1200px 600px at 80% -10%,rgba(240,210,138,.07),transparent 60%),var(--bg)}
+.admin.shell aside{display:flex;flex-direction:column;gap:18px;padding:20px 14px;border-right:1px solid var(--line);background:rgba(10,8,20,.75);backdrop-filter:blur(12px);overflow-y:auto;z-index:12}
+.admin.shell .brand{display:flex;flex-direction:column;padding:0 8px}.admin.shell .brand .logo{font-size:19px}.admin.shell .brand small{letter-spacing:.14em;text-transform:uppercase;font-size:10px}
+.admin.shell nav{display:flex;flex-direction:column;gap:3px}
+.admin.shell nav button{display:flex;align-items:center;gap:10px;text-align:left;padding:9px 12px;border:1px solid transparent;border-radius:10px;background:none;color:var(--mute)}
+.admin.shell nav button:hover:not(:disabled){background:var(--panel2);color:var(--ink);border-color:transparent}
+.admin.shell nav button.on{background:linear-gradient(95deg,rgba(240,210,138,.2),rgba(240,210,138,.05));color:var(--gold);border-color:rgba(240,210,138,.3);font-weight:600}
+.admin.shell .back{margin-top:auto;display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;color:var(--mute);text-decoration:none}.admin.shell .back:hover{color:var(--ink);background:var(--panel2)}
+.admin.shell main{display:flex;flex-direction:column;min-width:0;overflow:hidden}
+.admin .topbar{display:flex;align-items:center;gap:12px;padding:16px 28px;border-bottom:1px solid var(--line);background:rgba(13,11,22,.6);backdrop-filter:blur(10px)}
+.admin .topbar h1{margin:0;font:600 21px/1.2 var(--serif);letter-spacing:.02em}.admin .topbar .topico{color:var(--gold);flex:none}.admin .topbar .burger{display:none}
+.admin .content{flex:1;overflow-y:auto;padding:22px 28px 60px}.admin .content>section{max-width:1280px;margin:0 auto}
+.admin .scrim{display:none}
+.admin h2,.admin h3,.admin h4{font-family:var(--serif);font-weight:500;margin:0 0 10px}.admin h3{font-size:16px}.admin h4{font-size:14px}
+.admin .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 16px}
+.admin .grow{flex:1;min-width:8px}
+.admin .empty{color:var(--mute);text-align:center;padding:22px 10px;margin:0;font-style:italic}
+.admin .note{color:var(--mute);font-size:13px;margin:4px 0 10px}
+.admin code,.admin .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px}
+.admin button.primary{display:inline-flex;align-items:center;gap:6px;padding:8px 16px}
+.admin button.danger{color:var(--danger);border-color:rgba(255,122,122,.35)}.admin button.danger:hover:not(:disabled){background:rgba(255,122,122,.12);border-color:var(--danger)}
+.admin button.ghost{background:none;border-color:transparent;color:var(--mute)}.admin button.ghost:hover:not(:disabled){color:var(--ink)}
+.admin button.sm{padding:4px 10px;font-size:13px;display:inline-flex;align-items:center;gap:4px}
+.admin input.search{min-width:200px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.25)}
+.admin textarea{background:rgba(0,0,0,.25)}
+.admin .headrow{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.admin .headrow h2,.admin .headrow h3{margin:0}
 .admin .headrow .sub{color:var(--mute);font-size:12px}
-.admin .headrow .grow{flex:1;min-width:8px}
+.admin .dirty{font-size:11px;color:var(--en);border:1px solid currentColor;border-radius:999px;padding:1px 8px}
+/* Pilotage */
+.admin .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:16px}
+.admin .kpi{position:relative;display:flex;flex-direction:column;gap:2px;padding:16px 18px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(160deg,rgba(240,210,138,.08),var(--panel) 60%);min-height:96px}
+.admin .kpi svg{position:absolute;right:14px;top:14px;color:var(--gold);opacity:.75}
+.admin .kpi b{font:600 28px/1.1 var(--serif);font-variant-numeric:tabular-nums}.admin .kpi small{text-transform:uppercase;letter-spacing:.08em;font-size:11px}
+.admin .kpi.skel{background:linear-gradient(90deg,var(--panel),var(--panel2),var(--panel));background-size:200% 100%;animation:skel 1.2s linear infinite}
+@keyframes skel{to{background-position:-200% 0}}
+.admin .grid2{display:grid;grid-template-columns:2fr 1fr;gap:16px}.admin .grid2>.panel{margin:0 0 16px}
+.admin .bar{display:grid;grid-template-columns:110px 1fr 48px;gap:10px;align-items:center;margin:8px 0;text-transform:capitalize}
+.admin .bar i{display:block;height:10px;border-radius:99px;background:rgba(255,255,255,.08);position:relative;overflow:hidden}
+.admin .bar i::after{content:'';position:absolute;inset:0;width:calc(var(--p)*1%);background:linear-gradient(90deg,var(--bronze),var(--gold));border-radius:inherit;transition:width .5s}
+.admin .bar b{text-align:right;font-variant-numeric:tabular-nums}
+.admin .more{display:block;margin:10px auto 0}
+/* Tableaux */
+.admin .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.admin table{width:100%;border-collapse:collapse;font-size:14px}
+.admin th{position:sticky;top:0;background:rgba(20,17,34,.95);text-align:left;font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);padding:9px 10px;border-bottom:1px solid var(--line)}
+.admin td{padding:8px 10px;border-bottom:1px solid rgba(255,255,255,.05);text-align:left;vertical-align:middle}
+.admin tbody tr:hover{background:rgba(255,255,255,.03)}.admin tbody tr.sel{background:rgba(240,210,138,.09);box-shadow:inset 3px 0 0 var(--gold)}
+/* Liste + fiche (éditeur générique) */
+.admin .split{display:grid;grid-template-columns:minmax(240px,320px) 1fr;gap:16px;align-items:start}
+.admin .listpane{position:sticky;top:0;max-height:calc(100vh - 150px);display:flex;flex-direction:column}
+.admin .listpane .search{flex:1;min-width:0}.admin .count{margin:0 0 6px 4px}
+.admin .list{display:grid;gap:4px;margin:4px 0;overflow-y:auto}
+.admin .list .item{width:100%;text-align:left;display:flex;flex-direction:column;gap:1px;border-color:transparent;background:none}
+.admin .list .item:hover:not(:disabled){background:var(--panel2)}
+.admin .list .item.on{background:rgba(240,210,138,.13);border-color:rgba(240,210,138,.35);color:var(--ink)}
+.admin .form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;align-items:end;margin:10px 0}
+.admin .form .cell small,.admin .form div>small{display:block;margin-bottom:4px}
+.admin .form input,.admin .form select{width:100%}
+.admin .form textarea{width:100%;margin:0}
+.admin .form .span2{grid-column:span 2}.admin .form .span-all{grid-column:1/-1}
+.admin .form .check{display:flex;align-items:center;gap:8px;padding:8px 0}
+.admin .editor{border:1px solid var(--line);border-radius:14px;padding:16px;margin:0 0 16px;background:var(--panel)}
+.admin .divine{border:1px solid var(--line);border-radius:14px;padding:16px;margin:10px 0;background:var(--panel)}
+.admin .race{margin:0 0 14px;align-items:stretch;border-top:1px solid var(--line);border-left:3px solid var(--gold)}
+.admin .ranks{display:grid;gap:4px;margin-top:6px}
+.admin .rank{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:10px;align-items:center;padding:6px 10px;border-radius:10px;background:rgba(0,0,0,.18);text-align:left;color:var(--ink);font-size:inherit}
+.admin .actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:4px 0 10px}
+.admin .actions.sticky{position:sticky;bottom:-16px;margin:14px -16px -16px;padding:12px 16px;background:rgba(17,15,30,.95);border-top:1px solid var(--line);border-radius:0 0 14px 14px}
+.admin .actions .back{border:1px solid var(--line);border-radius:8px;padding:5px 10px}
+.admin .tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin:2px;text-align:left}
+.admin .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
+.admin .rules{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.admin .rulebox{border:1px dashed var(--line);border-radius:10px;padding:10px}
+.admin .ruleslist p{margin:6px 0}
+.admin .tabs{display:flex;gap:4px;margin:0 0 14px;padding:4px;background:rgba(0,0,0,.25);border-radius:12px;width:fit-content;max-width:100%;overflow-x:auto}
+.admin .tabs button{padding:6px 14px;border-radius:9px;border:0;background:none;color:var(--mute);white-space:nowrap}
+.admin .tabs button:hover:not(:disabled){background:var(--panel2);color:var(--ink)}
+.admin .tabs button.on{background:rgba(240,210,138,.18);color:var(--gold);font-weight:600}
+/* Toasts */
+.admin .toastline{position:fixed;bottom:20px;right:20px;z-index:40;display:flex;align-items:center;gap:10px;max-width:min(440px,calc(100vw - 32px));padding:11px 12px 11px 14px;border-radius:12px;background:var(--glass2);border:1px solid var(--line);box-shadow:0 12px 36px rgba(0,0,0,.5);animation:pop .18s ease-out}
+.admin .toastline.ok{border-color:rgba(95,208,138,.5)}.admin .toastline.ok svg:first-child{color:var(--ok)}
+.admin .toastline.err{border-color:rgba(255,122,122,.5)}.admin .toastline.err svg:first-child{color:var(--danger)}
+.admin .toastline .x{position:static;flex:none;width:24px;height:24px;display:grid;place-items:center;background:none;border:0}
+/* Menu de recherche (Pick) */
 .admin .pick{position:relative;display:inline-block;min-width:220px}
 .admin .pick .pickv{width:100%;text-align:left;background:var(--glass2);border:1px solid var(--line);border-radius:8px;
   padding:5px 8px;color:inherit;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.admin .picklist{position:absolute;z-index:30;top:calc(100% + 2px);left:0;right:0;background:var(--glass);border:1px solid var(--line);
-  border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);padding:6px}
+.admin .picklist{position:absolute;z-index:30;top:calc(100% + 2px);left:0;right:0;background:var(--glass2);border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.4);padding:6px;min-width:240px}
 .admin .picklist input{width:100%;margin-bottom:4px}
 .admin .pickscroll{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
 .admin .pickscroll button{text-align:left;font-size:12px}
@@ -303,49 +381,30 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .minimapwrap{position:relative;max-width:422px}
 .admin .minimapctl{position:absolute;top:6px;right:6px;z-index:5;display:flex;gap:4px}
 .admin .minimapinfo{position:absolute;bottom:6px;left:6px;z-index:5;background:rgba(0,0,0,.55);border-radius:6px;padding:2px 8px;font-size:11px;color:#fff}
-.admin .list{display:grid;gap:6px;margin:10px 0}
-.admin .list .item{width:100%;text-align:left}
-.admin .list .item.on{background:var(--accent,#c9a24a);color:#14100a}
-.admin .form{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;align-items:end;margin:8px 0}
-.admin .form .cell small,.admin .form div>small{display:block;margin-bottom:3px}
-.admin .form textarea{width:100%}
-.admin .editor,.admin .race,.admin .divine{border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0}
-.admin .rank{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:8px;align-items:center;padding:4px 0}
-.admin .kpis{display:flex;gap:10px;flex-wrap:wrap}
-.admin .kpi{border:1px solid var(--line);border-radius:12px;padding:10px 16px;text-align:center}
-.admin .kpi b{font-size:22px;display:block}
-.admin .tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 10px;margin:2px}
-.admin .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:6px 0}
-.admin .rules{display:grid;gap:10px}
-.admin .rulebox{border:1px dashed var(--line);border-radius:10px;padding:8px}
-.admin .ruleslist p{margin:6px 0}
-.admin .tabs{display:flex;gap:8px;margin:8px 0}
-.admin .tabs button{padding:6px 14px;border-radius:999px}
-.admin .tabs button.on{background:var(--accent,#c9a24a);color:#14100a}
-.admin .toastline{position:fixed;bottom:18px;right:18px;background:var(--glass2,#1c1428);border:1px solid var(--line);padding:10px 14px;border-radius:12px;z-index:30;cursor:pointer}
-
-/* Détail de monstre : silhouette des parties équipables (style personnage) + mini-carte admin */
+.admin .minimap{width:100%;max-width:420px;border:1px solid var(--line);border-radius:10px;cursor:crosshair;display:block}
+/* Détail de monstre : parties équipables */
 .admin .body{position:relative;width:150px;height:150px;border:1px dashed var(--line);border-radius:14px;margin:10px 0}
 .admin .body .chip{position:absolute;transform:translate(-50%,-50%);display:inline-flex;gap:4px;align-items:center;
-  padding:2px 7px;font-size:10px;white-space:nowrap;background:var(--glass2);border:1px solid var(--line);
-  border-radius:9px;cursor:pointer;color:inherit}
-.admin .body .chip.on{border-color:var(--halo,#ffb347);color:var(--halo,#ffb347)}
+  padding:2px 7px;font-size:10px;white-space:nowrap;background:var(--glass2);border:1px solid var(--line);border-radius:9px;cursor:pointer;color:inherit}
+.admin .body .chip.on{border-color:var(--halo);color:var(--halo)}
 .admin .body .chip input{margin:0}
-.admin .minimap{width:100%;max-width:420px;border:1px solid var(--line);border-radius:10px;cursor:crosshair;display:block}
-
-/* Onglet Monstres : ligne d'action simple (le bandeau headrow du titre a ete retire) */
-.admin .actions{display:flex;justify-content:flex-end;margin:4px 0 10px}
-.admin .actions .back{border:1px solid var(--line);border-radius:8px;padding:5px 10px}
-/* Onglets Objets & Sorts (phase 4) : ligne de filtres, badges de rareté, puces « qui peut… » */
-.admin .filterrow{display:flex;align-items:center;gap:10px;margin:6px 0}
+/* Objets & Sorts : filtres, badges de rareté, puces « qui peut… » */
+.admin .filterrow{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
 .admin .ux{display:flex;flex-wrap:wrap;gap:4px}
-.admin .ux .chip{padding:3px 10px;font-size:11px;border:1px solid var(--line);border-radius:12px;background:var(--glass2)}
-.admin .ux .chip.on{border-color:var(--halo,#ffb347);color:var(--halo,#ffb347)}
-.admin .rar{padding:2px 9px;border-radius:10px;font-size:11px;border:1px solid var(--line)}
-.admin .rar.commun{color:#b9c0cc}.admin .rar.rare{color:#59b7ff}.admin .rar.epique{color:#c678f5}
-.admin .rar.legendaire{color:#ffb347}.admin .rar.divin{color:#ff5f7a;border-color:#ff5f7a}
-.admin .form .span2{grid-column:span 2}
-/* Spécificités : parties du corps sélectionnables en ligne simple (retour à la ligne si besoin) */
+.admin .ux .chip,.admin .chips .chip{padding:4px 12px;font-size:12px;border:1px solid var(--line);border-radius:14px;background:var(--glass2);color:var(--mute)}
+.admin .ux .chip.on,.admin .chips .chip.on{border-color:var(--halo);color:var(--halo);background:rgba(240,210,138,.1)}
 .admin .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-.admin .chips .chip{padding:4px 12px;font-size:12px;border:1px solid var(--line);border-radius:14px;background:var(--glass2);color:inherit}
-.admin .chips .chip.on{border-color:var(--halo,#ffb347);color:var(--halo,#ffb347)}
+.admin .rar{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600;border:1px solid currentColor;background:color-mix(in srgb,currentColor 10%,transparent)}
+.admin .rar.commun{color:#b9c0cc}.admin .rar.rare{color:#59b7ff}.admin .rar.epique{color:#c678f5}
+.admin .rar.legendaire{color:#ffb347}.admin .rar.divin{color:#ff5f7a}
+/* Petits écrans : barre latérale en tiroir */
+@media (max-width:860px){
+  .admin.shell{grid-template-columns:1fr}
+  .admin.shell aside{position:fixed;inset:0 auto 0 0;width:250px;transform:translateX(-100%);transition:transform .2s}
+  .admin.shell.navopen aside{transform:none}
+  .admin.shell.navopen .scrim{display:block;position:fixed;inset:0;z-index:11;background:rgba(0,0,0,.5)}
+  .admin .topbar{padding:12px 16px}.admin .topbar .burger{display:grid}
+  .admin .content{padding:16px 16px 60px}
+  .admin .grid2,.admin .split{grid-template-columns:1fr}.admin .listpane{position:static;max-height:320px}
+  .admin .form .span2{grid-column:1/-1}
+}

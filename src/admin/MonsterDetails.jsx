@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
-import Pick from './Pick.jsx'; import MiniMap from './MiniMap.jsx';
+import Pick from './Pick.jsx'; import { confirmDel } from './ui.jsx'; import MiniMap from './MiniMap.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 import { SLOTS, SLOT_LABEL, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
 /**
@@ -56,10 +56,10 @@ export default function MonsterDetails() {
     }
     try {
       const r = sel === 'new' ? await api('/admin/content/monsters', body, 'POST') : await api(`/admin/content/monsters/${sel}`, body, 'PUT');
-      d(Ad.msg('Enregistré')); load(); open(r.id);
+      d(Ad.ok('Enregistré')); load(); open(r.id);
     } catch (e) { d(Ad.msg(e.message)); }
   };
-  const remove = async () => { try { await api(`/admin/content/monsters/${sel}`, undefined, 'DELETE'); d(Ad.msg('Supprimé')); setSel(''); load(); } catch (e) { d(Ad.msg(e.message)); } };
+  const remove = async () => { if (!confirmDel('ce type de monstre')) return; try { await api(`/admin/content/monsters/${sel}`, undefined, 'DELETE'); d(Ad.ok('Supprimé')); setSel(''); load(); } catch (e) { d(Ad.msg(e.message)); } };
   const run = f => async (...a) => { try { await f(...a); } catch (e) { d(Ad.msg(e.message)); } };
   const refresh = () => { api('/admin/bestiary/status').then(setStatus).catch(() => {}); };
   const addCap = run(async () => {
@@ -71,7 +71,7 @@ export default function MonsterDetails() {
     const sp = await api(`/admin/content/monsters/${sel}/spells`).catch(() => []);
     setActives(sp.filter(x => x.mode === 'active')); setPassives(sp.filter(x => x.mode === 'passive'));
   });
-  const delCap = run(async row => { await api(`/admin/content/monsters/${sel}/spells/${row.id}`, undefined, 'DELETE'); d(Ad.msg('Capacité retirée')); const sp = await api(`/admin/content/monsters/${sel}/spells`).catch(() => []); setActives(sp.filter(x => x.mode === 'active')); setPassives(sp.filter(x => x.mode === 'passive')); });
+  const delCap = run(async row => { await api(`/admin/content/monsters/${sel}/spells/${row.id}`, undefined, 'DELETE'); d(Ad.ok('Capacité retirée')); const sp = await api(`/admin/content/monsters/${sel}/spells`).catch(() => []); setActives(sp.filter(x => x.mode === 'active')); setPassives(sp.filter(x => x.mode === 'passive')); });
   const toggleSlot = run(async slot => {
     const on = slots.includes(slot);
     on ? await api(`/admin/content/monsters/${sel}/slots/${slot}`, undefined, 'DELETE') : await api(`/admin/content/monsters/${sel}/slots`, { slot });
@@ -83,9 +83,9 @@ export default function MonsterDetails() {
     if (maxCaps.inGame !== '') await api(base, { scope: 'global', value: Number(maxCaps.inGame) });
     if (maxCaps.perPlayer !== '') await api(base, { scope: 'per_player', value: Number(maxCaps.perPlayer) });
     setCaps((await api(`/admin/content/monsters/${sel}`).catch(() => null))?.caps ?? []);
-    d(Ad.msg('Spécificités enregistrées'));
+    d(Ad.ok('Spécificités enregistrées'));
   });
-  const delCapScope = run(async scope => { await api(`/admin/content/monsters/${sel}/caps/${scope}`, undefined, 'DELETE'); setCaps((await api(`/admin/content/monsters/${sel}`).catch(() => null))?.caps ?? []); setMaxCaps({ inGame: '', perPlayer: '' }); d(Ad.msg('Plafond retiré')); });
+  const delCapScope = run(async scope => { await api(`/admin/content/monsters/${sel}/caps/${scope}`, undefined, 'DELETE'); setCaps((await api(`/admin/content/monsters/${sel}`).catch(() => null))?.caps ?? []); setMaxCaps({ inGame: '', perPlayer: '' }); d(Ad.ok('Plafond retiré')); });
   // ── Onglet Liste : instances sur les maps + édition (position / or / butin / équipement) ──
   const selectInst = run(async id => {
     const i = ((await api('/admin/bestiary/status').catch(() => null))?.instances ?? []).find(x => x.id === id);
@@ -114,17 +114,17 @@ export default function MonsterDetails() {
     else if (nl.type === 'resource') { if (!nl.resId) return d(Ad.msg('Rechercher et choisir une ressource')); b.resource = ((cats?.resources ?? []).find(r => String(r.id) === String(nl.resId)) ?? { id: '', name: '' }).id; }
     else b.resource = 'or';   // « or » : fait partie du butin donné au tueur
     await api(`/admin/content/monsters/${instSel.id}/loot`, b);
-    d(Ad.msg('Butin ajouté')); setILoot(await api(`/admin/content/monsters/${instSel.id}/loot`).catch(() => []));
+    d(Ad.ok('Butin ajouté')); setILoot(await api(`/admin/content/monsters/${instSel.id}/loot`).catch(() => []));
   });
-  const delLoot = run(async id => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}/loot/${id}`, undefined, 'DELETE'); d(Ad.msg('Retiré')); setILoot(await api(`/admin/content/monsters/${instSel.id}/loot`).catch(() => [])); });
+  const delLoot = run(async id => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}/loot/${id}`, undefined, 'DELETE'); d(Ad.ok('Retiré')); setILoot(await api(`/admin/content/monsters/${instSel.id}/loot`).catch(() => [])); });
   const addEquip = run(async () => {
     if (!instSel) return;
     if (!ne.itemId) return d(Ad.msg('Rechercher et choisir un objet'));
     await api(`/admin/content/monsters/${instSel.id}/equips`, { itemId: Number(ne.itemId), slot: ne.slot });
-    d(Ad.msg('Équipement enregistré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => []));
+    d(Ad.ok('Équipement enregistré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => []));
   });
-  const delEquip = run(async itemId => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}/equips/${itemId}`, undefined, 'DELETE'); d(Ad.msg('Retiré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => [])); });
-  const removeInst = run(async () => { if (!instSel) return; await api(`/admin/bestiary/place/${instSel.pos_id}`, undefined, 'DELETE'); d(Ad.msg('Monstre retiré de la map')); setInstSel(null); refresh(); });
+  const delEquip = run(async itemId => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}/equips/${itemId}`, undefined, 'DELETE'); d(Ad.ok('Retiré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => [])); });
+  const removeInst = run(async () => { if (!instSel || !confirmDel('ce monstre de la carte')) return; await api(`/admin/bestiary/place/${instSel.pos_id}`, undefined, 'DELETE'); d(Ad.ok('Monstre retiré de la map')); setInstSel(null); refresh(); });
   const addNew = async () => {
     if (!nw.type || !nw.mapId) return d(Ad.msg('Choisir le type et la carte'));
     try {

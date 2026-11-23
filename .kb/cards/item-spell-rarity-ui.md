@@ -2,7 +2,7 @@
 title: Onglets admin Objets & Sorts (phase 4) : rareté + « qui peut s'en équiper / l'apprendre »
 slug: item-spell-rarity-ui
 status: done
-updated: 2026-11-21
+updated: 2026-11-23
 files:
   - src/admin/ItemsTab.jsx
   - src/admin/SpellsTab.jsx
@@ -30,6 +30,9 @@ Onglets admin « Objets » et « Sorts » (phase 4) : gestion du catalogue par r
   puces `usable_by`. Création (+ Nouvel objet), suppression.
 - `SpellsTab.jsx` : même pattern pour le catalogue des sorts (nom / genre / rareté / énergie /
   dégâts / durée / **appris par N** / « Apprenable par ») + création / édition / suppression.
+- Refonte UI (2026-11-23, fiche `admin-dashboard`) : recherche locale (nom/genre/type) au-dessus du
+  tableau, éditeur affiché AU-DESSUS du tableau, suppression confirmée (`confirmDel`), toasts `Ad.ok`.
+  « Éditer » appelle `open(r)` (la ligne) : l'ancien `open(r.id)` laissait `edit` à `undefined`, l'éditeur ne s'ouvrait pas.
 - `rarity.js` : miroir front des constantes back (`RARITIES`, `USABLE_KINDS`) + `usableBadge`.
 - API : `GET /admin/content/items?rarity=&slot=` (colonne `rarity_n` normalisée — les valeurs
   historiques libres et accentuées « Épique »/« unique »/« legendary » sont mappées vers les 5

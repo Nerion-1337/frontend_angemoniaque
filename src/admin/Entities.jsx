@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
+import { Plus, Save, Trash2 } from 'lucide-react';
 import { FIELDS, jsonOr, jsonText, URL_KIND } from './entityFields.js';
 import { RuleForms, RulesList } from './EntityRules.jsx';
-/** Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. */
+import { Search, matches, Empty, confirmDel } from './ui.jsx';
+/** Éditeur générique d'entités (montures, bâtiments) : liste filtrable à gauche + fiche à droite (caractéristiques, règles transverses). */
 export default function Entities({ kind }) {
-  const d = useDispatch(), [rows, setRows] = useState(null), [sel, setSel] = useState(null), [draft, setDraft] = useState(null), [tab, setTab] = useState('data');
+  const d = useDispatch(), [rows, setRows] = useState(null), [sel, setSel] = useState(null), [draft, setDraft] = useState(null), [tab, setTab] = useState('data'), [q, setQ] = useState(''), [dirty, setDirty] = useState(false);
   const url = URL_KIND[kind];
   const list = () => api(`/admin/content/${url}`).then(setRows).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { list(); }, [kind]);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
-  const open = async id => { const det = await api(`/admin/content/${url}/${id}`).catch(e => { d(Ad.msg(e.message)); return null; }); if (!det) return; setSel(det); setDraft({ ...det }); setTab('data'); };
+  const leave = () => !dirty || window.confirm('Modifications non enregistrées : les abandonner ?');
+  const open = async (id, force) => { if (!force && !leave()) return; const det = await api(`/admin/content/${url}/${id}`).catch(e => { d(Ad.msg(e.message)); return null; }); if (!det) return; setSel(det); setDraft({ ...det }); setTab('data'); setDirty(false); };
   const save = async () => {
     const body = {};
     for (const [k, , t] of FIELDS[kind]) {
@@ -20,26 +23,37 @@ export default function Entities({ kind }) {
     }
     try {
       const r = sel?.id ? await api(`/admin/content/${url}/${sel.id}`, body, 'PUT') : await api(`/admin/content/${url}`, body, 'POST');
-      d(Ad.msg('Enregistré')); list(); await open(r.id);
+      d(Ad.ok('Enregistré')); setDirty(false); list(); await open(r.id, true);
     } catch (e) { d(Ad.msg(e.message)); }
   };
-  const remove = async () => { try { await api(`/admin/content/${url}/${sel.id}`, undefined, 'DELETE'); setSel(null); setDraft(null); list(); } catch (e) { d(Ad.msg(e.message)); } };
-  const newOne = () => { const o = {}; for (const [k, , t] of FIELDS[kind]) o[k] = t === 'check' ? false : ''; setSel(null); setDraft(o); };
-  const TITLES = { monster: 'Monstres', item: 'Objets', mount: 'Montures', building: 'Bâtiments' };
-  const F = FIELDS[kind], set = (k, v) => setDraft({ ...draft, [k]: v });
-  return <section>
-    <div className="headrow"><h2>{TITLES[kind]}</h2><button className="sm" onClick={newOne}>+ Nouveau</button></div>
-    {rows && <div className="list">{rows.map(r => <button key={r.id} className={`item row2${sel?.id === r.id ? ' on' : ''}`} onClick={() => open(r.id)}><b>{r.name ?? r.key ?? r.id}</b><small>{r.slot ?? r.kind ?? r.rarity ?? ''} {r.owner ? `· ${r.owner}` : ''} · n°{r.id}</small></button>)}</div>}
-    {draft && <div className="editor">
-      {sel?.id && <div className="tabs">{['data', 'rules'].map(t => <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{t === 'data' ? 'Caractéristiques' : 'Règles transverses'}</button>)}</div>}
-      {tab === 'data' && <div className="form">{F.map(([k, label, t]) =>
-        t === 'check' ? <label key={k} className="sm"><input type="checkbox" checked={!!draft[k]} onChange={e => set(k, e.target.checked)} /> {label}</label>
-          : t === 'json' ? <div key={k}><small>{label}</small><textarea rows="3" value={jsonText(draft[k] ?? null)} onChange={e => set(k, e.target.value)} /></div>
-            : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>)}</div>}
-      {tab === 'rules' && sel?.id && <div><RuleForms kind={kind} id={sel.id} onSaved={() => open(sel.id)} /><RulesList kind={kind} id={sel.id} extra={sel} onSaved={() => open(sel.id)} /></div>}
-      {sel?.id && <button className="danger sm" onClick={remove}>Supprimer</button>}
-      <button onClick={save}>{sel?.id ? 'Enregistrer' : 'Créer'}</button>
-      {sel?.position && <p className="note">Position sur carte : {sel.position.map_id}:{sel.position.coord_x},{sel.position.coord_y}</p>}
-    </div>}
+  const remove = async () => { if (!confirmDel(`« ${sel.name ?? sel.id} »`)) return; try { await api(`/admin/content/${url}/${sel.id}`, undefined, 'DELETE'); d(Ad.ok('Supprimé')); setSel(null); setDraft(null); setDirty(false); list(); } catch (e) { d(Ad.msg(e.message)); } };
+  const newOne = () => { if (!leave()) return; const o = {}; for (const [k, , t] of FIELDS[kind]) o[k] = t === 'check' ? false : ''; setSel(null); setDraft(o); setTab('data'); setDirty(false); };
+  const F = FIELDS[kind], set = (k, v) => { setDraft({ ...draft, [k]: v }); setDirty(true); };
+  const view = (rows ?? []).filter(r => matches(q, r.name, r.key, r.kind, r.id));
+  return <section className="split">
+    <div className="listpane panel">
+      <div className="headrow"><Search value={q} onChange={setQ} /><button className="sm" onClick={newOne}><Plus size={14} /> Nouveau</button></div>
+      <small className="count">{rows ? `${view.length} / ${rows.length}` : 'Chargement…'}</small>
+      <div className="list">{view.map(r => <button key={r.id} className={`item row2${sel?.id === r.id ? ' on' : ''}`} onClick={() => open(r.id)}><b>{r.name ?? r.key ?? r.id}</b><small>{r.slot ?? r.kind ?? r.rarity ?? ''} {r.owner ? `· ${r.owner}` : ''} · n°{r.id}</small></button>)}
+        {rows && !view.length && <Empty>Aucun résultat.</Empty>}</div>
+    </div>
+    <div className="detailpane">
+      {!draft && <div className="panel"><Empty>Sélectionnez un élément dans la liste ou créez-en un nouveau.</Empty></div>}
+      {draft && <div className="editor panel">
+        <div className="headrow"><h3>{sel?.id ? (sel.name ?? `n°${sel.id}`) : 'Nouvel élément'}</h3>{dirty && <span className="dirty">non enregistré</span>}</div>
+        {sel?.id && <div className="tabs">{['data', 'rules'].map(t => <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{t === 'data' ? 'Caractéristiques' : 'Règles transverses'}</button>)}</div>}
+        {tab === 'data' && <div className="form">{F.map(([k, label, t]) =>
+          t === 'check' ? <label key={k} className="sm check"><input type="checkbox" checked={!!draft[k]} onChange={e => set(k, e.target.checked)} /> {label}</label>
+            : t === 'json' ? <div key={k} className="cell span-all"><small>{label}</small><textarea className="mono" rows="4" value={typeof draft[k] === 'string' ? draft[k] : jsonText(draft[k] ?? null)} onChange={e => set(k, e.target.value)} /></div>
+              : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>)}</div>}
+        {tab === 'rules' && sel?.id && <div><RuleForms kind={kind} id={sel.id} onSaved={() => open(sel.id, true)} /><RulesList kind={kind} id={sel.id} extra={sel} onSaved={() => open(sel.id, true)} /></div>}
+        {sel?.position && <p className="note">Position sur carte : {sel.position.map_id}:{sel.position.coord_x},{sel.position.coord_y}</p>}
+        <div className="actions sticky">
+          {sel?.id && <button className="danger" onClick={remove}><Trash2 size={14} /> Supprimer</button>}
+          <span className="grow" />
+          <button className="primary" onClick={save}><Save size={14} /> {sel?.id ? 'Enregistrer' : 'Créer'}</button>
+        </div>
+      </div>}
+    </div>
   </section>;
 }

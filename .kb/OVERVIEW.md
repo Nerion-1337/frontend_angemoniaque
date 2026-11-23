@@ -16,7 +16,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
 ## Features (17)
-- **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+5)
+- **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+6)
 - **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une **connexion ou une inscription réussie**, un compte admin doit pouvoir accéder directement à l'interface admin : la SPA le redirige sur `#admin` (l'écran d'admin s'ouvre immédiatement, avec  — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
 - **bestiaire** [done] (.kb/cards/bestiaire.md) Panneau Bestiaire (SUPPRIMÉ phase 3c) : composant retiré de l'onglet Monstres — Le panneau « Bestiaire — butin & apparitions » (`Bestiary.jsx` + helpers `bestiary.js`) a été **supprimé de l'onglet Monstres** (phase 3c, à la demande du propriétaire) : sa section titre (`div.headro — files: src/admin/index.jsx
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
@@ -38,9 +38,9 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `index.html`
 - `package.json`
 - `src/App.jsx` — App
-- `src/admin/Dashboard.jsx` — Pilotage : compteurs, répartition par race, simulation du tick, dernières actions d'audit. — Dashboard
+- `src/admin/Dashboard.jsx` — Pilotage : compteurs, répartition par race, simulation du tick, journal d'audit filtrable. — (header), KPI, ago, Dashboard
 - `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
-- `src/admin/Entities.jsx` — Éditeur générique d'entités (monstres, objets, montures, bâtiments) : liste + fiche + règles transverses. — Entities
+- `src/admin/Entities.jsx` — Éditeur générique d'entités (montures, bâtiments) : liste filtrable à gauche + fiche à droite (caractéristique — Entities
 - `src/admin/EntityRules.jsx` — Éditeur des règles transverses d'une entité : coûts, plafonds (caps), modificateurs bonus/malus & effets. — RuleForms, RulesList
 - `src/admin/ItemsTab.jsx` — Onglet admin « Objets » (phase 4) : sous-onglets par rareté (le sous-onglet Divin — (header), blank, ItemsTab
 - `src/admin/MiniMap.jsx` — Mini-carte admin (détail de monstre — onglet Liste) : grille colorée par le terrain du jeu — (header), COLORS, CSS_W, MiniMap
@@ -49,9 +49,10 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
 - `src/admin/SpellsTab.jsx` — Onglet admin « Sorts » (phase 4) : catalogue global des sorts (blessures/bonus/malus — (header), blank, SpellsTab
 - `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
-- `src/admin/index.jsx` — (header), SECTIONS, Admin
+- `src/admin/index.jsx` — (header), SECTIONS, ICONS, SUBS, KEY, Admin
 - `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3b) : aides pures du panneau (liste de types + onglets). — SLOTS, SLOT_LABEL, SLOT_POS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn
 - `src/admin/rarity.js` — Onglets admin Objets & Sorts (phase 4) : raretés et « qui peut s'en équiper / l'apprendre ». — (header), RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge
+- `src/admin/ui.jsx` — Éléments partagés du back-office : toast auto-masqué, en-tête de panneau, état vide, confirmation. — (header), confirmDel, Toast, Search, norm, matches, Empty
 - `src/components/Account.jsx` — Account
 - `src/components/Backdrop.jsx` — Fond 3D vivant (même moteur que le jeu) : la caméra orbite lentement au-dessus du monde. — (header), Backdrop
 - `src/components/Capital.jsx` — (header), CAP, Capital
@@ -83,5 +84,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/lib/postAuth.js` — Suite d'une réponse /auth/login ou /auth/register réussie : — (header), postAuth
 - `src/lib/relief.js` — Eau : le fond descend en pente raide sous le niveau d'eau ; relief des montagnes accentué. — (header), base, WATER_Y, ss, micro, ridge, heightAt, C, DEEP, g2, ZT, ZC, cellTint, zoneTint, groundColor, hash
 - `src/lib/resources.js` — ⚠ GÉNÉRÉ par tools/gen_human_map.py — catalogue des ressources et légende de la carte. — RESOURCES, GROUPS, RES_BY_ID
-- `src/lib/resources2.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — catalogue du monde Anges & Démons (zones, ressources, apparence 3D — SIDES, RESOURCES2, ZONES2, RES2_BY_ID
-- … 20 autres fichiers (utiliser `kb search`)
+- … 22 autres fichiers (utiliser `kb search`)

@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
 import { api } from '../lib/api.js';
 import { SLOTS, SLOT_LABEL } from './monsterDetails.js';
+import { Search, matches, Empty, confirmDel } from './ui.jsx';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
 import Divine from './Divine.jsx';
 
@@ -18,7 +19,8 @@ export default function ItemsTab() {
   const [slot, setSlot] = useState('');          // '' = tous / 'none' = sans slot
   const [rows, setRows] = useState([]);
   const [edit, setEdit] = useState(null);        // id en cours | 'new' | null
-  const [f, setF] = useState(blank);             // formulaire (édition ou création)
+  const [f, setF] = useState(blank);
+  const [q, setQ] = useState('');               // recherche locale (nom, genre/type)             // formulaire (édition ou création)
 
   const load = () => {
     const p = new URLSearchParams();
@@ -36,15 +38,15 @@ export default function ItemsTab() {
       body.usable_by = f.usable_by;
       if (edit === 'new') await api('/admin/content/items', body, 'POST');
       else await api(`/admin/content/items/${edit}`, body, 'PUT');
-      d(Ad.msg(edit === 'new' ? 'Objet créé' : 'Objet mis à jour')); setEdit(null); load();
+      d(Ad.ok(edit === 'new' ? 'Objet créé' : 'Objet mis à jour')); setEdit(null); load();
     } catch (e) { d(Ad.msg(e.message)); }
   };
-  const del = async id => { try { await api(`/admin/content/items/${id}`, undefined, 'DELETE'); d(Ad.msg('Supprimé')); load(); } catch (e) { d(Ad.msg(e.message)); } };
+  const del = async row => { if (!confirmDel(`l’objet « ${row.name} »`)) return; try { await api(`/admin/content/items/${row.id}`, undefined, 'DELETE'); d(Ad.ok('Supprimé')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   const setU = k => setF(v => ({ ...v, usable_by: v.usable_by.includes(k) ? v.usable_by.filter(x => x !== k) : [...v.usable_by, k] }));
   const num = (k, v) => setF(x => ({ ...x, [k]: v === '' ? '' : Number(v) }));
 
+  const view = rows.filter(r => matches(q, r.name, r.kind, r.slot));
   return <section>
-    <h2>Objets</h2>
     <div className="tabs">{['', ...RARITIES].map(r =>
       <button key={r || 'all'} className={rar === r ? 'on' : ''} onClick={() => setRar(r)}>{r === '' ? 'Toutes raretés' : RARITY_LABEL[r]}</button>)}
     </div>
@@ -60,22 +62,11 @@ export default function ItemsTab() {
           {SLOTS.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}
           <option value="none">Sans type (ressource, consommable…)</option>
         </select>
+        <Search value={q} onChange={setQ} />
+        <small>{view.length} objet(s)</small><span className="grow" />
         <button className="sm" onClick={() => { setEdit('new'); setF({ ...blank, rarity: rar || 'commun' }); }}>+ Nouvel objet</button>
       </div>
-      <table><thead><tr>
-        <th>Nom</th><th>Type</th><th>Rareté</th><th>Équippable par</th><th>Détenu par</th><th>Prix</th><th />
-      </tr></thead><tbody>
-        {rows.map(r => <tr key={r.id} className={edit === r.id ? 'sel' : ''}>
-          <td><b>{r.name}</b> <button className="sm" onClick={() => open(r.id)}>{edit === r.id ? '×' : 'Éditer'}</button></td>
-          <td>{r.slot ? SLOT_LABEL[r.slot] ?? r.slot : '—'}</td>
-          <td><span className={`rar ${r.rarity_n ?? r.rarity ?? 'commun'}`}>{RARITY_LABEL[r.rarity_n ?? r.rarity ?? 'commun'] ?? r.rarity}</span></td>
-          <td className="ux">{usableBadge(r.usable_by)}</td>
-          <td>{r.holders ? `${r.holders} joueur(s)` : '—'}</td>
-          <td>{r.price ?? ''}</td>
-          <td><button className="sm danger" onClick={() => del(r.id)}>Suppr.</button></td>
-        </tr>)}</tbody></table>
-
-      {edit && <div className="editor">
+      {edit && <div className="editor panel">
         <h3>{edit === 'new' ? 'Nouvel objet' : 'Édition'}</h3>
         <div className="form">
           <div className="cell"><small>Nom</small><input value={f.name} onChange={e => setF(x => ({ ...x, name: e.target.value }))} /></div>
@@ -86,7 +77,7 @@ export default function ItemsTab() {
             <select value={f.rarity} onChange={e => setF(x => ({ ...x, rarity: e.target.value }))}>
               {RARITIES.filter(x => x !== 'divin').map(r => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}</select></div>
           <div className="cell"><small>Prix</small><input type="number" value={f.price} onChange={e => num('price', e.target.value)} /></div>
-          <div className="cell"><small>Bligne</small><input type="number" value={f.armor} onChange={e => num('armor', e.target.value)} /></div>
+          <div className="cell"><small>Armure</small><input type="number" value={f.armor} onChange={e => num('armor', e.target.value)} /></div>
           <div className="cell"><small>Dégâts d'arme</small><input type="number" value={f.weapon_damage} onChange={e => num('weapon_damage', e.target.value)} /></div>
           <div className="cell"><small>Force +</small><input type="number" value={f.strength_bonus} onChange={e => num('strength_bonus', e.target.value)} /></div>
           <div className="cell"><small>Agilité +</small><input type="number" value={f.agility_bonus} onChange={e => num('agility_bonus', e.target.value)} /></div>
@@ -105,6 +96,20 @@ export default function ItemsTab() {
           <button className="ghost" onClick={() => setEdit(null)}>Annuler</button>
         </div>
       </div>}
+      <div className="tablewrap"><table><thead><tr>
+        <th>Nom</th><th>Type</th><th>Rareté</th><th>Équipable par</th><th>Détenu par</th><th>Prix</th><th />
+      </tr></thead><tbody>
+        {view.map(r => <tr key={r.id} className={edit === r.id ? 'sel' : ''}>
+          <td><b>{r.name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
+          <td>{r.slot ? SLOT_LABEL[r.slot] ?? r.slot : '—'}</td>
+          <td><span className={`rar ${r.rarity_n ?? r.rarity ?? 'commun'}`}>{RARITY_LABEL[r.rarity_n ?? r.rarity ?? 'commun'] ?? r.rarity}</span></td>
+          <td className="ux">{usableBadge(r.usable_by)}</td>
+          <td>{r.holders ? `${r.holders} joueur(s)` : '—'}</td>
+          <td>{r.price ?? ''}</td>
+          <td><button className="sm danger" onClick={() => del(r)}>Suppr.</button></td>
+        </tr>)}</tbody></table></div>
+      {!view.length && <Empty>{rows.length ? 'Aucun résultat pour cette recherche.' : 'Aucun élément dans cette catégorie.'}</Empty>}
+
     </div>}
   </section>;
 };

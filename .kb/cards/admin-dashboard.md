@@ -2,7 +2,7 @@
 title: Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques
 slug: admin-dashboard
 status: done
-updated: 2026-11-21
+updated: 2026-11-23
 files:
   - src/admin/index.jsx
   - src/admin/Dashboard.jsx
@@ -11,6 +11,7 @@ files:
   - src/admin/Races.jsx
   - src/admin/Divine.jsx
   - src/admin/entityFields.js
+  - src/admin/ui.jsx
   - src/store/admin.js
   - src/store/index.js
 symbols:
@@ -20,6 +21,7 @@ symbols:
   - src/store/admin.js:Ad
 tests:
   - test/admin.test.js
+  - test/adminUi.test.js
 ---
 ## Purpose
 Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing
@@ -54,6 +56,15 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 - **Store** (`store/admin.js`): small slice (section/kind/list/detail/msg) registered in `store/index.js`.
 - All API calls go through `lib/api.js` (relative `/api/...`, Bearer token).
 
+- **Refonte UI (2026-11-23)** : le shell est une application plein écran — barre latérale à icônes
+  lucide (tiroir sous 860 px), en-tête de section (titre + sous-titre `SUBS`), dernière section
+  mémorisée dans `localStorage` (`admin.section`, try/catch). Toasts typés via `ui.jsx` `Toast` :
+  `Ad.ok(text)` = succès (vert, 4 s), `Ad.msg(text)` = erreur/avertissement (rouge, 6 s) ; le slice porte
+  `tone`. `ui.jsx` fournit aussi `Search` + `matches` (filtre local sans casse ni accents), `Empty`,
+  `confirmDel` (toute suppression demande confirmation). Pilotage : cartes KPI, barres par race,
+  journal d'audit en tableau filtrable (« Afficher plus » jusqu'à 200). `Entities` : liste filtrable
+  + fiche, indicateur « non enregistré », barre d'actions collante. Objets/Sorts : recherche,
+  éditeur au-dessus du tableau, `open(r)` (corrige « Éditer » qui ne s'ouvrait pas : `open(r.id)`).
 
 
 ## Entry points
