@@ -2,7 +2,7 @@
 title: Connexion admin : redirection vers l'interface admin (#admin)
 slug: admin-login-nav
 status: done
-updated: 2026-11-20
+updated: 2026-11-24
 files:
   - src/lib/postAuth.js
   - src/components/Login.jsx
@@ -29,6 +29,8 @@ Avant ce changement, l'accès existait seulement via les liens discrets (CharSel
   `hash === '#admin'` en voyant déjà `auth.admin === true` → rend `<Admin />`.
 - `App.jsx` gate existant inchangé : `hash === '#admin'` + `auth.admin` → `<Admin />`, sinon
   « Accès réservé ».
+
+- **2026-11-24 (card `race-rules-ui`)** : `CharSelect` lit `/characters/races` (races jouables, places, raisons) ; plus de limite codée en dur ; l'admin crée sans limite.
 
 ## Entry points
 - `Login.jsx` : après `POST /auth/login` et `POST /auth/register` réussis.

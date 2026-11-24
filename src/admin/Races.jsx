@@ -1,18 +1,19 @@
 import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { confirmDel } from './ui.jsx';
+import { confirmDel } from './ui.jsx'; import { RaceRules, rulesDraft, rulesBody, rulesLabel } from './raceRules.jsx';
 /** Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. */
 export default function Races() {
-  const d = useDispatch(), [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
+  const d = useDispatch(), [maps, setMaps] = useState([]), [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
   const load = () => api('/admin/content/races').then(setRaces).catch(e => d(Ad.msg(e.message)));
-  useEffect(() => { load(); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
-  const openRace = r => { setSel(r.key); setRaceDraft({ id: r.id, key: r.key, name: r.name, color: r.color ?? '', active: r.active, base_stats: jsonText(r.base_stats ?? null) }); };
-  const newRace = () => { setSel(null); setRaceDraft({ id: null, key: '', name: '', color: '', active: true, base_stats: '' }); };
+  useEffect(() => { load(); }, []);
+  useEffect(() => { api('/admin/catalog').then(c => setMaps(c.maps ?? [])).catch(() => {}); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
+  const openRace = r => { setSel(r.key); setRaceDraft({ id: r.id, key: r.key, name: r.name, color: r.color ?? '', active: r.active, base_stats: jsonText(r.base_stats ?? null), ...rulesDraft(r) }); };
+  const newRace = () => { setSel(null); setRaceDraft({ id: null, key: '', name: '', color: '', active: true, base_stats: '', ...rulesDraft(null) }); };
   const delRace = async r => { if (!confirmDel(`la race « ${r.name} » et ses paliers`)) return; try { await api(`/admin/content/races/${r.id}`, undefined, 'DELETE'); d(Ad.ok('Race supprimée')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   const saveRace = async () => {
     const body = { key: raceDraft.key, name: raceDraft.name, color: raceDraft.color || undefined, active: raceDraft.active,
-      base_stats: raceDraft.base_stats ? jsonOr(raceDraft.base_stats, undefined) : null };
+      base_stats: raceDraft.base_stats ? jsonOr(raceDraft.base_stats, undefined) : null, ...rulesBody(raceDraft) };
     if (body.base_stats === undefined && raceDraft.base_stats) { d(Ad.msg('JSON invalide : base_stats')); return; }
     try { await api(raceDraft.id ? `/admin/content/races/${raceDraft.id}` : '/admin/content/races', body, raceDraft.id ? 'PUT' : 'POST');
       d(Ad.ok('Enregistré')); setRaceDraft(null); load(); } catch (e) { d(Ad.msg(e.message)); }
@@ -32,7 +33,7 @@ export default function Races() {
   return <section>
     <div className="headrow"><span className="grow" /><button className="sm" onClick={newRace}>+ Race</button></div>
     {races?.map(r => <div key={r.id} className="race apanel">
-      <div className="headrow"><b>{r.name}</b><small>({r.key}){r.active ? '' : ' · inactive'}</small>
+      <div className="headrow"><b>{r.name}</b><small>({r.key}){r.active ? '' : ' · inactive'} · {rulesLabel(r)}</small>
         <button className="sm" onClick={() => openRace(r)}>✎</button>
         <button className="sm danger" onClick={() => delRace(r)}>×</button></div>
       {raceDraft?.id === r.id && <div className="form">
@@ -41,6 +42,7 @@ export default function Races() {
           : t === 'json'
             ? <div key={k} className="cell span-all"><small>{label}</small><textarea rows="4" className="mono" value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>
             : <div key={k} className="cell"><small>{label}</small><input value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>)}
+        <RaceRules draft={raceDraft} set={setRaceDraft} maps={maps} />
         <div className="row"><button onClick={saveRace}>Enregistrer</button>
           <button className="sm" onClick={() => setRaceDraft(null)}>Annuler</button></div>
       </div>}
@@ -60,6 +62,7 @@ export default function Races() {
         : t === 'json'
           ? <div key={k} className="cell span-all"><small>{label}</small><textarea rows="4" className="mono" value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>
           : <div key={k} className="cell"><small>{label}</small><input value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>)}
+        <RaceRules draft={raceDraft} set={setRaceDraft} maps={maps} />
         <div className="row"><button onClick={saveRace}>Créer</button>
           <button className="sm" onClick={() => setRaceDraft(null)}>Annuler</button></div>
       </div>

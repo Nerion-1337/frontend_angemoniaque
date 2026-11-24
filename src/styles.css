@@ -442,3 +442,5 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .form label.check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:500}
 .admin .form input[type=checkbox]{width:auto;flex:none}
 .admin .form>div:has(>textarea){grid-column:1/-1}
+.admin .form>.racerules{grid-column:1/-1}
+.admin .racerules h4{margin:14px 0 6px;color:var(--mute);font-size:13px;text-transform:uppercase;letter-spacing:.06em}

@@ -22,16 +22,24 @@ export function Login() {
     {err && <p className="err" role="alert">{err}</p>}</form></main></>;
 }
 const RACES = [['human', 'Humain', User, 'Forgerons et fidèles. Un seul pacte, des Artefacts à conquérir.'], ['demon', 'Démon', Flame, 'Puissance brute, pactes multiples. Gardien des Arcanes.'], ['angel', 'Ange', Feather, 'Porteur des Reliques, il guide les mortels par ses pactes.']];
+/** Écran des personnages : races jouables, places et refus viennent du serveur (GET /characters/races :
+ *  une seule race par compte, max par compte, population max) ; le compte admin n'a aucune limite. */
 export function CharSelect({ admin }) {
-  const d = useDispatch(), [list, setList] = useState(null), [f, set] = useState({ pseudo: '', race: 'human' }), [err, setErr] = useState(''); const load = () => api('/characters').then(setList); if (!list) load();
-  const locked = list?.[0]?.race, race = locked ?? f.race;                  // 3 personnages max, tous de la même race
+  const d = useDispatch(), [list, setList] = useState(null), [info, setInfo] = useState(null), [f, set] = useState({ pseudo: '', race: '' }), [err, setErr] = useState('');
+  const load = () => { api('/characters').then(setList); api('/characters/races').then(setInfo).catch(() => setInfo({ races: [] })); };
+  if (!list) load();
+  const races = info?.races ?? [], allowed = races.filter(r => r.allowed);
+  const race = allowed.some(r => r.key === f.race) ? f.race : info?.locked ?? allowed[0]?.key ?? '';
+  const cur = races.find(r => r.key === (info?.locked ?? race)), max = info?.admin ? null : cur?.max ?? null;
   const create = async e => { e.preventDefault(); try { setErr(''); await api('/characters', { pseudo: f.pseudo, race }); set({ ...f, pseudo: '' }); load(); } catch (er) { setErr(er.message); } };
+  const meta = k => RACES.find(r => r[0] === k) ?? [k, races.find(r => r.key === k)?.name ?? k, User, ''];
   return <><Backdrop /><main className="stage"><div className="glass auth wide"><Logo />
-    <h2>Vos personnages <small>{list?.length ?? 0} sur 3</small></h2>
-    <div className="chars">{list?.map(c => { const [, label, I] = RACES.find(r => r[0] === c.race); return <button key={c.id} className={`char race-${c.race}`} onClick={() => d(A.setChar(c.id))}><I size={22} />{c.pseudo}<small>{label} · Jouer</small></button>; })}</div>
-    {(list?.length ?? 0) < 3 && <form onSubmit={create}><h3>Nouveau personnage</h3>
-      <div className="races">{RACES.map(([k, l, I, desc]) => <button type="button" key={k} disabled={!!locked && locked !== k} className={`race race-${k}${race === k ? ' on' : ''}`} onClick={() => set({ ...f, race: k })}><I size={26} /><b>{l}</b><small>{desc}</small></button>)}</div>
-      {locked && <small className="note">Tous vos personnages partagent la même race.</small>}
-      <label>Pseudo <small>(définitif)</small><input value={f.pseudo} onChange={e => set({ ...f, pseudo: e.target.value })} maxLength={20} /></label><button className="primary">Créer le personnage</button></form>}
+    <h2>Vos personnages <small>{list?.length ?? 0}{max != null ? ` sur ${max}` : info?.admin ? ' · administrateur, sans limite' : ''}</small></h2>
+    <div className="chars">{list?.map(c => { const [, label, I] = meta(c.race); return <button key={c.id} className={`char race-${c.race}`} onClick={() => d(A.setChar(c.id))}><I size={22} />{c.pseudo}<small>{label} · Jouer</small></button>; })}</div>
+    {allowed.length > 0 && <form onSubmit={create}><h3>Nouveau personnage</h3>
+      <div className="races">{races.map(r => { const [, l, I, desc] = meta(r.key); return <button type="button" key={r.key} disabled={!r.allowed} title={r.reason ?? ''} className={`race race-${r.key}${race === r.key ? ' on' : ''}`} onClick={() => set({ ...f, race: r.key })}><I size={26} /><b>{r.name ?? l}</b><small>{r.reason ?? desc}</small></button>; })}</div>
+      {info?.locked && <small className="note">Tous vos personnages partagent la même race.</small>}
+      <label>Pseudo <small>(définitif)</small><input value={f.pseudo} onChange={e => set({ ...f, pseudo: e.target.value })} maxLength={20} /></label><button className="primary" disabled={!race}>Créer le personnage</button></form>}
+    {info && !allowed.length && <p className="note">Aucune nouvelle création possible pour ce compte.</p>}
     {err && <p className="err" role="alert">{err}</p>}{admin && <a className="link" href="#admin">Espace administrateur</a>}</div></main></>;
 }

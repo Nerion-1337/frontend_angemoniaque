@@ -71,6 +71,8 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 
 - **2026-11-24 (card `admin-players-divine-ui`)** : section **Joueurs** ; `Divine.jsx` = exemplaires d'un objet divin + panneau des familles (utilisé par `ItemsTab`). **CSS** : `.panel` → `.apanel` et neutralisation sous `.admin` des classes globales du jeu (`.cell`, `.actions`, `.item.row2`, `.empty`, `.logo`) — elles plaquaient les panneaux à gauche sous la barre latérale.
 
+- **2026-11-24 (card `race-rules-ui`)** : Races = bloc apparition/limites (`raceRules.jsx`) ; Pilotage = état de l'horloge (dernier / prochain tick).
+
 ## Entry points
 - `App.jsx` renders `<Admin />` when `hash === '#admin'` and `auth.admin` (import `./admin/index.jsx`). Auto-reached after a successful admin login/registration (`postAuth`, card `admin-login-nav`); otherwise via the `#admin` links in `CharSelect` / `Account` or by hand.
 - `Account.jsx` links to `#admin` for admin users; `Login.jsx` `CharSelect` shows the admin link.

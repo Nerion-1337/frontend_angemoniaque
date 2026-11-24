@@ -26,7 +26,9 @@ export default function Dashboard() {
       </div>
       <div className="apanel">
         <h3>Horloge du monde</h3>
-        <p className="note">Applique immédiatement un tick horaire : XP, régénération, production des bâtiments.</p>
+        <p className="note">Le serveur applique un tick par heure écoulée, même après un arrêt (rattrapage au redémarrage).
+          {st?.clock?.last_tick_at && <> Dernier tick : <b>{new Date(st.clock.last_tick_at).toLocaleString()}</b> · prochain vers <b>{new Date(new Date(st.clock.last_tick_at).getTime() + 3600e3).toLocaleTimeString()}</b>.</>}
+          {' '}Le bouton applique un tick supplémentaire immédiat (XP, régénération, production).</p>
         <button className="primary" disabled={busy} onClick={tick}><Hourglass size={16} /> {busy ? 'Application…' : 'Simuler +1 heure'}</button>
       </div>
     </div>
