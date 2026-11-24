@@ -36,6 +36,7 @@ Monstres, Objets, Sorts, Cases, Montures, Bâtiments), éditeur générique d'en
 - Routes au nom de table PLURIEL : `URL_KIND` (front) doit rester identique au `URL_KIND` du back.
 - Le contenu venant de l'API est rendu comme texte React, jamais en HTML.
 - CSS : aucune classe admin ne reprend un nom global du jeu ; `.apanel` remplace `.panel`, et `.cell`, `.actions`, `.item.row2`, `.empty`, `.logo` sont neutralisés sous `.admin`.
+- Section « Parchemins » : recettes de fabrication (card `scrolls-shop-ui`).
 
 ## Gotchas
 - Un effet qui charge des données s'écrit `useEffect(() => { load(); }, deps)` : passer le loader directement renvoie sa Promise comme fonction de nettoyage → « destroy is not a function » au changement d'onglet.

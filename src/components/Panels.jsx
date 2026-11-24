@@ -40,8 +40,19 @@ export function MountsPanel() {
 }
 
 const OFFS = [[-1, -1, 'NO'], [0, -1, 'N'], [1, -1, 'NE'], [-1, 0, 'O'], [0, 0, ''], [1, 0, 'E'], [-1, 1, 'SO'], [0, 1, 'S'], [1, 1, 'SE']], BUILD = [['wall', 'Muraille de pierre'], ['tower', 'Tour de garde'], ['factory', 'Usine de production'], ['totem', 'Totem de zone'], ['ship', 'Navire (monture aquatique)']];
+/** Fabrication par parchemin : recettes dont le parchemin est dans le sac ; ressources manquantes affichées ; un bâtiment se pose sur la case adjacente ciblée. */
+function Craft({ rc, me, sel, blk, run, after }) {
+  if (!rc?.length) return null;
+  const lack = m => Object.entries(m ?? {}).map(([k, q]) => `${k} ×${q}`).join(', ');
+  return <><h4><Hammer size={14} /> Fabrication <small>(parchemin + ressources)</small></h4>
+    {rc.map(r => { const miss = Object.keys(r.missing ?? {}).length > 0, build = r.target_kind === 'building';
+      return <div key={r.id} className="item row2"><div><b>{r.target_name}</b>{r.qty_out > 1 && <small> ×{r.qty_out}</small>}<br />
+        <small>{r.scroll_name}{r.consume_scroll ? ' (consommé)' : ''} · {Object.entries(r.resources ?? {}).map(([k, q]) => `${k} ×${q}`).join(', ') || 'aucune ressource'}{r.energy_cost ? ` · ⚡${r.energy_cost}` : ''}{r.at_capital ? ' · à la capitale' : ''}</small>
+        {miss && <><br /><small className="err">Manque : {lack(r.missing)}</small></>}</div>
+        <button disabled={miss || (build && !!blk)} title={build ? `Case (${sel.x}, ${sel.y})` : ''} onClick={() => run(() => api('/craft', { characterId: me.id, recipeId: r.id, ...(build ? sel : {}) }), after)}>{build ? 'Bâtir ici' : 'Fabriquer'}</button></div>; })}</>;
+}
 export function ActionsPanel() {
-  const { me, entities } = useSelector(s => s.game), d = useDispatch(), P = me.actor.pos, run = useDo(), refresh = useRefreshMe(), [sp, loadSp] = useData(`/spells/${me.id}`, [me.summons.length, me.maxSummons]);
+  const { me, entities } = useSelector(s => s.game), d = useDispatch(), P = me.actor.pos, run = useDo(), refresh = useRefreshMe(), [sp, loadSp] = useData(`/spells/${me.id}`, [me.summons.length, me.maxSummons]), [rc, loadRc] = useData(`/craft/${me.id}`, [me.energy_current]);
   const occ = (x, y) => entities.find(e => e.x === x && e.y === y && !(e.char_id === me.id && me.actor.kind === 'hero')), blocked = (x, y) => occ(x, y) || terrain(x, y).kind === 'deep';
   const free = OFFS.filter(o => o[0] || o[1]).map(o => ({ x: P.x + o[0], y: P.y + o[1] })).find(c => !blocked(c.x, c.y)) ?? { x: P.x + 1, y: P.y }; const [sel, setSel] = useState(free); useEffect(() => setSel(free), [P.x, P.y]);
   const blk = occ(sel.x, sel.y) || (terrain(sel.x, sel.y).kind === 'deep' && { name: 'terrain infranchissable' }), dist = e => Math.max(Math.abs(e.x - P.x), Math.abs(e.y - P.y)), after = () => { refresh(); loadSp(); };
@@ -55,6 +66,7 @@ export function ActionsPanel() {
     <p className="status">Case ({sel.x}, {sel.y}) — {blk ? <span className="err">occupée par {blk.name}</span> : <span style={{ color: 'var(--ok)' }}>libre</span>}</p>
     <h4><Hammer size={14} /> Poser une structure <small>(parchemin requis · ⚡10)</small></h4>
     {BUILD.filter(([k]) => me.scrolls?.[k] > 0).length ? <div className="grid2">{BUILD.filter(([k]) => me.scrolls?.[k] > 0).map(([k, l]) => <button key={k} disabled={k !== 'ship' && !!blk} onClick={() => run(() => api('/buildings/place', k === 'ship' ? { characterId: me.id, kind: k } : { characterId: me.id, kind: k, x: sel.x, y: sel.y }), after)}>{l} <small>×{me.scrolls[k]}</small></button>)}</div> : <p className="empty">Nécessite un parchemin de construction.</p>}
+    <Craft rc={rc} me={me} sel={sel} blk={blk} run={run} after={() => { after(); loadRc(); }} />
     <h4><Sparkles size={14} /> 2. Sorts & invocations <span className="pill">{sp?.active ?? 0}/{sp?.maxSummons ?? 1} invoc.</span></h4>
     {sp && !sp.spells.length && <p className="empty">Aucun sort appris. Les sorts de base s'apprennent à la boutique de la capitale.</p>}
     {sp?.spells.map(s => { const off = (s.kind === 'summon' && (!!blk || sp.active >= sp.maxSummons)) || (s.kind === 'attack' && !occ(sel.x, sel.y)); return <div key={s.id} className="item row2"><div><b>{s.name}</b><br /><small>{s.description}</small></div><button disabled={off} onClick={() => run(() => api('/spells/cast', { characterId: me.id, spellId: s.id, x: sel.x, y: sel.y }), after)}>Lancer ⚡{s.energy_cost}</button></div>; })}

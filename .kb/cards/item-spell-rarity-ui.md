@@ -26,6 +26,7 @@ détenteurs / apprenants, et paramètre « qui peut s'en équiper / l'apprendre 
 - « Détenu par » compte les inventaires (+ exemplaires divins détenus) ; « Appris par » compte les personnages qui ont le sort.
 - « Éditer » ouvre la ligne (`open(r)`) ; l'éditeur s'affiche au-dessus du tableau ; suppression confirmée.
 - Divin : voir card `admin-players-divine-ui` (même formulaire + famille + exemplaires).
+- Boutique de l'hôtel de ville (Objets et Sorts) : en vente ou non, races autorisées, stock pour un objet ; colonne « Boutique » (card `scrolls-shop-ui`).
 
 ## Gotchas
 - `items.rarity` reste du texte libre en base (seule `spells.rarity` est bornée) : toujours afficher `rarity_n`.

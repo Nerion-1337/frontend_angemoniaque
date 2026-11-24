@@ -317,7 +317,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .dirty{font-size:11px;color:var(--en);border:1px solid currentColor;border-radius:999px;padding:1px 8px}
 /* Neutralise, DANS l'admin, les classes globales homonymes du jeu (.panel fixe, .cell verte centrée,
    .actions en menu absolu, .empty en pointillés, .logo masqué < 900 px). Préfixer toute nouvelle classe admin. */
-.admin .cell{display:block;padding:0;border:0;border-radius:0;background:none;text-align:left;line-height:inherit}
+.admin .cell{display:block;padding:0;border:0;border-radius:0;background:none;text-align:left;line-height:inherit;align-items:stretch}
 .admin .actions{position:static;top:auto;left:auto;transform:none;flex-direction:row;padding:0;min-width:0;z-index:auto;background:none;animation:none}
 .admin .actions.sticky{position:sticky}
 .admin .empty{border:0}
@@ -448,3 +448,4 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .startkit h5{margin:14px 0 6px;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .admin .race .headrow button.on{background:rgba(240,210,138,.18);color:var(--gold);border-color:rgba(240,210,138,.4)}
 .admin .chip label.check{display:inline-flex;align-items:center;gap:6px}
+.admin .shopfields{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:10px;border:1px dashed var(--line);border-radius:10px}

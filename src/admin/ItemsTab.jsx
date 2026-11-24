@@ -10,9 +10,9 @@ import { SLOTS, SLOT_LABEL } from './monsterDetails.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
 import { itemBody, familyLabel } from './divine.js';
-import Divine, { Families } from './Divine.jsx';
+import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '' };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [] };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -23,6 +23,7 @@ export default function ItemsTab() {
   const [f, setF] = useState(blank);             // formulaire (édition ou création)
   const [q, setQ] = useState('');                // recherche locale (nom, type)
   const [fams, setFams] = useState([]);          // familles divines
+  const [races, setRaces] = useState([]);        // races (boutique)
 
   const load = () => {
     const p = new URLSearchParams();
@@ -33,13 +34,14 @@ export default function ItemsTab() {
   };
   const loadFams = () => api('/admin/content/divine-families').then(setFams).catch(() => setFams([]));
   useEffect(() => { load(); setEdit(null); setF(blank); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [rar, slot]);
-  useEffect(() => { loadFams(); }, []);
+  useEffect(() => { loadFams(); api('/admin/content/races').then(setRaces).catch(() => {}); }, []);
   const open = row => {
     setEdit(row ? row.id : 'new');
     const v = { ...blank };
     for (const k of Object.keys(blank)) if (row?.[k] != null) v[k] = row[k];
     v.rarity = row?.rarity_n ?? row?.rarity ?? 'commun';
     v.usable_by = typeof row?.usable_by === 'string' ? JSON.parse(row.usable_by || '[]') : (row?.usable_by ?? []);
+    v.shop = !!row?.shop; v.shop_races = typeof row?.shop_races === 'string' ? JSON.parse(row.shop_races || '[]') : (row?.shop_races ?? []);
     setF(v);
   };
   const save = async () => {
@@ -99,6 +101,7 @@ export default function ItemsTab() {
             <button key={k} className={`chip${f.usable_by.includes(k) ? ' on' : ''}`} onClick={() => setU(k)}>{USABLE_LABEL[k]}</button>)}
           </div>
           <p className="note">Rien de coché = tout le monde peut s'en équiper.</p></div>
+        <ShopFields f={f} set={setF} races={races} stock what="l’objet" />
       </div>
       {f.rarity === 'divin' && edit !== 'new' && <Divine itemId={edit} onChange={load} />}
       {f.rarity === 'divin' && edit === 'new' && <p className="note">Les exemplaires uniques se créent une fois l’objet enregistré.</p>}
@@ -108,7 +111,7 @@ export default function ItemsTab() {
       </div>
     </div>}
     <div className="tablewrap"><table><thead><tr>
-      <th>Nom</th><th>Type</th><th>Rareté</th>{divine && <th>Famille · exemplaires</th>}<th>Équipable par</th><th>Détenu par</th><th>Prix</th><th />
+      <th>Nom</th><th>Type</th><th>Rareté</th>{divine && <th>Famille · exemplaires</th>}<th>Équipable par</th><th>Détenu par</th><th>Prix</th><th>Boutique</th><th />
     </tr></thead><tbody>
       {view.map(r => <tr key={r.id} className={edit === r.id ? 'sel' : ''}>
         <td><b>{r.name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
@@ -118,6 +121,7 @@ export default function ItemsTab() {
         <td>{usableBadge(r.usable_by)}</td>
         <td>{r.holders ? `${r.holders} joueur(s)` : '—'}</td>
         <td>{r.price ?? ''}</td>
+        <td>{shopLabel(r.shop, r.shop_races, races)}</td>
         <td><button className="sm danger" onClick={() => del(r)}>Suppr.</button></td>
       </tr>)}</tbody></table></div>
     {!view.length && <Empty>{rows.length ? 'Aucun résultat pour cette recherche.' : 'Aucun élément dans cette catégorie.'}</Empty>}

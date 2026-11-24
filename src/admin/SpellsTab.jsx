@@ -6,9 +6,10 @@ import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
 import { api } from '../lib/api.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
+import { ShopFields, shopLabel } from './shop.jsx';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
 
-const blank = { name: '', kind: '', rarity: 'commun', energyCost: '', damage: '', description: '', price: '', durationH: '', usableBy: [] };
+const blank = { name: '', kind: '', rarity: 'commun', energyCost: '', damage: '', description: '', price: '', durationH: '', usableBy: [], shop: true, shop_races: [] };
 
 export default function SpellsTab() {
   const d = useDispatch();
@@ -16,6 +17,8 @@ export default function SpellsTab() {
   const [rows, setRows] = useState([]);
   const [edit, setEdit] = useState(null);        // id en cours | 'new' | null
   const [f, setF] = useState(blank);
+  const [races, setRaces] = useState([]);
+  useEffect(() => { api('/admin/content/races').then(setRaces).catch(() => {}); }, []);
   const [q, setQ] = useState('');               // recherche locale (nom, genre/type)
 
   const load = () => {
@@ -23,12 +26,15 @@ export default function SpellsTab() {
     api(`/admin/content/spells${qs}`).then(setRows).catch(e => d(Ad.msg(e.message)));
   };
   useEffect(() => { load(); setEdit(null); setF(blank); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [rar]);
-  const open = row => { setEdit(row ? row.id : 'new'); setF({ ...blank, ...row, usableBy: typeof row?.usable_by === 'string' ? JSON.parse(row.usable_by || '[]') : (row?.usable_by ?? []) }); };
+  const js = v => (typeof v === 'string' ? JSON.parse(v || '[]') : (v ?? []));
+  // La ligne de l'API est en snake_case (energy_cost…) ; le formulaire en camelCase : correspondance explicite (avant : énergie et durée vides à l'édition).
+  const open = row => { setEdit(row ? row.id : 'new'); setF(row ? { ...blank, name: row.name ?? '', kind: row.kind ?? '', rarity: row.rarity ?? 'commun', energyCost: row.energy_cost ?? '', damage: row.damage ?? '', description: row.description ?? '', price: row.price ?? '', durationH: row.duration_h ?? '', usableBy: js(row.usable_by), shop: row.shop !== false, shop_races: js(row.shop_races) } : blank); };
   const save = async () => {
     try {
       const body = { ...f };
       Object.keys(body).forEach(k => { if (body[k] === '') delete body[k]; });
       body.usableBy = f.usableBy;
+      body.shop = !!f.shop; body.shopRaces = f.shop ? f.shop_races : []; delete body.shop_races;
       if (edit === 'new') await api('/admin/content/spells', body, 'POST');
       else await api(`/admin/content/spells/${edit}`, body, 'PUT');
       d(Ad.ok(edit === 'new' ? 'Sort créé' : 'Sort mis à jour')); setEdit(null); load();
@@ -69,6 +75,7 @@ export default function SpellsTab() {
               <button key={k} className={`chip${f.usableBy.includes(k) ? ' on' : ''}`} onClick={() => setU(k)}>{USABLE_LABEL[k]}</button>)}
             </div>
             <p className="note">Rien de coché = tout le monde peut l'apprendre.</p></div>
+          <ShopFields f={f} set={setF} races={races} what="le sort" />
         </div>
         <div className="actions">
           <button onClick={save}>{edit === 'new' ? 'Créer le sort' : 'Enregistrer'}</button>
@@ -76,7 +83,7 @@ export default function SpellsTab() {
         </div>
       </div>}
       <div className="tablewrap"><table><thead><tr>
-        <th>Nom</th><th>Genre</th><th>Rareté</th><th>Énergie</th><th>Dégâts</th><th>Durée</th><th>Apprenable par</th><th>Appris par</th><th />
+        <th>Nom</th><th>Genre</th><th>Rareté</th><th>Énergie</th><th>Dégâts</th><th>Durée</th><th>Apprenable par</th><th>Appris par</th><th>Boutique</th><th />
       </tr></thead><tbody>
         {view.map(r => <tr key={r.id} className={edit === r.id ? 'sel' : ''}>
           <td><b>{r.name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
@@ -87,6 +94,7 @@ export default function SpellsTab() {
           <td>{r.duration_h ? `${r.duration_h} h` : '—'}</td>
           <td className="ux">{usableBadge(r.usable_by)}</td>
           <td>{r.learners ? `${r.learners} joueur(s)` : '—'}</td>
+          <td>{shopLabel(r.shop, r.shop_races, races)}</td>
           <td><button className="sm danger" onClick={() => del(r)}>Suppr.</button></td>
         </tr>)}</tbody></table></div>
       {!view.length && <Empty>{rows.length ? 'Aucun résultat pour cette recherche.' : 'Aucun élément dans cette catégorie.'}</Empty>}

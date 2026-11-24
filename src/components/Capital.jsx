@@ -1,7 +1,7 @@
 import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Store, ShoppingBag, Package, PlusCircle, ArrowRightLeft } from 'lucide-react'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import Modal from './Modal'; import { api } from '../lib/api'; import { useRefreshMe } from './GameCanvas';
 const CAP = { human: 'Hôtel de Ville', demon: 'Bastion Infernal', angel: 'Sanctuaire de la Providence' };
 export default function Capital() {
-  const { me } = useSelector(s => s.game), d = useDispatch(), run = useDo(), refresh = useRefreshMe(), [shop, ls] = useData('/shop'), [mk, lm] = useData(`/market/${me.id}`), [ch, lc] = useData(`/chest/${me.id}`), [known, lk] = useData(`/spells/${me.id}`), [inv, li] = useData(`/inventory/${me.id}`), [price, setPrice] = useState(150);
+  const { me } = useSelector(s => s.game), d = useDispatch(), run = useDo(), refresh = useRefreshMe(), [shop, ls] = useData(`/shop?characterId=${me.id}`), [mk, lm] = useData(`/market/${me.id}`), [ch, lc] = useData(`/chest/${me.id}`), [known, lk] = useData(`/spells/${me.id}`), [inv, li] = useData(`/inventory/${me.id}`), [price, setPrice] = useState(150);
   const all = () => { ls(); lm(); lc(); li(); lk(); refresh(); }, bag = inv?.items.filter(i => !i.equipped_slot) ?? [], act = f => run(f, all), stat = i => i.weapon_damage ? `Arme ×${i.weapon_damage}` : i.armor ? `Armure +${i.armor}` : 'Outil / parchemin';
   return <Modal onClose={() => d(A.setPanel(null))} className="inv capital" label="Capitale de faction">
     <div className="banner"><div><h3>{CAP[me.race]}</h3><small>Toutes les interactions dans ce bâtiment coûtent 0 énergie.</small></div><span className="pill gold">{me.gold} Or</span></div>

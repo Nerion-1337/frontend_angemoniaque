@@ -7,6 +7,8 @@ export const itemBody = f => {
   if (f.slot) b.slot = f.slot;
   for (const k of NUM) if (f[k] !== '' && f[k] != null && !Number.isNaN(Number(f[k]))) b[k] = Number(f[k]);
   b.divine_family = b.rarity === 'divin' && f.divine_family ? f.divine_family : null;
+  b.shop = !!f.shop; b.shop_races = f.shop ? [...(f.shop_races ?? [])] : [];
+  if (f.shop_stock !== '' && f.shop_stock != null && !Number.isNaN(Number(f.shop_stock))) b.shop_stock = Math.max(0, Math.trunc(Number(f.shop_stock)));
   return b;
 };
 /** « Reliques (relique) · 3 / 4 » */
