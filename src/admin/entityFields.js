@@ -26,7 +26,9 @@ export const FIELDS = {
   ],
   building: [
     ['name', 'Nom'], ['kind', 'Type (wall/tower/factory/totem/...)'], ['invulnerable', 'Invulnérable', 'check'],
-    ['structure', 'Points de structure', 'number'], ['size', 'Taille (cases)', 'number'],
+    ['structure', 'Points de vie (structure)', 'number'], ['armor', 'Armure de la structure', 'number'], ['size', 'Taille (cases)', 'number'],
+    ['occupiable', 'Case occupable (un personnage peut s\'y tenir)', 'check'],
+    ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée (occupant)', 'number'],
     ['prerequisites', 'Prérequis (JSON : {"rank":3,"building":2})', 'json'],
     ['data', 'Passifs/collecte/production (JSON : {"passive":{"defense":5},"production":{"lorien":2},"storage":{"lorien":50}})', 'json']
   ],

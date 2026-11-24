@@ -15,12 +15,13 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (23)
+## Features (24)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Back-office d'administration (`src/admin/`, route `#admin`) : application plein écran à sections (Pilotage, Joueurs, Races & Rangs, Monstres, Objets, Sorts, Cases, Montures, Bâtiments), éditeur généri — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+6)
 - **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une connexion ou une inscription réussie, un compte admin arrive directement sur `#admin` ; un joueur reste sur la sélection de personnage. — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
 - **admin-players-divine-ui** [done] (.kb/cards/admin-players-divine-ui.md) Admin « Joueurs » (liste paginée, fiche) et objets divins dans l'onglet Objets ; préfixe CSS admin — Section admin « Joueurs » (liste paginée par race, fiche éditable) et rareté « Divin » de l'onglet Objets gérée comme les autres objets, avec familles divines et exemplaires uniques. — files: src/admin/PlayersTab.jsx, src/admin/players.js, src/admin/ItemsTab.jsx, src/admin/Divine.jsx (+1)
 - **admin-tiles-ui** [done] (.kb/cards/admin-tiles-ui.md) Section admin « Cases » : types de case par monde + affichage en jeu — Section admin « Cases » : types de case par monde (nom, description, coût d'énergie, sort appliqué en continu) ; en jeu, la carte de case affiche nom, description, effet continu et coût réglés en admi — files: src/admin/TilesTab.jsx, src/admin/tiles.js, src/lib/tiles.js
 - **bestiaire** [done] (.kb/cards/bestiaire.md) Panneau Bestiaire (SUPPRIMÉ phase 3c) : composant retiré de l'onglet Monstres — Trace de décision : l'ancien panneau « Bestiaire — butin & apparitions » a été retiré de l'onglet Monstres (phase 3c) ; le panneau `monster-details-ui` couvre butin et équipement par instance. — files: src/admin/index.jsx
+- **buildings-ui** [done] (.kb/cards/buildings-ui.md) Onglet Bâtiments : armure, case occupable, bonus et attaques de l’occupant, production, sorts — Onglet admin « Bâtiments » : armure et PV de la structure, case occupable, bonus de l'occupant, attaques possibles contre lui, production horaire par ressource et sorts de la structure. — files: src/admin/BuildingExtras.jsx, src/admin/building.js, src/admin/entityFields.js
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Onglet Gestion de la guilde (Chef seul) : choix unique du rang attribué aux nouveaux membres, « Automatique (rang le plus bas) » ou un rang non-Chef. — files: src/components/Guild.jsx, src/styles.css
 - **guild-forum-tools** [done] (.kb/cards/guild-forum-tools.md) Guilde (UI) : formatage par balises texte ([g]/[i]/[rgb]), édition unifiée titre+description+droits, suppression/transfert — Outils d'édition du forum : formatage par balises texte, édition unifiée en place (titre, description, droits), confirmation avant enregistrement ou suppression, suppression (Chef) et transfert de suj — files: src/components/Guild.jsx, src/components/fmtbar.jsx, src/components/Confirm.jsx, src/lib/fmt.js (+4)
 - **guild-forum-ui** [done] (.kb/cards/guild-forum-ui.md) Guilde (UI) : forum en drill-down, modales +, réorganisation, messages aérés et formatage — Onglet « Forum » de la guilde : navigation en trois niveaux (catégories → sujets → messages) avec retour à chaque niveau, création par fenêtres dédiées, rendu sûr du texte formaté. — files: src/components/Guild.jsx, src/lib/fmt.js, src/styles.css
@@ -44,6 +45,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `index.html`
 - `package.json`
 - `src/App.jsx` — App
+- `src/admin/BuildingExtras.jsx` — Onglet Bâtiments (lot 4) : case occupable + attaques possibles contre l'occupant, production horaire par resso — BuildingExtras, BuildingSpells
 - `src/admin/Dashboard.jsx` — Pilotage : compteurs, répartition par race, simulation du tick, journal d'audit filtrable. — (header), KPI, ago, Dashboard
 - `src/admin/Divine.jsx` — Objets divins (rareté « Divin » de l'onglet Objets) : — Divine, Families
 - `src/admin/Entities.jsx` — Éditeur générique d'entités (montures, bâtiments) : liste filtrable à gauche + fiche à droite (caractéristique — Entities
@@ -60,9 +62,6 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/SpellsTab.jsx` — Onglet admin « Sorts » (phase 4) : catalogue global des sorts (blessures/bonus/malus — (header), blank, SpellsTab
 - `src/admin/StartKit.jsx` — Équipement de départ d'une race (races.start_kit) : rang, or, XP, ressources, objets (sac / coffre), — StartKit
 - `src/admin/TilesTab.jsx` — Section admin « Cases » : types de case par monde — nom, description, coût d'énergie d'un pas, — (header), hex, TilesTab
+- `src/admin/building.js` — Helpers purs des bâtiments (lot 4), testés dans test/building.test.js. — buildingBody, buildingDraft
 - `src/admin/divine.js` — Helpers purs : objets (dont divins) et familles divines (testés dans test/adminDivine.test.js). — NUM, itemBody, familyLabel, validFamilyKey, CORE_FAMILIES
-- `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
-- `src/admin/index.jsx` — (header), SECTIONS, ICONS, SUBS, KEY, Admin
-- `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3b) : aides pures du panneau (liste de types + onglets). — SLOTS, SLOT_LABEL, SLOT_POS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn
-- `src/admin/players.js` — Helpers purs de la section admin « Joueurs » (testés dans test/adminPlayers.test.js). — RACE_LABEL, PLACE_LABEL, STAT_GROUPS, STAT_KEYS, statDiff, posLabel, pageWindow
-- … 70 autres fichiers (utiliser `kb search`)
+- … 75 autres fichiers (utiliser `kb search`)
