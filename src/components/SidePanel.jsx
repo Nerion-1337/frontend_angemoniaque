@@ -19,6 +19,18 @@ const GROUP = { weapon: ['weapon_main', 'weapon_off'], shield: ['weapon_off'], b
 const TYPE = { weapon: 'Arme', shield: 'Bouclier', bow: 'Arc', head: 'Casque', chest: 'Plastron', foot: 'Chaussures', amulet: 'Collier', ring: 'Bague', bracelet: 'Bracelet', special: 'Objet spécial', scroll: 'Parchemin', tool: 'Outil' };
 const statLine = i => [i.weapon_damage ? `Arme ×${i.weapon_damage}` : null, i.armor || i.magic_armor ? `Armure ${i.armor}/${i.magic_armor}` : null, i.strength_bonus ? `+${i.strength_bonus} Force` : null, i.agility_bonus ? `+${i.agility_bonus} Agilité` : null, i.req_strength ? `Force req. ${i.req_strength}` : null].filter(Boolean).join(' · ');
 const fmtLock = sec => { const h = Math.floor(sec / 3600), m = Math.ceil((sec % 3600) / 60); return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`; };
+/** Passage au rang suivant par conditions (objets du sac, ressources, énergie, XP) ; rang temporaire affiché avec son échéance. */
+function RankUp({ me, after }) {
+  const run = useDo(), [r, load] = useData(`/characters/${me.id}/rank-up`, [me.xp, me.energy_current]);
+  if (!r) return null;
+  const req = r.requirements;
+  return <div className="item rankup"><div><b>Rang : {me.rank?.rank_name ?? '—'}</b>
+    {r.temp && <><br /><small>Rang temporaire jusqu'au {new Date(r.temp.until).toLocaleString()}</small></>}
+    {r.next ? req ? <><br /><small>Prochain : <b>{r.next.name}</b> — {[...(req.items ?? []).map(i => `objet n°${i.itemId} ×${i.qty}`), ...Object.entries(req.resources ?? {}).map(([k, q]) => `${k} ×${q}`), req.energyCost ? `⚡${req.energyCost}` : null, r.next.prereq_xp != null ? `${r.next.prereq_xp} XP` : null].filter(Boolean).join(', ') || 'aucune condition'}{req.mode === 'temporary' ? ` · temporaire ${req.durationH} h` : ''}{req.consume === false ? ' · non consommés' : ''}</small>
+      {r.missing?.length > 0 && <><br /><small className="err">Manque : {r.missing.join(', ')}</small></>}</>
+      : <><br /><small>Prochain : {r.next.name} — passage non disponible par conditions.</small></> : <><br /><small>Rang maximal.</small></>}</div>
+    {r.next && req && <button className="primary" disabled={!!r.temp || r.missing?.length > 0} onClick={() => run(() => api(`/characters/${me.id}/rank-up`, undefined, 'POST'), () => { load(); after(); })}>Passer {r.next.name}</button>}</div>;
+}
 function Inventory({ close }) {
   const { me } = useSelector(s => s.game), refresh = useRefreshMe(), run = useDo(), [inv, load] = useData(`/inventory/${me.id}`), [up, loadUp] = useData(`/characters/${me.id}/upgrades`, [me.xp]), [sel, setSel] = useState(null), [tab, setTab] = useState('equip'), st = me.stats;
   const act = f => run(f, () => { load(); loadUp(); refresh(); }), eq = s => inv?.items.find(i => i.equipped_slot === s), bag = inv?.items.filter(i => !i.equipped_slot) ?? [], selItem = bag.find(i => i.id === sel), okSlots = selItem ? GROUP[selItem.slot] ?? [] : [];
@@ -47,6 +59,7 @@ function Inventory({ close }) {
         <small className="hint">Cliquez un objet du sac (les emplacements compatibles s'illuminent) puis l'emplacement ; cliquez un emplacement pour déséquiper (si le verrou de 12 h est écoulé).</small></div>
         <div><h4>Sac à dos <small>{bag.length}/20</small></h4><div className="bag2">{Array.from({ length: 20 }, (_, i) => { const it = bag[i]; return <button type="button" key={i} className={'bagcell' + (it ? ' full' : '') + (it && it.id === sel ? ' sel' : '')} onClick={() => it && setSel(it.id === sel ? null : it.id)} title={it ? `${it.name} — ${statLine(it) || TYPE[it.slot]}` : 'Emplacement libre'}>
           {it ? <><b>{it.name}</b><small>{statLine(it) || TYPE[it.slot] || ''}</small></> : <span className="free">{i + 1}</span>}</button>; })}</div></div></div></>}
+    {tab === 'up' && <RankUp me={me} after={() => { loadUp(); refresh(); }} />}
     {tab === 'up' && <div className="upgrades"><small>Le coût en XP suit les paliers de la table (×1, ×2, ×3). Chaque amélioration donne +1.</small>
       {up?.filter(u => !u.needsDivine || me.hasDivine).map(u => <div key={u.stat} className="item row2"><div><b>{LABEL[u.stat]}</b> <span className="pill">{u.value}</span> <span className="pill">Palier ×{u.tier}</span><br /><small>{u.untilNextTier} amélioration(s) avant le palier suivant · {u.count} effectuée(s)</small></div>
         <button className="primary" disabled={me.xp < u.nextCost} onClick={() => act(() => api(`/characters/${me.id}/upgrade/${u.stat}`, undefined, 'POST'))}>+1 ({u.nextCost} XP)</button></div>)}</div>}</Modal>;

@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react'; import { api } from '../lib/api';
+import { Fragment, useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { confirmDel } from './ui.jsx'; import { RaceRules, rulesDraft, rulesBody, rulesLabel } from './raceRules.jsx'; import StartKit from './StartKit.jsx'; import { kitSummary, kitDraft } from './startKit.js';
+import { confirmDel } from './ui.jsx'; import { RaceRules, rulesDraft, rulesBody, rulesLabel } from './raceRules.jsx'; import StartKit from './StartKit.jsx'; import RankReq from './RankReq.jsx'; import { reqSummary } from './rankReq.js'; import { kitSummary, kitDraft } from './startKit.js';
 /** Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. */
 export default function Races() {
-  const d = useDispatch(), [cat, setCat] = useState(null), [kitFor, setKitFor] = useState(null), maps = cat?.maps ?? [], [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
+  const d = useDispatch(), [cat, setCat] = useState(null), [kitFor, setKitFor] = useState(null), [reqFor, setReqFor] = useState(null), maps = cat?.maps ?? [], [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
   const load = () => api('/admin/content/races').then(setRaces).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { load(); }, []);
   useEffect(() => { api('/admin/catalog').then(setCat).catch(() => {}); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
@@ -48,12 +48,13 @@ export default function Races() {
         <div className="row"><button onClick={saveRace}>Enregistrer</button>
           <button className="sm" onClick={() => setRaceDraft(null)}>Annuler</button></div>
       </div>}
-      <div className="ranks">{r.ranks.map(s => <div key={s.id} className="rank">
+      <div className="ranks">{r.ranks.map(s => <Fragment key={s.id}><div className="rank">
         <small>Palier {s.current_rank}</small><b>{s.name}</b>
-        <small>{s.hp_max} PV · {s.strength} F · {s.agility} A{s.prereq_xp != null ? ` · prérequis ${s.prereq_xp} XP` : ''}{s.multipliers && Object.keys(s.multipliers).length ? ` · ×${JSON.stringify(s.multipliers)}` : ''}</small>
+        <small>{s.hp_max} PV · {s.strength} F · {s.agility} A{s.prereq_xp != null ? ` · prérequis ${s.prereq_xp} XP` : ''}{s.multipliers && Object.keys(s.multipliers).length ? ` · ×${JSON.stringify(s.multipliers)}` : ''}{reqSummary(s.requirements) ? ` · passage : ${reqSummary(s.requirements)}` : ''}</small>
+        <span className="rankbtns"><button className={`sm${reqFor === s.id ? ' on' : ''}`} title="Conditions pour passer à ce rang" onClick={() => setReqFor(reqFor === s.id ? null : s.id)}>Passage</button>
         <button className="sm" onClick={() => openRank(r, s)}>✎</button>
-        <button className="sm danger" onClick={() => delRank(s)}>×</button>
-      </div>)}
+        <button className="sm danger" onClick={() => delRank(s)}>×</button></span>
+      </div>{reqFor === s.id && <RankReq rank={s} catalog={cat} onSaved={load} />}</Fragment>)}
         <button className="sm" onClick={() => openRank(r, null)}>+ Palier</button>
       </div>
     </div>)}

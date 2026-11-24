@@ -31,6 +31,7 @@ Pilotage (dernier et prochain tick).
 - Équipement de départ (bouton « Départ ») : palier (vide = premier), or, XP, objets (sac ou coffre, quantité), sorts (sans doublon), montures (une seule active), ressources ; enregistré en entier (`kitBody`).
 - Toutes les valeurs envoyées sont des entiers ≥ 0.
 - L'en-tête de chaque race résume apparition et limites (`rulesLabel`) ; l'infobulle du bouton Départ résume le kit (`kitSummary`).
+- Chaque rang a un bouton « Passage » (conditions pour passer à ce rang, card `rank-req-ui`).
 
 ## Gotchas
 - Les règles de création sont décidées par le SERVEUR ; le front n'affiche que `allowed` / `reason`.

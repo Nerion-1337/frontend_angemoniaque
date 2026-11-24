@@ -454,3 +454,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .spellfx>.row{flex-wrap:nowrap}.admin .spellfx>.row select{width:auto;flex:0 1 320px}
 .admin .spellfx>button,.admin .spelllinks>button{align-self:flex-start}
 .admin .row select{width:auto;max-width:100%}
+.admin .rank{grid-template-columns:auto auto 1fr auto}.admin .rankbtns{display:inline-flex;gap:6px}.admin .rankbtns button.on{background:rgba(240,210,138,.18);color:var(--gold)}
+.admin .rankreq{margin:4px 0 10px;padding:14px;border:1px dashed var(--line);border-radius:12px;background:rgba(0,0,0,.15);display:flex;flex-direction:column;gap:8px}
+.admin .rankreq h5{margin:8px 0 0;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.admin .seg2 .chip.on{color:var(--gold);border-color:var(--gold);background:rgba(240,210,138,.12)}
