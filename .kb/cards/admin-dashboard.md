@@ -24,99 +24,23 @@ tests:
   - test/adminUi.test.js
 ---
 ## Purpose
-Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing
-`#admin` route. Provides a shell (section nav), a pilotage dashboard, a generic entity editor driven by field
-descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-cutting rules editor
-(costs/caps/modifiers), and a divine-items panel. Replaces the legacy `components/Admin.jsx`.
+Back-office d'administration (`src/admin/`, route `#admin`) : application plein écran à sections (Pilotage, Joueurs, Races & Rangs,
+Monstres, Objets, Sorts, Cases, Montures, Bâtiments), éditeur générique d'entités, règles transverses, toasts et éléments partagés.
 
+## Business rules
+- Accès : `#admin` ET `auth.admin` ; sinon « Accès réservé ».
+- Toute suppression demande confirmation (`confirmDel`) ; toute action affiche un toast : succès `Ad.ok` (vert, 4 s), erreur `Ad.msg` (rouge, 6 s).
+- La dernière section ouverte est retenue dans `localStorage` (`admin.section`), lecture/écriture protégées par try/catch.
+- Pilotage : compteurs, personnages par race, journal d'audit filtrable (jusqu'à 200 lignes), état de l'horloge ; « Simuler +1 heure » = tick supplémentaire.
+- Éditeur générique (Montures, Bâtiments) : champs décrits par `FIELDS` (`[colonne, libellé, number|check|json]`) ; un JSON invalide bloque l'enregistrement ; quitter une fiche modifiée demande confirmation.
+- Routes au nom de table PLURIEL : `URL_KIND` (front) doit rester identique au `URL_KIND` du back.
+- Le contenu venant de l'API est rendu comme texte React, jamais en HTML.
+- CSS : aucune classe admin ne reprend un nom global du jeu ; `.apanel` remplace `.panel`, et `.cell`, `.actions`, `.item.row2`, `.empty`, `.logo` sont neutralisés sous `.admin`.
 
-
-## How it works
-- **Shell** (`src/admin/index.jsx`): reads the active section from the Redux `admin` slice, renders the matching
-  panel; a shared `msg` toast shows API errors/success. Gated by `auth.admin` in `App.jsx` (`#admin`). Phase 2:
-  the monster tab renders the `MonsterDetails` panel only (phase 3c removed the generic
-  `Entities` CRUD and the `Bestiary` panel from this tab — the monster panel owns the type
-  list + instances; the `Bestiary` component was deleted). Phase 3: the
-  equipment (7 slots) / auras / caps + the all-monsters placement dashboard; card
-  `monster-details-ui`. Section headers (`.headrow`) re-styled: baseline alignment, optional
-  `.sub` subtitle, `.grow` spacer for right-aligned actions, bottom border separator —
-  backward-compatible with the unchanged `Entities`/`Races`/`Bestiary` markup.
-- **Field descriptors** (`entityFields.js` `FIELDS`): one array per entity type — `[column, label, type?]`
-  where type is `number|check|json`. JSON fields (behaviour, effects, multipliers, base_stats, prerequisites,
-  production/collection) are edited as textareas and parsed with `jsonOr` (default on empty, undefined on
-  invalid). `URL_KIND` maps the singular class to the PLURAL route segment (`monster -> monsters`).
-- **Generic editor** (`Entities.jsx`): list from `GET /admin/content/{plural}`, open →
-  `GET /admin/content/{plural}/{id}` (includes costs/caps/modifiers), form built from `FIELDS`, save →
-  `PUT` (existing) / `POST` (new). A "Règles transverses" tab renders `EntityRules.jsx`.
-- **Rules editor** (`EntityRules.jsx`): `RuleForms` adds a cost / cap / modifier via `POST .../{res|scope|}`;
-  `RulesList` lists and deletes the existing rows from the joined detail.
-- **Races** (`Races.jsx`): races list + per-race rank (paliers) tree with prereq_xp and multipliers; create/
-  edit/delete races and ranks.
-- **Divine** (`Divine.jsx`): list of arcana/relics/artifacts with holder/guardian, and a capped "create n".
-- **Store** (`store/admin.js`): small slice (section/kind/list/detail/msg) registered in `store/index.js`.
-- All API calls go through `lib/api.js` (relative `/api/...`, Bearer token).
-
-- **Refonte UI (2026-11-23)** : le shell est une application plein écran — barre latérale à icônes
-  lucide (tiroir sous 860 px), en-tête de section (titre + sous-titre `SUBS`), dernière section
-  mémorisée dans `localStorage` (`admin.section`, try/catch). Toasts typés via `ui.jsx` `Toast` :
-  `Ad.ok(text)` = succès (vert, 4 s), `Ad.msg(text)` = erreur/avertissement (rouge, 6 s) ; le slice porte
-  `tone`. `ui.jsx` fournit aussi `Search` + `matches` (filtre local sans casse ni accents), `Empty`,
-  `confirmDel` (toute suppression demande confirmation). Pilotage : cartes KPI, barres par race,
-  journal d'audit en tableau filtrable (« Afficher plus » jusqu'à 200). `Entities` : liste filtrable
-  + fiche, indicateur « non enregistré », barre d'actions collante. Objets/Sorts : recherche,
-  éditeur au-dessus du tableau, `open(r)` (corrige « Éditer » qui ne s'ouvrait pas : `open(r.id)`).
-
-
-- Section **« Cases »** (`tiles`, icône `Grid3x3`) : `TilesTab`, card `admin-tiles-ui`.
-
-- **2026-11-24 (card `admin-players-divine-ui`)** : section **Joueurs** ; `Divine.jsx` = exemplaires d'un objet divin + panneau des familles (utilisé par `ItemsTab`). **CSS** : `.panel` → `.apanel` et neutralisation sous `.admin` des classes globales du jeu (`.cell`, `.actions`, `.item.row2`, `.empty`, `.logo`) — elles plaquaient les panneaux à gauche sous la barre latérale.
-
-- **2026-11-24 (card `race-rules-ui`)** : Races = bloc apparition/limites (`raceRules.jsx`) ; Pilotage = état de l'horloge (dernier / prochain tick).
-
-## Entry points
-- `App.jsx` renders `<Admin />` when `hash === '#admin'` and `auth.admin` (import `./admin/index.jsx`). Auto-reached after a successful admin login/registration (`postAuth`, card `admin-login-nav`); otherwise via the `#admin` links in `CharSelect` / `Account` or by hand.
-- `Account.jsx` links to `#admin` for admin users; `Login.jsx` `CharSelect` shows the admin link.
-- After a **successful** login/registration an admin account is auto-navigated to `#admin` via `src/lib/postAuth.js` `postAuth` (card `admin-login-nav`); the two links above stay as the access points once in-game / after a session reload.
-- Redux: `store/admin.js` slice, actions `Ad.*`.
-
-
-
-## Data flow
-- Reads/writes the `/admin/content/*` + `/admin/dashboard` + `/admin/audit` + `/admin/tick` endpoints.
-- Entity detail payloads embed `costs`, `caps`, `modifiers` (from the back `extras()`); the rules editor
-  mutates them through the per-entity endpoints then re-fetches the detail.
-- State: `admin` slice (section, selected entity detail, toast). No persistence (each visit re-fetches).
-
-
+## Gotchas
+- Un effet qui charge des données s'écrit `useEffect(() => { load(); }, deps)` : passer le loader directement renvoie sa Promise comme fonction de nettoyage → « destroy is not a function » au changement d'onglet.
+- Nouvelle classe CSS admin : vérifier par `grep` qu'elle n'existe pas déjà dans `styles.css` (régression du 2026-11-24 : panneaux plaqués à gauche sous la barre).
+- Nouveau type d'entité : entrée `FIELDS` ET clé `URL_KIND`.
 
 ## Tests
-- `test/admin.test.js`: `admin` slice transitions (section/detail/msg), `FIELDS` covers the required
-  cross-cutting fields per entity type (durability, speed/carry, structure, prereq_xp, multipliers, base_stats),
-  and `jsonOr` tolerant parsing. (Node env — no DOM rendering tests in this repo.)
-- `test/adminEffects.test.js`: regression guard — the data-loading effects in `Races`/`Entities`/`Divine`
-  use a block body that returns `undefined` (never the loader Promise, which crashed tab switches),
-  plus a unit check of the React cleanup contract on an async loader.
-- The API surface it calls is integration-tested in `back/test/integration/admin.test.ts`.
-
-
-
-- **Onglets Objets/Sorts (phase 4)** : la section nav « Objets & Divins » est devenue « Objets »
-  (`ItemsTab`) + une section « Sorts » (`SpellsTab`) ; le panneau `Divine` est rendu **sous le
-  sous-onglet Divin** de `ItemsTab` (objets uniques : artefacts/arcanes/reliques). Voir la fiche
-  `item-spell-rarity-ui`.
-## Gotchas
-- **Plural vs singular**: routes use the PLURAL table name; `URL_KIND` (entityFields.js) must stay in sync with
-  the back `common.ts URL_KIND`. A new entity type = add its FIELDS entry AND its URL_KIND key.
-- **JSON fields**: edited as text; an invalid JSON blocks the save with a message (`jsonOr` returns undefined).
-  Keep the sentinel check (`jsonOr(v, undefined)`).
-- **`POST /characters`/entity POST returns the row** (id) but the list/detail GETs return full objects — after
-  creating, re-open by `r.id` (the editor already does `open(r.id)`).
-- The legacy `components/Admin.jsx` was deleted; don't re-import it. `styles.css` holds the `.admin` layout.
-- Keep components small; shared UI lives in `EntityRules.jsx`/`entityFields.js`, not duplicated per panel.
-- **useEffect contract (data loaders)**: an effect that triggers a loader returning a Promise (`api(...).then(...)`)
-  must use a block body (`useEffect(() => { load(); }, deps)`) — passing the loader directly
-  (`useEffect(load, [])`) makes the effect return the Promise, which React treats as the cleanup fn and calls
-  on unmount (tab switch) → `Uncaught TypeError: destroy is not a function` + the
-  « useEffect must not return anything besides a function » warning. Regression-guarded by `test/adminEffects.test.js`.
-  (`Bestiary.jsx`/`Dashboard.jsx` already use block bodies.)
-
+`test/admin.test.js` (slice, `FIELDS`, `jsonOr`), `test/adminEffects.test.js` (effets en corps de bloc), `test/adminUi.test.js` (toasts typés, recherche, confirmations) ; API testée côté back (`admin.test.ts`). Rendu vérifié dans Chromium (Playwright, 9 sections, bureau + mobile).

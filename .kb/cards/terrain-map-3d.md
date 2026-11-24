@@ -2,7 +2,7 @@
 title: 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions
 slug: terrain-map-3d
 status: done
-updated: 2026-11-23
+updated: 2026-11-24
 files:
   - src/lib/terrain.js
   - src/lib/humanMap.js
@@ -35,39 +35,22 @@ tests:
   - test/world.test.js
 ---
 ## Purpose
-The client-side world renderer: a mirror of the back's world model — **map 1 (Human) is a hand-drawn grid** (`humanMap.js`, byte-equivalent to the back's generated copy) and the other worlds are the original procedural noise — plus energy/mount rules. It drives the 3D scene (`scene.js` / `entities.js`) and the interactive panels (`Location.jsx` for the 3D view, `TileCard.jsx` for the mobile tile view, `MapLegend.jsx` + `Compass.jsx` as new HUD widgets). The mirror keeps movement costs, terrain colors, relief tinting, resource **catalog names**, safe zones and the volcano look in lockstep with `back/src/game/{terrain,movement}.ts`.
+Rendu client du monde : miroir exact du modèle du back (carte 1 dessinée, monde 2 par zones, carte 3 générée), règles d'énergie
+et de montures pour les estimations, scène 3D, carte de case, légende et boussole.
 
-## How it works
-- `terrain.js`: `terrain(x, y, mapId = WORLD)` — map 1 comes from `humanMap.js` (same codes as the back); maps 2/3 use the original `procNoise` thresholds. Each cell: `{kind, cost, resourceId, resource (catalog name), burn, v}`. `inSafeZone(x, y, mapId)` mirrors the back (hotel 100,100, Chebyshev ≤ 10, map 1 only). `setWorld(n)` sets the default map — **global mutable state**, called by `GameCanvas` on every `me` refresh.
-- `resources.js` (generated mirror of the back catalog): `RESOURCES`/`RES_BY_ID`/`GROUPS` — the front's harvest previews show the catalog name; the back stores the stable id in `characters.resources`.
-- `energy.js`: `pathEnergy(from, to, {mount, stopAt, aquatic, flying})` — Chebyshev step sum, 1 step at a time (flying = 1 everywhere), aquatic mounts are 1 on water / forbidden on land. The **current world** is read from the global `WORLD` (no mapId parameter on `pathEnergy`).
-- `relief.js`: per-kind tint (`COLORS`, extended with arid/snow/ether/volcano), a 4×4 zone-averaged tint, and a 25% darkening for deep water; the cell's resource/feature glyph.
-- `three/scene.js`: grid + fog + `THREE.InstancedMesh` terrain quads (200×200, 8 directions) tinted by `relief.js`; `three/entities.js`: sprites for characters/monsters/buildings/items.
-- `GameCanvas.jsx`: fetches `/map/{id}/landmarks` + `area` per WS event + 8 s poll, renders the instanced grid, `setWorld(me.map_id)` on refresh; safe-zone and cell-click flow into `Location.jsx` → `TileCard.jsx` (action menu gated by the same safe-zone rule as the back).
-- `MapLegend.jsx`: legend of the current map's resource groups + a coordinate box (only shown for map 1: "emplacement précis ne vaut que pour la carte 1").
-- `Compass.jsx`: N/E/S/O labels with `cardinalOf(dir)` for the 8 directions.
-- The mobile tile grid renders one cell per `TileCard`; 3D view uses the camera pan/zoom + `entities` sprites.
-
-- **Types de case admin (2026-11-24, card `admin-tiles-ui`)** : `energy.js` `pathEnergy` utilise `costOf(t)` (`lib/tiles.js`, coûts du monde courant chargés par `TileCard` depuis `/map/{id}/tile-types`) ; `TileCard` affiche `cell.tile` (nom du type, description, effet continu) et son coût.
-
-## Entry points
-- `GameCanvas` mount + WS `moved` events + 8 s poll → `scene.js` render loop.
-- `Location.jsx` "voir case" → `TileCard.jsx` menu (move / gather / attack gated by `t.kind !== 'monster' && !t.safe`, mirroring the back's 403).
-- `App.jsx` `WorldPanel` → `MapLegend` + map switcher (`POST /actions/enter` → `setWorld` on next refresh).
-- Mounts/boats: `/mounts` list feeds `pathEnergy` options in the action menu.
-
-## Data flow
-`GET /map/{id}/landmarks` → entity positions → sprites; `GET /map/{id}/area?x&y&r=15` (r caps at 25 on the back) → instanced terrain quads + tile grid; `terrain(x, y)` (mirror) → `energy.js` cost → "move" button energy badge; the back remains authoritative (client previews only, see `back` card `map-terrain-gather`).
-
-## Tests
-- `test/lib.test.js` (unit): energy linearity, `stopAt` cap, water/aquatic/flying rules, **catalog name ⇄ stable id on the 3 maps**, new kinds (arid 2, volcano 3 / forbidden for aquatic mounts).
-- `test/world.test.js` (unit, generated invariants): same hotel/safe-radius/portal/resource-presence/Yggdrasil-8-cells checks as the back `test/world.test.ts` — the front copy is a true mirror.
-- `test/guild-panel.test.js` / `test/format.test.js`: untouched sibling utilities.
+## Business rules
+- Le miroir `terrain.js` / `humanMap.js` / `resources.js` est identique au back : même type, coût, ressource (nom affiché, id stocké) pour chaque case.
+- Estimation d'énergie (`pathEnergy`) : pas Chebyshev ; monture volante = 1 ; aquatique = 1 sur l'eau, impossible sur terre ; à pied = coût admin du type de case du monde (`costOf`), eau profonde impossible.
+- `pathEnergy` calcule toujours sur le monde COURANT (`setWorld`, appelé à chaque rafraîchissement du personnage).
+- L'option d'attaque est masquée dans la zone sacrée (drapeau `safe` de `/map/{id}/cell`), comme le refus 403 du back.
+- La carte de case affiche le type réglé en admin (nom, description, effet continu, coût) ; jamais de PV exacts (état public).
+- Le serveur reste seul juge : le front ne fait que prévisualiser.
 
 ## Gotchas
-- **The mirror is duplicated across two repos**: any terrain/energy change lands in both `back/src/game/{terrain,movement}.ts` and `front/src/lib/{terrain,energy}.js` (+ the generated `humanMap`/`resources` pairs) — lock it with tests on both sides; the generated files say so at the top of the file.
-- `setWorld(n)` is **global mutable state** in `terrain.js`: every world switch must `setWorld` again (the `GameCanvas` refresh does it); tests must set it explicitly before any `pathEnergy` call that depends on the current world.
-- `pathEnergy` has no `mapId` parameter — it always runs on the current world; passing a cross-world target would produce wrong costs (never do that).
-- `deep` quads are tinted but the effective rule is `Infinity` on foot; the volcano is crossable (cost 3) — its burn is a **server-side** effect (`burn_until`), the client only previews the cost.
-- `tile`/`entity` payloads never carry exact HP (public 4-level state only, back `pub()`), the safe-zone flag `safe` comes from `/map/{id}/cell` — gate the attack option on it to stay consistent with the back's 403.
-- Mobile tile view vs 3D: both read the same `terrain()`; keep `COLORS`/tints in sync when adding a kind (now 9 kinds, `relief.js` owns the tint map).
+- Toute modification du terrain ou de l'énergie se fait des DEUX côtés (back et front) ; les fichiers générés se régénèrent par `tools/gen_*`.
+- `setWorld` est un état global : les tests doivent le fixer avant tout calcul.
+- Ne jamais passer une cible d'un autre monde à `pathEnergy`.
+- Nouveau type de case : couleur dans `relief.js` (`COLORS`) et dans `energy.js`.
+
+## Tests
+`test/lib.test.js` (énergie, `stopAt`, règles de l'eau, id ⇄ nom sur les 3 cartes) ; `test/world.test.js` (mêmes invariants que le back) ; `test/adminTiles.test.js` (`costOf`).

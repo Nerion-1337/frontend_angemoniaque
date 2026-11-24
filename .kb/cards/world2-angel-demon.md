@@ -2,7 +2,7 @@
 title: Monde Anges & Démons (UI) : sol par zone, ressources visibles, eau teintée, légende
 slug: world2-angel-demon
 status: done
-updated: 2026-11-20
+updated: 2026-11-24
 files:
   - src/lib/world2.js
   - src/lib/resources2.js
@@ -19,17 +19,17 @@ tests:
   - test/world2.test.js
 ---
 ## Purpose
-Rendu du monde 2 (copie exacte de la logique back, voir fiche back `world2-angel-demon`) avec une règle : **ce qui est dessiné sur une case est ce qu'on y récolte**.
+Rendu du monde 2 (Anges & Démons), copie exacte de la logique du back : ce qui est dessiné sur une case est ce qu'on y récolte.
 
-## How it works
-- `relief.js:zoneTint` mélange la couleur `ground` des 4 cases voisines (sol de zone) ; à défaut, la teinte par type (arides, glaces, éther, volcan) comme avant.
-- `scene.js` : `ORE_FX`/`FLORA_FX`/`WOOD` sont complétés depuis `RESOURCES2[].look` (cristaux émissifs, plantes à 3 formes, arbres, `bare` = arbre mort sans feuillage). Sol : herbe teintée par zone (`grass`, `false` = aucune), arbres isolés par zone (`lone`), roches par zone (`rock`), lave sans aiguilles (`flat`) mais couverte de cristaux de Cœur de magma. Minerais aussi sur les terres arides. Les maillages sans instance sont masqués (`visible`).
-- Eau : couleur par sommet (`waterTint`) recalculée à chaque déplacement.
-- `Panels.jsx` : carte globale colorée par `ground` pour le monde 2 ; `MapLegend` du monde 2 liste zone par zone (même couleur que la carte) et ses ressources. `TileCard`/`Location` affichent le libellé de zone (« Forêt calcinée ») au lieu du type générique.
-
-## Tests
-`test/world2.test.js` (délégation de `terrain()`, légende, poids, eau) ; la cohérence complète est dans les tests back.
+## Business rules
+- La teinte du sol suit la zone (moyenne de la couleur `ground` des cases voisines), sinon la teinte du type de case.
+- L'apparence 3D d'une ressource vient de `RESOURCES2[].look` ; herbe, arbres isolés et roches suivent la zone ; la lave porte les cristaux de Cœur de magma.
+- Eau sombre côté démons, claire côté anges (recalculée à chaque déplacement).
+- Carte globale, légende, carte de case et emplacement affichent la ZONE (« Forêt calcinée ») plutôt que le type générique.
 
 ## Gotchas
-- Ajouter une ressource : une entrée `RES` + une zone dans `tools/catalogue2.py` ; le contrôle `check()` refuse arbre hors forêt, plante hors plaine/aride/eau, minerai sur sol non rocheux, récolte sans apparence.
-- `terrain.js` est généré : le crochet `mapId === 2` doit exister dans le gabarit.
+- Ajouter une ressource : entrée `RES` + zone dans `tools/catalogue2.py` ; `check()` refuse arbre hors forêt, plante hors plaine/aride/eau, minerai hors sol rocheux, récolte sans apparence.
+- `terrain.js` est généré : le crochet `mapId === 2` doit rester dans le gabarit.
+
+## Tests
+`test/world2.test.js` (délégation de `terrain()`, légende, poids, eau) ; cohérence complète dans les tests du back.

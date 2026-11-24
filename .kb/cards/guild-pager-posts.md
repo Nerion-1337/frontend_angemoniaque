@@ -12,42 +12,24 @@ symbols:
   - src/components/Guild.jsx:Members
 tests:
   - test/guild.test.js
-updated: 2026-10-21
+updated: 2026-11-24
 ---
-
 ## Purpose
-Système de pagination commun (flèches icones seules ‹ › + input de page modifiable + `/total`) appliqué à toutes les listes (forum : catégories/sujets/messages ; onglet Liste : postulants/membres), et nouvelle structure des cartes de message (div auteur à gauche, div message à droite avec date en bas à droite, fonds alternés pair/impair).
+Pagination commune des listes de guilde (catégories, sujets, messages, postulants, membres) et mise en page des cartes de message.
 
-## How it works
-- **`PageNav({ page, total, onPage, size = PAGE })`** (composant commun) : rendu `‹ [input] /N ›` — **tailles de page** : `PFOLDER = 8` (catégories **et** sujets), `PMSG = 20` (messages), `PAGE = 10` (listes postulants/membres, défaut) — les flèches sont **icônes seules** (`ChevronLeft`/`ChevronRight`, `title` au survol, désactivées aux bornes) ; l'input `.ppage` affiche la page courante, est modifiable (chiffres seulement), et **valide à l'Entrée / à la perte de focus** → `onPage(clamp(1..N))` ; l'input se resynchronise quand la page change par ailleurs (`useEffect`). Affiché **en bas de page** (`.pagenav` centré).
-- **Cinq listes paginées** : catégories (`fRealP` + carte d'ajout) et sujets (`tRealP` + carte d'ajout) dans `Forum` (état `pgF`/`pgT`, remis à 1 quand on change de catégorie : `useEffect(() => setPgT(1), [fid])`), messages (`postsP`, `pgP` remis à 1 quand on change de sujet : `useEffect(() => setPgP(1), [tid])`), postulants (`applicantsP`, `pgA`) et membres (`membersP`, `pgM`) dans `Members` — 8 éléments/page pour catégories et sujets (`size={PFOLDER}`), 20 messages/page (`size={PMSG}`), 10 par page pour les listes (défaut `PAGE`). Le nombre total de pages = `ceil(total/size)` ; la page courante est clampée si les données ont rétréci.
-- **Carte d'ajout sur CHAQUE page** : la tranche ne contient que les items **réels** (`fRealP`/`tRealP`) et la carte `.item.radd` est **toujours rendue en dernière ligne de la page** (`{ add: true }` ajouté), **non draggée** (`AddCard` reçoit `dnd={null}` → pas de `rowProps` : le drag ne la compte pas, `dnd?.justDrag` / `dnd?.drag` null-safe). La position d'insertion **n'est plus mémorisée** (états `fAdd`/`tAdd` supprimés) : l'ancrage de création = **fin de la page courante** (`insertF`/`insertT`, toggle au-dessus/en-dessous relatif à ce point — le nouvel item apparaît donc sur la page courante). Réordonnancement : les indices locaux sont traduits par `startF`/`startT` et `dropRankRow`/`moveRankRow` sont appelés **avec `addPos = ids.length`** (liste complète, carte d'ajout virtuelle en fin) ; le drag de la carte d'ajout est impossible (pas de handlers) et un drop « sur » sa zone se borne à fin de page (`Math.min(b, fRealP.length)`).
-- **Pagination masquée si une seule page** : `PageNav` rend `null` quand `ceil(total/size) <= 1` (après les hooks, jamais avant).
-- **Vue sujet** : après `.fhead2`, la séparation `<div className="fsep">-----</div>` (centrée, `.fview > .fsep`) est TOUJOURS affichée — seule la `.fdesc` (description du sujet) est retirée ; en mode édition le `TopicEditBlock` suit la séparation.
-- **Édition complète de la catégorie depuis l'en-tête de la liste des sujets** : le crayon du titre de catégorie ouvre l'édition unifiée **complète** (titre déjà dans l'en-tête + `FmtBar` au-dessus + description `FmtField` + `Perks` droits sous la `.fsep` — même jeu de champs que pour les sujets), puis sauvegarde par le crayon (`pencil('f', …)` en bascule via `dirty()`).
-- **En-tête de la liste des sujets** : le titre de la catégorie (`h4.rhead` = `folder.name`) a un `button.btnlike` crayon **« Éditer (titre, description, droits) »** à côté (identique au motif de la vue sujet : en mode édition le h4 devient un `FmtField` pré-rempli, un X d'annulation apparaît à gauche du crayon, le crayon devient « Sauvegarder ») — Chef uniquement (`can`).
-- **Aperçu de la réponse** : le composeur de message utilise le composant réutilisable **`PrevToggle`** (`fmtbar.jsx`) : le `.rtext` (textarea 80 % centré) et le panneau `.fmtprev` alternent **dans le même slot** (pas de nouvelle balise affichée), le `button.pvbtn` « Aperçu du rendu formaté » (œil/crayon) est **à droite** du textarea (ligne `.fmtf-body.rbox`, état local `pv` remis à false à l'envoi ; `FmtBar` inactif pendant l'aperçu). `PrevToggle` est **aussi** le système de `FmtField` (édition titres/descriptions) — la bascule y est pilotée par l'état local `preview` du champ ; l'ancien `FPrev` statique a été retiré.
-- **Drag & drop + flèches sous pagination** : `DndList` ne voit que la tranche de la page (indices locaux) ; la fonction `off(pg, i) = (pg-1)*PAGE + i` traduit l'indice local en **index global de liste d'affichage** avant d'appeler `moveRankRow`/`dropRankRow` (qui opèrent sur l'ordre complet + position de la carte d'ajout) → le réordonnancement reste exact même si la carte d'ajout est sur une autre page. Le réordonnangement ne se fait qu'au sein d'une page (pas de drag transverse entre pages — limitation assumée).
-- **`Post`** : `<div class="post">` = ligne flex **à pleine largeur** (comme les `.item.fcard` des catégories/sujets — la `max-width:460px` historique est supprimée) — **`div.pauthor` à gauche** (avatar 40 px → rang guilde `.prank` → pseudo, colonne verticale, `padding:10px 30px` — précision utilisateur) et **`div.pmsg` à droite** (le corps `.postbody` + **`small.ptime` en bas à droite** : `position:absolute; right:10px; bottom:5px`, la `pmsg` réserve `padding-bottom:24px`). **Fonds alternés** : `.post:nth-child(odd)` (impair, blanc 5 %) / `.post:nth-child(even)` (paire, halo 7 %) — le fond est porté par le conteneur `.post`, donc il couvre **les deux div** (auteur + message).
-- **Réponse (vue sujet)** : le composeur est un **`textarea` `.rtext` à 80 % de la largeur, centré** (`.rtext{width:80%;margin:0 auto}`) avec la bascule **`PrevToggle`** à droite (voir « Aperçu de la réponse »), le bouton **Envoyer est centré juste en dessous** (`.rrow{justify-content:center}`) et le groupe d'icônes `FmtBar` au-dessus (inactif pendant l'aperçu, réactivé à l'envoi).
-- **`.pmsg` occupe l'espace restant** de `.post` (`flex:1;min-width:0`) — le corps `.post .postbody` est à `width:100%` (plus de contrainte 92 %) avec **texte à gauche** (`.post .postbody{text-align:left}` — précision utilisateur).
-- **`.post` à pleine largeur comme `.item.fcard`** : `width:100%` sur la règle active. **Piège** : une `margin:0 auto` sur ce flex-item (le `.posts` est en `flex-direction:column`) le rétrécit à sa largeur de contenu et le centre (marges auto sur l'axe de traversée) — d'où la règle explicite `width:100%` sans `margin:auto`. La règle résiduelle `.post{display:flex;flex-direction:column;...}` (ancienne variante) a été supprimée (complètement surclassée).
-- **`.ptotal`** (le `/ total` de la pagination) : texte **×2** (`font-size:1.6rem` sur base 0.8rem) et **espace après le `/`** (JSX : `` `/ ${pages}` `` → « / 10 »).
-- La **liste des rangs (onglet Gestion) n'est PAS paginée** : c'est un éditeur (drag & drop sur l'ordre complet, toggle d'insertion) ; paginer casserait la sémantique de réorganisation.
-
-## Entry points
-- `PageNav` est rendu : sous le `DndList` catégories, sous le `DndList` sujets (Forum), sous `.posts` (vue sujet), sous `.achips` (postulants) et sous `.mgrid` (membres).
-- `Post` est rendu dans `.posts` (vue sujet) — la parité pair/impair = position dans la liste des messages de la page (le `.posts` ne contient que des `.post` quand non vide).
-
-## Data flow
-`PAGE = 10` constant → troncatures `slice((pg-1)*PAGE, pg*PAGE)` des listes locales (données déjà chargées côté client — **pagination d'affichage, pas d'API back**) ; les réordonnancements passent par `off()` → `POST /guilds/reorder` (ordre global complet).
-
-## Tests
-- `test/guild.test.js` (gardes statiques, plusieurs blocs) : `function PageNav` + `ChevronLeft/ChevronRight` + `.ppage` + `/${pages}` ; ≥ 5 usages de `<PageNav` (les 5 listes) + **`if (pages <= 1) return null;`** (pagination masquée si une seule page) ; `fRealP`/`tRealP` + `[...fRealP.map(id => ({ id })), { add: true }]` (carte d'ajout à chaque page, `dnd={null}`) ; `PFOLDER = 8`/`PMSG = 20`/`PAGE = 10` + `startF`/`startT` (translation local→global) + `size={PFOLDER}`/`size={PMSG}` ; totaux sur items réels (`total={fIds.length}`/`total={tIds.length}`, plus d'`offF`/`offT`) ; `.post` pleine largeur (`width:100%`, plus de `max-width`) ; `.rtext` 80 % + `.rrow` centré + `.replywrap .fmtf-body{max-width:none` + `.replywrap .fmtprev{min-height` ; **`PrevToggle`** (`fmtbar.jsx` : `export function PrevToggle`, `FmtField` le réutilise) ; `.post{display:flex;flex-direction:row`, `.post:nth-child(odd)/(even){background`, `.ptime{position:absolute;right:10px;bottom:5px`, `<div className="pmsg">` ; vue sujet : `<div className="fsep">-----</div>` suivi de `{ed?.id === topic.id && TopicEditBlock()}` (plus de `.fdesc`) ; édition catégorie depuis l'en-tête liste sujets : `pencil('f', folder.id, folder)` + bloc `{ed?.id === folder.id && <>` (description + `Perks` kind="folders").
+## Business rules
+- Tailles de page : 8 pour catégories et sujets, 20 pour les messages, 10 pour postulants et membres.
+- Pagination masquée s'il n'y a qu'une page ; page remise à 1 quand on change de catégorie ou de sujet ; l'input de page n'accepte que des chiffres.
+- La carte d'ajout est la dernière ligne de CHAQUE page et n'est pas déplaçable.
+- Le glisser-déposer est limité à la page courante ; l'indice local est converti en indice global avant d'envoyer l'ordre complet.
+- Pagination d'affichage seulement (les listes sont entièrement chargées par `GET /guilds/{id}`).
+- Message : auteur à gauche (avatar, rang de guilde, pseudo), texte à gauche dans la zone de droite, date en bas à droite ; fonds alternés pair/impair.
+- La liste des rangs (onglet Gestion) n'est jamais paginée.
 
 ## Gotchas
-- **Le drag ne traverse pas les pages** : un réordonnancement est limité à la page courante ; l'ordre global reste cohérent via `startF`/`startT` + `addPos = ids.length`. La carte d'ajout est **fixée en dernière ligne de chaque page** (plus de position draggable mémorisée — l'insertion d'un nouvel item s'ancre à la fin de la page courante).
-- La parité `.post:nth-child()` suppose que `.posts` ne contient que des `.post` (c'est le cas : le `<small>Aucun message</small>` n'apparaît que quand il n'y a **aucun** message, donc aucun `.post`).
-- `nth-child(even)`/`(odd)` : « impair » = 1ᵉʳ, 3ᵉ, … (`:nth-child(odd)`) ; si le design demande l'inverse, inverser les deux règles.
-- L'input de page n'accepte que des chiffres (`replace(/[^0-9]/g, '')`) ; entrée vide → resynchronisation au `blur`.
-- La pagination est **client-side** : les listes forums/membres/postulants sont intégralement chargées par `GET /guilds/{characterId}` — pour de vrais gros volumes, il faudra une pagination côté API (hors périmètre ici).
+- `.post` doit garder `width:100%` sans `margin:0 auto` (sinon rétréci et centré dans la colonne flex).
+- L'alternance pair/impair suppose que `.posts` ne contient que des `.post`.
+- Pour de gros volumes, il faudra une pagination côté API.
+
+## Tests
+`test/guild.test.js` (gardes : `PageNav`, 5 usages, masquage à une page, carte d'ajout par page, structure des messages).

@@ -1,5 +1,5 @@
 ---
-title: Races (apparition, limites) dans l'admin, écran de création piloté par le serveur, horloge au Pilotage
+title: Races (apparition, limites, équipement de départ) dans l'admin, écran de création piloté par le serveur, horloge au Pilotage
 slug: race-rules-ui
 status: done
 updated: 2026-11-24
@@ -8,39 +8,34 @@ files:
   - src/admin/Races.jsx
   - src/components/Login.jsx
   - src/admin/Dashboard.jsx
+  - src/admin/StartKit.jsx
+  - src/admin/startKit.js
 symbols:
   - src/admin/raceRules.jsx:rulesBody
   - src/admin/raceRules.jsx:rulesDraft
   - src/admin/raceRules.jsx:rulesLabel
   - src/admin/raceRules.jsx:RaceRules
   - src/components/Login.jsx:CharSelect
+  - src/admin/startKit.js:kitBody
 tests:
   - test/raceRules.test.js
+  - test/startKit.test.js
 ---
 ## Purpose
-Admin « Races & Rangs » : bloc « Apparition des nouveaux personnages » (monde, centre X/Y, rayon) et « Limites de personnages »
-(par compte, population totale) dans le formulaire d'une race ; résumé sur l'en-tête de chaque race. Écran de création de
-personnage : races, places et refus fournis par le serveur ; le compte admin crée sans limite, toutes races.
+Onglet « Races & Rangs » : zone d'apparition, limites de personnages et équipement de départ de chaque race ; panneau Horloge du
+Pilotage (dernier et prochain tick).
 
-## How it works
-- `raceRules.jsx` : `rulesDraft(r)` (null → '' ; nouvelle race : 3 / compte, rayon 4), `rulesBody(f)` ('' → null = défaut /
-  illimité ; pas de centre sans monde), `rulesLabel(r)`, composant `RaceRules` (monde choisi dans `/admin/catalog` `maps`, bornes affichées).
-- `Races.jsx` : brouillon de race = champs historiques + `rulesDraft` ; `saveRace` envoie `...rulesBody(raceDraft)` ; `<RaceRules>`
-  rendu sous le formulaire (édition et création).
-- `Login.jsx` `CharSelect` : `GET /characters/races` (allowed, reason, max, admin, locked) ; boutons de race désactivés avec la raison ;
-  compteur « n sur max » ou « administrateur, sans limite » ; icônes connues pour human/demon/angel, `User` sinon.
-- `Dashboard.jsx` : panneau Horloge = dernier tick (`clock.last_tick_at`) et prochain vers +1 h ; le bouton reste un tick supplémentaire.
-
-## Entry points
-Section admin `races` ; écran de sélection de personnage (`App.jsx` → `CharSelect`). Back : card `races-spawn-clock`.
-
-## Data flow
-Lit `/admin/content/races`, `/admin/catalog`, `/characters/races`, `/admin/dashboard` ; écrit `PUT/POST /admin/content/races`, `POST /characters`.
-
-## Tests
-`test/raceRules.test.js` : `rulesBody`, `rulesDraft`, `rulesLabel`, et `Login.jsx` utilise `/characters/races` (plus de « < 3 » codé en dur).
-Rendu vérifié dans Chromium (Playwright) le 2026-11-24 : formulaire race avec zone/limites, écran de création admin (4 personnages, 3 races).
+## Business rules
+- Apparition : monde + centre X/Y + rayon ; vide = capitale de la race ; un centre sans monde n'est pas envoyé (`rulesBody`).
+- Limites : par compte (nouvelle race : 3) et population totale ; vide = illimité. Le compte admin n'y est jamais soumis.
+- Équipement de départ (bouton « Départ ») : palier (vide = premier), or, XP, objets (sac ou coffre, quantité), sorts (sans doublon), montures (une seule active), ressources ; enregistré en entier (`kitBody`).
+- Toutes les valeurs envoyées sont des entiers ≥ 0.
+- L'en-tête de chaque race résume apparition et limites (`rulesLabel`) ; l'infobulle du bouton Départ résume le kit (`kitSummary`).
 
 ## Gotchas
-- Les règles de création sont décidées par le SERVEUR ; l'écran ne fait qu'afficher `allowed` / `reason` — ne pas recoder de limite côté front.
-- `RaceRules` est placé dans la grille `.form` : la règle CSS `.admin .form>.racerules{grid-column:1/-1}` lui donne toute la ligne.
+- Les règles de création sont décidées par le SERVEUR ; le front n'affiche que `allowed` / `reason`.
+- `StartKit.jsx` (composant) et `startKit.js` (fonctions), `raceRules.jsx` : importer avec l'extension.
+- `RaceRules` est dans la grille `.form` : `.admin .form>.racerules{grid-column:1/-1}` lui donne la ligne entière.
+
+## Tests
+`test/raceRules.test.js` (`rulesBody`, `rulesDraft`, `rulesLabel`, écran de création piloté par le serveur) ; `test/startKit.test.js` (`kitDraft`, `kitBody`, `kitSummary`).

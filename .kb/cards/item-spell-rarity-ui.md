@@ -15,48 +15,22 @@ symbols:
 tests:
   - test/itemSpellRarity.test.js
 ---
-# item-spell-rarity-ui
 ## Purpose
-Onglets admin « Objets » et « Sorts » (phase 4) : gestion du catalogue par rareté et du paramètre
-« qui peut s'en équiper / l'apprendre ».
-## How it works
-- `index.jsx` : sections `item` → « Objets » (`ItemsTab`) et `spell` → « Sorts » (`SpellsTab`) ;
-  l'ancienne section « Objets & Divins » (`Entities kind=item` + `Divine`) est remplacée — le
-  panneau `Divine` vit maintenant **sous le sous-onglet Divin** de `ItemsTab`.
-- `ItemsTab.jsx` : sous-onglets par rareté (Toutes + `RARITIES`). Chaque sous-onglet (hors Divin) :
-  filtre par **type d'équipement** (les 7 slots `monsterDetails.SLOTS` + « Sans type »), table
-  (nom / type / rareté / « Équippable par » / **détenu par N** / prix), éditeur inline (nom, slot,
-  rareté, prix, bligne, dégâts, bonus, durabilité, armure magique, plafond, force requise) et
-  puces `usable_by`. Création (+ Nouvel objet), suppression.
-- `SpellsTab.jsx` : même pattern pour le catalogue des sorts (nom / genre / rareté / énergie /
-  dégâts / durée / **appris par N** / « Apprenable par ») + création / édition / suppression.
-- Refonte UI (2026-11-23, fiche `admin-dashboard`) : recherche locale (nom/genre/type) au-dessus du
-  tableau, éditeur affiché AU-DESSUS du tableau, suppression confirmée (`confirmDel`), toasts `Ad.ok`.
-  « Éditer » appelle `open(r)` (la ligne) : l'ancien `open(r.id)` laissait `edit` à `undefined`, l'éditeur ne s'ouvrait pas.
-- `rarity.js` : miroir front des constantes back (`RARITIES`, `USABLE_KINDS`) + `usableBadge`.
-- API : `GET /admin/content/items?rarity=&slot=` (colonne `rarity_n` normalisée — les valeurs
-  historiques libres et accentuées « Épique »/« unique »/« legendary » sont mappées vers les 5
-  valeurs canoniques), `POST/PUT items` (`usable_by` JSON, `rarity` libre côté base),
-  `GET /admin/content/spells?rarity=` (`learners`), `POST/PUT spells` (`usableBy`, `rarity` enum).
-- **2026-11-24** : le sous-onglet **Divin** n'embarque plus l'ancien panneau anonyme : même tableau et même formulaire que les autres raretés + famille divine, panneau `Families` et exemplaires `<Divine itemId>` (card `admin-players-divine-ui`). Corps d'objet construit par `itemBody` (plus de null envoyés).
+Onglets admin « Objets » et « Sorts » : catalogue par rareté (Commun → Divin), filtre par type d'équipement, décomptes de
+détenteurs / apprenants, et paramètre « qui peut s'en équiper / l'apprendre ».
 
-## Entry points
-`src/admin/ItemsTab.jsx`, `src/admin/SpellsTab.jsx`, `src/admin/rarity.js`, `src/admin/index.jsx`.
-## Data flow
-Sous-onglet → `?rarity=` (+ `?slot=`) → API → table (+ `holders`/`learners`) ; édition →
-`PUT` (`usable_by`/`usableBy` sérialisé JSON) ; le décompte vient de `character_items` /
-`character_spells`.
-## Tests
-`test/itemSpellRarity.test.js` (miroir des constantes, sous-onglets, filtres, guards),
-tests d'intégration back `test/integration/itemSpellRarity.test.ts` (rareté, usable_by,
-filtres, décomptes, édition, validation zod).
+## Business rules
+- Raretés proposées : commun, rare, epique, legendaire, divin ; l'affichage d'un objet passe par `rarity_n` (rareté historique normalisée).
+- « Qui peut s'en équiper / l'apprendre » ⊂ {humain, ange, demon, monstre, structure, monture} ; rien de coché = tout le monde.
+- Filtre « type d'équipement » : les 7 slots + « sans type ».
+- « Détenu par » compte les inventaires (+ exemplaires divins détenus) ; « Appris par » compte les personnages qui ont le sort.
+- « Éditer » ouvre la ligne (`open(r)`) ; l'éditeur s'affiche au-dessus du tableau ; suppression confirmée.
+- Divin : voir card `admin-players-divine-ui` (même formulaire + famille + exemplaires).
+
 ## Gotchas
-- **Rareté legacy** : `items.rarity` est du texte libre historique (l'API n'impose PAS d'enum —
-  seule la colonne `spells.rarity`, fraîche, est bornée). L'UI ne propose que les 5 valeurs ;
-  l'affichage passe par `rarity_n`.
-- **`usable_by` jsonb** : pg peut renvoyer la valeur parsée (tableau) ou stringifiée — toujours
-  passer par `usableBadge` (front) / `ub()` (tests) ; ne jamais `JSON.parse` à l'aveugle.
-- **Les 6 kinds de `USABLE_KINDS`** sont strictement synchronisés entre `rarity.js` (front) et
-  `admin/common.ts` (back) ; une évolution = les deux fichiers.
-- La colonne `holders` ne compte que `character_items` (inventaires porteurs), pas les items
-  déposés en monde (`positions.item_id`).
+- `items.rarity` reste du texte libre en base (seule `spells.rarity` est bornée) : toujours afficher `rarity_n`.
+- `usable_by` peut arriver parsé ou en chaîne : passer par `usableBadge`, jamais `JSON.parse` à l'aveugle.
+- `USABLE_KINDS` et `RARITIES` sont synchronisés avec `admin/common.ts` du back : modifier les deux.
+
+## Tests
+`test/itemSpellRarity.test.js` (miroir des constantes, sous-onglets, filtres) ; back `test/integration/itemSpellRarity.test.ts`.

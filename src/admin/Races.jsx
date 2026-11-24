@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { confirmDel } from './ui.jsx'; import { RaceRules, rulesDraft, rulesBody, rulesLabel } from './raceRules.jsx';
+import { confirmDel } from './ui.jsx'; import { RaceRules, rulesDraft, rulesBody, rulesLabel } from './raceRules.jsx'; import StartKit from './StartKit.jsx'; import { kitSummary, kitDraft } from './startKit.js';
 /** Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. */
 export default function Races() {
-  const d = useDispatch(), [maps, setMaps] = useState([]), [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
+  const d = useDispatch(), [cat, setCat] = useState(null), [kitFor, setKitFor] = useState(null), maps = cat?.maps ?? [], [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
   const load = () => api('/admin/content/races').then(setRaces).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { load(); }, []);
-  useEffect(() => { api('/admin/catalog').then(c => setMaps(c.maps ?? [])).catch(() => {}); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
+  useEffect(() => { api('/admin/catalog').then(setCat).catch(() => {}); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
   const openRace = r => { setSel(r.key); setRaceDraft({ id: r.id, key: r.key, name: r.name, color: r.color ?? '', active: r.active, base_stats: jsonText(r.base_stats ?? null), ...rulesDraft(r) }); };
   const newRace = () => { setSel(null); setRaceDraft({ id: null, key: '', name: '', color: '', active: true, base_stats: '', ...rulesDraft(null) }); };
   const delRace = async r => { if (!confirmDel(`la race « ${r.name} » et ses paliers`)) return; try { await api(`/admin/content/races/${r.id}`, undefined, 'DELETE'); d(Ad.ok('Race supprimée')); load(); } catch (e) { d(Ad.msg(e.message)); } };
@@ -34,8 +34,10 @@ export default function Races() {
     <div className="headrow"><span className="grow" /><button className="sm" onClick={newRace}>+ Race</button></div>
     {races?.map(r => <div key={r.id} className="race apanel">
       <div className="headrow"><b>{r.name}</b><small>({r.key}){r.active ? '' : ' · inactive'} · {rulesLabel(r)}</small>
+        <button className={`sm${kitFor === r.id ? ' on' : ''}`} title={kitSummary(kitDraft(r.start_kit))} onClick={() => setKitFor(kitFor === r.id ? null : r.id)}>Départ</button>
         <button className="sm" onClick={() => openRace(r)}>✎</button>
         <button className="sm danger" onClick={() => delRace(r)}>×</button></div>
+      {kitFor === r.id && <StartKit race={r} catalog={cat} onSaved={load} />}
       {raceDraft?.id === r.id && <div className="form">
         {FIELDS.race.map(([k, label, t]) => t === 'check'
           ? <label key={k} className="sm check"><input type="checkbox" checked={!!raceDraft[k]} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.checked })} /> {label}</label>

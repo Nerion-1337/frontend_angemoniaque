@@ -444,3 +444,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .form>div:has(>textarea){grid-column:1/-1}
 .admin .form>.racerules{grid-column:1/-1}
 .admin .racerules h4{margin:14px 0 6px;color:var(--mute);font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.admin .startkit{margin:10px 0 14px;padding:14px;border:1px dashed var(--line);border-radius:12px;background:rgba(0,0,0,.15)}
+.admin .startkit h5{margin:14px 0 6px;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.admin .race .headrow button.on{background:rgba(240,210,138,.18);color:var(--gold);border-color:rgba(240,210,138,.4)}
+.admin .chip label.check{display:inline-flex;align-items:center;gap:6px}

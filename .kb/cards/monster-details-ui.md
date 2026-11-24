@@ -2,7 +2,7 @@
 title: Onglet Monstres (phase 3b/3c) : types, capacités actives/passives, spécificités, liste & édition des instances
 slug: monster-details-ui
 status: done
-updated: 2026-11-21
+updated: 2026-11-24
 files:
   - src/admin/MonsterDetails.jsx
   - src/admin/monsterDetails.js
@@ -19,105 +19,23 @@ tests:
   - test/monsterDetails.test.js
 ---
 ## Purpose
-Onglet « Monstres » du dashboard admin (étape 2, phases 3b/3c). Vue d'entrée : la liste des
-**types** de monstres + bouton « + Nouveau type » aligné à droite (le bandeau de titre
-`headrow` a été retiré — simple ligne d'action `.actions`). Un clic sur un nom ouvre le panneau du type,
-à 4 onglets :
-1. **Caractéristiques** (édition des champs du type, CRUD `entityFields`),
-2. **Capacité** — sorts **actifs** (lancés à la demande) et **passifs** (possédés par défaut,
-   appliqués en continu, sans énergie ; cible alliés/ennemis + périmètre) ; l'ancien concept
-   « aura » y est fusionné (catalogue de sorts global, menu avec recherche),
-3. **Spécificités** — quantité max (jeu / joueur) + **parties du corps équipables** : 7 puces
-   de sélection affichées **sur une simple ligne** (retour à la ligne si besoin, `monster_slots`) —
-   **sans partie cochée, aucun équipement ne peut être ajouté** aux monstres de ce type,
-4. **Liste** — **uniquement les instances du type sélectionné** (coordonnées, carte, PV,
-   lié à un pseudo / natif, réincarnation). Un bouton « + Ajouter » à côté du titre ouvre UNE
-   SEULE section partagée **édition / création** : en mode création on choisit le type + carte +
-   x/y ; en édition on déplace l'instance (**x/y saisis manuellement** et/ou **mini-carte avec
-   zoom molette/boutons + pan** — un clic sans glisser remplit x/y), on édite le **butin donné
-   au tueur** (objet / ressource — menus déroulants avec **recherche paginée 20/page** — / **or**,
-   l'or détenu n'étant plus un champ à part) et l'**équipement** : le choix de partie est
-   **borné par la grille du type** (côté UI **et côté serveur** — grille vide = ajout impossible),
-   les pièces déjà portées restent supprimables. L'ancien onglet « Règles transverses » a été
-   retiré (phase 3c). Le bouton « ← Retour à la liste des types » remonte depuis la fiche d'un
-   type.
-La logique (tables, endpoints, mort/réincarnation, or du butin) est au dépôt back — carte
-`monster-details`.
+Onglet admin « Monstres » : liste des types, puis fiche à 4 onglets — Caractéristiques, Capacité (sorts actifs/passifs),
+Spécificités (quantités max, parties du corps équipables), Liste (instances du type : placement, déplacement, butin, équipement).
 
-## How it works
-- **Montage** (`src/admin/index.jsx`) : la section `monster` rend `<MonsterDetails />` puis
-  `<Bestiary />` (butin de spawn & gardiens) — le CRUD générique d'entité n'y figure plus.
-- **Panneau** (`MonsterDetails.jsx`) : au montage, charge `/admin/content/monsters` (liste des
-  types), `/admin/catalog` (items, spells, maps, **resources**) et `/admin/bestiary/status`.
-  `sel` = type ouvert ('' liste, 'new' création, id) ; `mine` = instances du type (filtre de
-  l'onglet Liste). Onglets `data/caps/spec/list` ; l'onglet Liste porte `lMode` ('' / 'edit' /
-  'new') : « + Ajouter » → création (remplace l'édition), « Sélectionner » → édition
-  (`selectInst` recharge `/equips`, `/loot`, grille `/slots` du prototype). Mutations :
-  capacités `POST/DELETE /admin/content/monsters/{id}/spells` (mode active|passive),
-  `POST/DELETE /slots/{slot}`, caps `POST/DELETE /caps/{scope}`, déplacement
-  `PUT /admin/bestiary/place/{pos_id}` ({x, y[, mapId]}), création
-  `POST /admin/bestiary/place` (corps `placeBody`), retrait `DELETE /place/{pos_id}`, butin
-  `POST/DELETE /loot` (type « Or » = `resource:'or'`, ressource = id du catalogue),
-  équipement `POST/DELETE /equips` (slot borné par la grille).
-- **`Pick.jsx`** : menu déroulant avec **recherche + pagination** (`perPage` défaut 20,
-  pieds de page ‹ › sur la liste complète filtrée) — catalogues objets/ressources/monstres.
-- **`MiniMap.jsx`** : canvas coloré par le terrain du jeu (`lib/terrain`), points des
-  instances de la carte ; **zoom** molette (écouteur natif non-passif) et boutons ±/⌂,
-  **pan** par glisser ; un clic (sans glisser) renvoie la case à `onPick`.
-- **Aides pures** (`monsterDetails.js`) : `SLOTS/SLOT_LABEL/SLOT_POS` (miroir du CHECK back +
-  positions silhouette), `slotAllowed`, `pickFilter`, `spellLabel/capLabel/equipLabel`,
-  `capsToMaxCaps`, `placeBody`, `linkedLabel`, `respawnIn`.
-
-- **Phase 4** : l'onglet Monstres est inchangé, mais la nav admin a changé — la section
-  « Objets & Divins » est devenue « Objets » + « Sorts » (fiche `item-spell-rarity-ui`) ;
-  `SLOTS`/`SLOT_LABEL` restent importés par `ItemsTab` (type d'équipement).
-
-## Entry points
-- `src/admin/index.jsx` → `MonsterDetails` (section `monster`) ; accès `#admin` (fiche
-  `admin-login-nav`). API consommée (back) : `/admin/content/monsters`, `/admin/catalog`
-  (avec `resources`), `/admin/bestiary/status|place` (+ `PUT /place/{id}`), sous-collections
-  `/admin/content/monsters/{id}/{spells,equips,slots,caps,loot}` — carte back
-  `monster-details`.
-
-## Data flow
-État React local par panneau (la slice Redux `admin` ne porte que section/msg) :
-`monsters/cats/status` (montage), `sel/draft/caps/actives/passives/slots` (à l'ouverture d'un
-type), `instSel/iLoot/iEquips/iGrid/mx/my/instMap/lMode` (onglet Liste — `mx,my` = position
-saisie manuellement OU cliquée, source unique du marqueur de la mini-carte et du bouton
-« Déplacer »), formulaires `capF/nl/ne/nw`. Chaque succès de mutation rechargue le status ou
-la sous-collection concernée (pas de cache côté client).
-
-## Tests
-- `test/monsterDetails.test.js` (Vitest) : contrat des 7 `SLOTS` (+ `slotAllowed`,
-  `SLOT_POS`), `pickFilter`, libellés (`spellLabel/capLabel/equipLabel/linkedLabel/respawnIn`),
-  `capsToMaxCaps`, `placeBody` ; gardes source : `useEffect` du panneau en corps de bloc,
-  `<thead>/<tbody>` des tableaux, absence de l'onglet « règles transverses », liste filtrée
-  par type (`mine`), `Pick` paginé (20/page), `MiniMap` (zoom/pan/clic).
+## Business rules
+- Capacités : actives (lancées à la demande) et passives (en continu, sans énergie, cible alliés/ennemis + rayon) ; catalogue global de sorts avec recherche.
+- Parties équipables : 7 puces sur une ligne ; sans partie cochée, aucun équipement ne peut être ajouté aux monstres du type (règle aussi appliquée par le serveur) ; une pièce portée reste supprimable.
+- L'onglet Liste n'affiche que les instances DU TYPE ouvert ; une seule zone partagée création / édition.
+- Déplacement par x/y saisis ou clic sur la mini-carte (zoom molette/boutons, déplacement par glisser ; clic sans glisser = choix de case).
+- Butin du tueur : objet, ressource (id du catalogue) ou Or (`resource: 'or'`, crédité en or par le back).
+- Menus de choix (`Pick`) : recherche + 20 éléments par page, rendus seulement quand ouverts, fermés au clic extérieur.
 
 ## Gotchas
-- **`SLOTS` doit rester à 7 et coïncider avec le CHECK `monster_equips.slot`** (migration 12
-  back) : ajouter une partie = migrer le back + la constante + `SLOT_POS` ensemble.
-- **Grille des parties équipables (phase 3d)** : la liste des parties cochées borne
-  l'équipement des instances — **côté UI** (le formulaire ne propose que les parties cochées,
-  masqué si la grille est vide) **et côté serveur** (`POST /equips` vérifie la grille du type :
-  vide → 400 ; slot hors grille → 400). Une pièce déjà portée reste supprimable même si sa
-  partie n'est plus cochée.
-- **L'or du butin = `monster_loot.resource='or'`** : la ressource spéciale créditée en or du
-  tueur par `rollLoot` (back) — ne pas la confondre avec le JSONB `characters.resources` ;
-  l'affichage (`lootTag`) et l'ajout (type « Or ») du panneau passent par cette valeur.
-- **`Pick` ne se souvient de rien** (recherche/page réinitialisées) : le panneau rechargue les
-  catalogues à chaque sélection — pas de cache qui désynchroniserait. Le menu est rendu
-  **conditionnellement** (`open`) : ne pas le faire réapparaître via `display` (la règle
-  `display:none` cachait tout le menu, phase 3d) ; la fermeture passe par un écouteur
-  `mousedown` global.
-- **`MiniMap` : le clic = selection, le glisser = pan** (seuil 4 px) ; le `wheel` doit rester
-  un écouteur natif non-passif (React rend `preventDefault` impossible en passif).
-- **La section édition/création est une seule et même zone** : « + Ajouter » en mode édition
-  la bascule en création (et inversement) — ne pas ajouter de 2e zone d'ajout.
-- **Le changement de carte de la section (mode création) passe par `setNw({ ...nw, mapId })`** :
-  la forme `setNw(v => updater)(valeur)` appelle l'updater avec la valeur — état corrompu.
-- **Le `open(id)` du panneau ne doit jamais faire référence à un setter supprimé**
-  (`setPend` a fait planter le chargement des fiches — les onglets restaient vides/à 0,
-  phase 3d) : vérifier les setters utilisés dans `open()`.
-- **Le tableau de l'onglet Liste est filtré par type** (`mine`) : afficher « tous les
-  monstres » serait contredit par la demande — le titre le précise (« du type … »).
+- `SLOTS` = 7 valeurs alignées sur le CHECK `monster_equips.slot` du back : modifier les deux ensemble.
+- Mettre à jour l'état de création avec `setNw({ ...nw, mapId })` (la forme updater mal appelée a corrompu l'état).
+- `open()` ne doit appeler aucun setter supprimé (`setPend` avait vidé toutes les fiches).
+- Ne pas masquer le menu `Pick` par `display:none` ; garder `wheel` en écouteur natif non passif.
+- Pas de second bandeau `headrow` dans l'onglet (supprimé volontairement).
+
+## Tests
+`test/monsterDetails.test.js` (7 `SLOTS`, filtres, libellés, `placeBody`, effets en corps de bloc, `<thead>/<tbody>`, `Pick` paginé, `MiniMap`) ; `test/adminDom.test.js`.

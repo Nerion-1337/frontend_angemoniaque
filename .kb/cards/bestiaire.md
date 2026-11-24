@@ -2,7 +2,7 @@
 title: "Panneau Bestiaire (SUPPRIMÉ phase 3c) : composant retiré de l'onglet Monstres"
 slug: bestiaire
 status: done
-updated: 2026-11-21
+updated: 2026-11-24
 files:
   - src/admin/index.jsx
 symbols:
@@ -11,21 +11,16 @@ tests:
   - test/adminDom.test.js
 ---
 ## Purpose
-Le panneau « Bestiaire — butin & apparitions » (`Bestiary.jsx` + helpers `bestiary.js`)
-a été **supprimé de l'onglet Monstres** (phase 3c, à la demande du propriétaire) : sa
-section titre (`div.headrow`) ne servait à rien et était mal affichée, et le nouveau
-panneau `monster-details-ui` couvre déjà le butin (par instance) et l'équipement.
-Le back reste seul point de vérité pour les règles de spawn et les gardiens :
-`POST/GET /admin/content/monsters/{id}/spawns` et `/admin/bestiary/status` (fiche back
-`bestiaire` du dépôt `back`).
+Trace de décision : l'ancien panneau « Bestiaire — butin & apparitions » a été retiré de l'onglet Monstres (phase 3c) ; le panneau
+`monster-details-ui` couvre butin et équipement par instance. Les règles d'apparition et de gardiens restent au back.
 
-## How it works
-- `src/admin/index.jsx` : l'onglet `monster` ne rend plus que `<MonsterDetails />`
-  (import de `Bestiary` retiré, composant + helpers + fiche supprimés).
-- Le contrat DOM du tableau (`thead`/`tbody`) est suivi par `test/adminDom.test.js`
-  (retargeté sur `MonsterDetails.jsx`).
+## Business rules
+- L'onglet Monstres ne rend que `<MonsterDetails />` ; aucun composant `Bestiary` ne doit être réintroduit.
+- Les règles d'apparition (`/admin/content/monsters/{id}/spawns`) et l'état (`/admin/bestiary/status`) sont la vérité du back (card back `bestiaire`).
+- Les tableaux admin ont toujours `<thead>` et `<tbody>` (jamais de `<tr>` enfant direct de `<table>`).
 
 ## Gotchas
-- Ne pas réintroduire un second bandeau `div.headrow` dans cet onglet (supprimé
-  systématiquement, phase 3c) — les actions se placent sur une simple ligne
-  `.actions` alignée à droite.
+- Pas de second bandeau `div.headrow` dans cet onglet : les actions vont sur une ligne `.actions`.
+
+## Tests
+`test/adminDom.test.js` (contrat `<thead>/<tbody>` sur `MonsterDetails.jsx`).
