@@ -45,6 +45,7 @@ et de montures pour les estimations, scène 3D, carte de case, légende et bouss
 - L'option d'attaque est masquée dans la zone sacrée (drapeau `safe` de `/map/{id}/cell`), comme le refus 403 du back.
 - La carte de case affiche le type réglé en admin (nom, description, effet continu, coût) ; jamais de PV exacts (état public).
 - Le serveur reste seul juge : le front ne fait que prévisualiser.
+- La carte de case affiche le gisement de la case et propose sa récolte (card `resources-ui`).
 
 ## Gotchas
 - Toute modification du terrain ou de l'énergie se fait des DEUX côtés (back et front) ; les fichiers générés se régénèrent par `tools/gen_*`.

@@ -38,6 +38,7 @@ Monstres, Objets, Sorts, Cases, Montures, Bâtiments), éditeur générique d'en
 - CSS : aucune classe admin ne reprend un nom global du jeu ; `.apanel` remplace `.panel`, et `.cell`, `.actions`, `.item.row2`, `.empty`, `.logo` sont neutralisés sous `.admin`.
 - Section « Parchemins » : recettes de fabrication (card `scrolls-shop-ui`).
 - Bâtiments : champs armure, case occupable, bonus, attaques de l'occupant, production et sorts (card `buildings-ui`).
+- Section « Ressources » : gisements (card `resources-ui`).
 
 ## Gotchas
 - Un effet qui charge des données s'écrit `useEffect(() => { load(); }, deps)` : passer le loader directement renvoie sa Promise comme fonction de nettoyage → « destroy is not a function » au changement d'onglet.

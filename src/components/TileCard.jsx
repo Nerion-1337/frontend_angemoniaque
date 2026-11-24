@@ -35,7 +35,7 @@ export default function TileCard() {
     if (e && dist > 1 && e.char_id !== me.id) acts.push(['approach', `S'approcher à côté de ${e.name}`, pe(t, { stopAt: 1 }), 0]);
     if (attackable) { acts.push(['attack', `Attaquer ${e.name}`, pe(t, { stopAt: range }), 5]); if (mount?.special_attack_name) acts.push(['breath', `${mount.special_attack_name} (${mount.special_attack_damage} dég.)`, pe(t, { stopAt: range }), 0, mount.special_attack_energy]); }
     if (e?.kind === 'building') acts.push(['interact', e.building_kind === 'door' ? `Franchir ${e.name}` : `Interagir avec ${e.name}`, 0, 0]);
-    if (!e && res?.resource && !(res.kind === 'deep' && !fly && !aq)) acts.push(['harvest', `Récolter ${res.resource}`, pe(t), 4]); if (!e && kinds.length) acts.push(['build', 'Poser un élément', pe(t, { stopAt: 1 }), 10]);
+    const dep = sc?.deposit; if (!e && (res?.resource || dep) && !(res?.kind === 'deep' && !fly && !aq)) acts.push(['harvest', dep ? `Récolter ${dep.resource} (gisement ${dep.stock}/${dep.stockMax})` : `Récolter ${res.resource}`, pe(t), 4]); if (!e && kinds.length) acts.push(['build', 'Poser un élément', pe(t, { stopAt: 1 }), 10]);
     acts.push(['info', 'Plus d\'informations (état de forme & équipement)', 0, 0]);
     const ids = { characterId: me.id, targetCharacterId: e?.char_id, targetMonsterId: e?.monster_id, targetSummonId: e?.summon_id };
     const run = async () => { try {
@@ -47,7 +47,7 @@ export default function TileCard() {
       if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital')); else msg = r.name; }
       if (msg) d(A.toast(msg)); await refresh(); d(A.setSelected(null)); } catch (er) { d(A.toast(er.message)); } };
     return <><div className="card" style={{ left: selected.sx + 14, top: selected.sy + 14 }}><button className="x" aria-label="Fermer" onClick={() => d(A.setSelected(null))}>×</button>
-      <div><b>{res?.zone ?? sc?.tile?.name ?? KIND[res?.kind] ?? '…'}</b>{res?.zone && sc?.tile?.name && <small> · {sc.tile.name}</small>} <small>({t.x}, {t.y})</small> · <small>⚡ {res ? (cellCost(sc) >= 99 ? '∞' : cellCost(sc)) : '…'}/case · {res?.resource ?? 'aucune ressource'}</small></div><TileInfo tile={sc?.tile} /><Entity e={e} />
+      <div><b>{res?.zone ?? sc?.tile?.name ?? KIND[res?.kind] ?? '…'}</b>{res?.zone && sc?.tile?.name && <small> · {sc.tile.name}</small>} <small>({t.x}, {t.y})</small> · <small>⚡ {res ? (cellCost(sc) >= 99 ? '∞' : cellCost(sc)) : '…'}/case · {res?.resource ?? 'aucune ressource'}</small></div><TileInfo tile={sc?.tile} />{sc?.deposit && <div className="note">Gisement : {sc.deposit.resource} — {sc.deposit.stock}/{sc.deposit.stockMax} (+{sc.deposit.regenPerH}/h, {sc.deposit.yieldPerHarvest} par récolte)</div>}<Entity e={e} />
       {e && dist === 1 && !attackable && e.kind !== 'building' && <div className="note"><Ban size={14} /> Case occupée (vous êtes juste à côté).</div>}
       {prev?.hitChance != null && <div className="hit"><Dices size={14} /> Chance de toucher (agilité) : <b>{prev.hitChance}%</b> <small>esquive {prev.dodge}%</small></div>}
       <select value={act} onChange={x => setAct(x.target.value)}><option value="">— Actions possibles —</option>{acts.map(([k, l, mv, ac, mc]) => <option key={k} value={k} disabled={mv === Infinity}>{l}{k !== 'info' ? ` — ${mc ? `⚡${mc} monture` + (mv ? ` + ${E(mv)}` : '') : E(mv, ac)}` : ''}</option>)}</select>

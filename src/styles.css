@@ -460,3 +460,4 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .seg2 .chip.on{color:var(--gold);border-color:var(--gold);background:rgba(240,210,138,.12)}
 .admin .bldextras{display:flex;flex-direction:column;gap:8px;margin:10px 0;padding:12px;border:1px dashed var(--line);border-radius:10px}
 .admin .bldextras h5{margin:4px 0 0;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.admin .stockbar{display:inline-block;width:70px;height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;vertical-align:middle}.admin .stockbar i{display:block;height:100%;width:calc(var(--p)*1%);background:linear-gradient(90deg,var(--bronze),var(--gold))}
