@@ -15,7 +15,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (21)
+## Features (22)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Back-office d'administration (`src/admin/`, route `#admin`) : application plein écran à sections (Pilotage, Joueurs, Races & Rangs, Monstres, Objets, Sorts, Cases, Montures, Bâtiments), éditeur généri — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+6)
 - **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une connexion ou une inscription réussie, un compte admin arrive directement sur `#admin` ; un joueur reste sur la sélection de personnage. — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
 - **admin-players-divine-ui** [done] (.kb/cards/admin-players-divine-ui.md) Admin « Joueurs » (liste paginée, fiche) et objets divins dans l'onglet Objets ; préfixe CSS admin — Section admin « Joueurs » (liste paginée par race, fiche éditable) et rareté « Divin » de l'onglet Objets gérée comme les autres objets, avec familles divines et exemplaires uniques. — files: src/admin/PlayersTab.jsx, src/admin/players.js, src/admin/ItemsTab.jsx, src/admin/Divine.jsx (+1)
@@ -35,6 +35,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **race-rules-ui** [done] (.kb/cards/race-rules-ui.md) Races (apparition, limites, équipement de départ) dans l'admin, écran de création piloté par le serveur, horloge au Pilotage — Onglet « Races & Rangs » : zone d'apparition, limites de personnages et équipement de départ de chaque race ; panneau Horloge du Pilotage (dernier et prochain tick). — files: src/admin/raceRules.jsx, src/admin/Races.jsx, src/components/Login.jsx, src/admin/Dashboard.jsx (+2)
 - **react-redux-base** [done] (.kb/cards/react-redux-base.md) React + Redux base: store, app shell, API client, Vite config — Socle de la SPA : React 18 + Redux Toolkit, coquille `App.jsx` (connexion → choix du personnage → jeu, ou `#admin`), client API unique, proxy `/api` vers le back. — files: src/main.jsx, src/store/index.js, src/App.jsx, src/lib/api.js (+1)
 - **scrolls-shop-ui** [done] (.kb/cards/scrolls-shop-ui.md) Admin Parchemins, boutique par race (Objets, Sorts) et fabrication en jeu — Section admin « Parchemins » (recettes), options « boutique de l'hôtel de ville » dans les onglets Objets et Sorts, boutique de la capitale filtrée par race et section « Fabrication » du panneau Actio — files: src/admin/ScrollsTab.jsx, src/admin/scrolls.js, src/admin/shop.jsx, src/components/Panels.jsx (+1)
+- **spell-fx-ui** [done] (.kb/cards/spell-fx-ui.md) Onglet Sorts : éditeur des effets (moteur de sorts) et liens ; sorts liés en jeu — Onglet admin « Sorts » : éditeur des effets du moteur de sorts et gestion des liens du sort ; en jeu, le panneau Actions indique la provenance et le résumé des effets de chaque sort lançable. — files: src/admin/SpellFx.jsx, src/admin/spellFx.js
 - **terrain-map-3d** [done] (.kb/cards/terrain-map-3d.md) 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions — Rendu client du monde : miroir exact du modèle du back (carte 1 dessinée, monde 2 par zones, carte 3 générée), règles d'énergie et de montures pour les estimations, scène 3D, carte de case, légende et — files: src/lib/terrain.js, src/lib/humanMap.js, src/lib/resources.js, src/lib/energy.js (+8)
 - **world2-angel-demon** [done] (.kb/cards/world2-angel-demon.md) Monde Anges & Démons (UI) : sol par zone, ressources visibles, eau teintée, légende — Rendu du monde 2 (Anges & Démons), copie exacte de la logique du back : ce qui est dessiné sur une case est ce qu'on y récolte. — files: src/lib/world2.js, src/lib/resources2.js, src/lib/angelDemonMap.js, src/lib/relief.js (+3)
 
@@ -53,6 +54,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/PlayersTab.jsx` — Section admin « Joueurs » : liste paginée de tous les personnages par race (pseudo, rang, position, XP, or), — (header), PER, PlayersTab, TABS, PlayerSheet
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
 - `src/admin/ScrollsTab.jsx` — Section admin « Parchemins » : un parchemin (objet du catalogue) + des ressources permettent, en jeu, de fabri — ScrollsTab
+- `src/admin/SpellFx.jsx` — Onglet Sorts : éditeur des effets (moteur de sorts, lot 2) et liens du sort avec monstres / objets / montures  — SpellEffects, KIND_LABEL, SpellLinks
 - `src/admin/SpellsTab.jsx` — Onglet admin « Sorts » (phase 4) : catalogue global des sorts (blessures/bonus/malus — (header), blank, SpellsTab
 - `src/admin/StartKit.jsx` — Équipement de départ d'une race (races.start_kit) : rang, or, XP, ressources, objets (sac / coffre), — StartKit
 - `src/admin/TilesTab.jsx` — Section admin « Cases » : types de case par monde — nom, description, coût d'énergie d'un pas, — (header), hex, TilesTab
@@ -64,7 +66,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/raceRules.jsx` — Races : zone d'apparition des nouveaux personnages et limites de personnages (migration 17). — RULE_KEYS, rulesDraft, rulesBody, rulesLabel, RaceRules
 - `src/admin/rarity.js` — Onglets admin Objets & Sorts (phase 4) : raretés et « qui peut s'en équiper / l'apprendre ». — (header), RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge
 - `src/admin/scrolls.js` — Helpers purs de la section « Parchemins » (testés dans test/scrolls.test.js). — TARGET_LABEL, recipeDraft, int, recipeBody, resLabel
-- `src/admin/shop.jsx` — Boutique de l'hôtel de ville (onglets Objets et Sorts) : en vente ou non, races autorisées ([] = toutes), stoc — shopLabel, ShopFields
-- `src/admin/startKit.js` — Helpers purs de l'équipement de départ (testés dans test/startKit.test.js). Miroir du schéma back game/startKi — kitDraft, int, kitBody, kitSummary
-- `src/admin/tiles.js` — Helpers purs de la section admin « Cases » (testés dans test/adminTiles.test.js). — WORLD_LABEL, hpPerHour, tileBody, spellSummary
-- … 60 autres fichiers (utiliser `kb search`)
+- … 65 autres fichiers (utiliser `kb search`)
