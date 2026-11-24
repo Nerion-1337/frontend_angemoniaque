@@ -1,7 +1,7 @@
-// Onglet admin « Objets » (phase 4) : sous-onglets par rareté (le sous-onglet Divin
-// embarque les objets uniques artefacts/arcanes/reliques — panneau Divine existant),
-// liste des objets filtrable par type d'équipement (slot) avec décompte « détenu par N »,
-// et le paramètre « qui peut s'en équiper » (usable_by).
+// Onglet admin « Objets » : sous-onglets par rareté, filtre par type d'équipement (slot),
+// décompte « détenu par N », paramètre « qui peut s'en équiper » (usable_by).
+// Rareté « Divin » : MÊME tableau et MÊME formulaire que les autres objets, plus la famille divine
+// (relique / arcane / artefact ou famille créée ici, avec son plafond) et les exemplaires uniques (Divine.jsx).
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
@@ -9,9 +9,10 @@ import { api } from '../lib/api.js';
 import { SLOTS, SLOT_LABEL } from './monsterDetails.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
-import Divine from './Divine.jsx';
+import { itemBody, familyLabel } from './divine.js';
+import Divine, { Families } from './Divine.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', usable_by: [] };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '' };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -19,8 +20,9 @@ export default function ItemsTab() {
   const [slot, setSlot] = useState('');          // '' = tous / 'none' = sans slot
   const [rows, setRows] = useState([]);
   const [edit, setEdit] = useState(null);        // id en cours | 'new' | null
-  const [f, setF] = useState(blank);
-  const [q, setQ] = useState('');               // recherche locale (nom, genre/type)             // formulaire (édition ou création)
+  const [f, setF] = useState(blank);             // formulaire (édition ou création)
+  const [q, setQ] = useState('');                // recherche locale (nom, type)
+  const [fams, setFams] = useState([]);          // familles divines
 
   const load = () => {
     const p = new URLSearchParams();
@@ -29,87 +31,95 @@ export default function ItemsTab() {
     const qs = p.toString();
     api(`/admin/content/items${qs ? `?${qs}` : ''}`).then(setRows).catch(e => d(Ad.msg(e.message)));
   };
+  const loadFams = () => api('/admin/content/divine-families').then(setFams).catch(() => setFams([]));
   useEffect(() => { load(); setEdit(null); setF(blank); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [rar, slot]);
-  const open = row => { setEdit(row ? row.id : 'new'); setF({ ...blank, ...row, rarity: row?.rarity_n ?? row?.rarity ?? 'commun', usable_by: typeof row?.usable_by === 'string' ? JSON.parse(row.usable_by || '[]') : (row?.usable_by ?? []) }); };
+  useEffect(() => { loadFams(); }, []);
+  const open = row => {
+    setEdit(row ? row.id : 'new');
+    const v = { ...blank };
+    for (const k of Object.keys(blank)) if (row?.[k] != null) v[k] = row[k];
+    v.rarity = row?.rarity_n ?? row?.rarity ?? 'commun';
+    v.usable_by = typeof row?.usable_by === 'string' ? JSON.parse(row.usable_by || '[]') : (row?.usable_by ?? []);
+    setF(v);
+  };
   const save = async () => {
     try {
-      const body = { ...f };
-      Object.keys(body).forEach(k => { if (body[k] === '' && k !== 'usable_by') delete body[k]; });
-      body.usable_by = f.usable_by;
+      const body = itemBody(f);
       if (edit === 'new') await api('/admin/content/items', body, 'POST');
       else await api(`/admin/content/items/${edit}`, body, 'PUT');
-      d(Ad.ok(edit === 'new' ? 'Objet créé' : 'Objet mis à jour')); setEdit(null); load();
+      d(Ad.ok(edit === 'new' ? 'Objet créé' : 'Objet mis à jour')); setEdit(null); load(); loadFams();
     } catch (e) { d(Ad.msg(e.message)); }
   };
   const del = async row => { if (!confirmDel(`l’objet « ${row.name} »`)) return; try { await api(`/admin/content/items/${row.id}`, undefined, 'DELETE'); d(Ad.ok('Supprimé')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   const setU = k => setF(v => ({ ...v, usable_by: v.usable_by.includes(k) ? v.usable_by.filter(x => x !== k) : [...v.usable_by, k] }));
   const num = (k, v) => setF(x => ({ ...x, [k]: v === '' ? '' : Number(v) }));
+  const divine = rar === 'divin';
 
-  const view = rows.filter(r => matches(q, r.name, r.kind, r.slot));
+  const view = rows.filter(r => matches(q, r.name, r.slot, r.family_name));
   return <section>
     <div className="tabs">{['', ...RARITIES].map(r =>
       <button key={r || 'all'} className={rar === r ? 'on' : ''} onClick={() => setRar(r)}>{r === '' ? 'Toutes raretés' : RARITY_LABEL[r]}</button>)}
     </div>
-    {rar === 'divin' ? <div>
-      <p className="note">Rareté <b>Divin</b> : objets uniques — artefacts, arcanes et reliques (plafonds globaux,
-        jamais de duplication) avec le porteur (personnage / gardien monstre).</p>
-      <Divine />
-    </div> : <div>
-      <div className="filterrow">
-        <small>Type d'équipement</small>
-        <select value={slot} onChange={e => setSlot(e.target.value)}>
-          <option value="">Tous</option>
-          {SLOTS.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}
-          <option value="none">Sans type (ressource, consommable…)</option>
-        </select>
-        <Search value={q} onChange={setQ} />
-        <small>{view.length} objet(s)</small><span className="grow" />
-        <button className="sm" onClick={() => { setEdit('new'); setF({ ...blank, rarity: rar || 'commun' }); }}>+ Nouvel objet</button>
+    {divine && <Families fams={fams} reload={() => { loadFams(); load(); }} />}
+    <div className="filterrow">
+      <small>Type d'équipement</small>
+      <select value={slot} onChange={e => setSlot(e.target.value)}>
+        <option value="">Tous</option>
+        {SLOTS.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}
+        <option value="none">Sans type (ressource, consommable…)</option>
+      </select>
+      <Search value={q} onChange={setQ} />
+      <small>{view.length} objet(s)</small><span className="grow" />
+      <button className="sm" onClick={() => { setEdit('new'); setF({ ...blank, rarity: rar || 'commun', divine_family: divine ? fams[0]?.key ?? '' : '' }); }}>+ Nouvel objet</button>
+    </div>
+    {edit && <div className="editor apanel">
+      <h3>{edit === 'new' ? 'Nouvel objet' : `Édition — ${f.name}`}</h3>
+      <div className="form">
+        <div className="cell"><small>Nom</small><input value={f.name} onChange={e => setF(x => ({ ...x, name: e.target.value }))} /></div>
+        <div className="cell"><small>Type (slot)</small>
+          <select value={f.slot} onChange={e => setF(x => ({ ...x, slot: e.target.value }))}>
+            <option value="">Sans type</option>{SLOTS.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></div>
+        <div className="cell"><small>Rareté</small>
+          <select value={f.rarity} onChange={e => setF(x => ({ ...x, rarity: e.target.value, divine_family: e.target.value === 'divin' ? (x.divine_family || fams[0]?.key || '') : '' }))}>
+            {RARITIES.map(r => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}</select></div>
+        {f.rarity === 'divin' && <div className="cell"><small>Famille divine</small>
+          <select value={f.divine_family} onChange={e => setF(x => ({ ...x, divine_family: e.target.value }))}>
+            {fams.map(fm => <option key={fm.key} value={fm.key}>{familyLabel(fm)}</option>)}</select></div>}
+        <div className="cell"><small>Prix</small><input type="number" value={f.price} onChange={e => num('price', e.target.value)} /></div>
+        <div className="cell"><small>Armure</small><input type="number" value={f.armor} onChange={e => num('armor', e.target.value)} /></div>
+        <div className="cell"><small>Dégâts d'arme</small><input type="number" value={f.weapon_damage} onChange={e => num('weapon_damage', e.target.value)} /></div>
+        <div className="cell"><small>Force +</small><input type="number" value={f.strength_bonus} onChange={e => num('strength_bonus', e.target.value)} /></div>
+        <div className="cell"><small>Agilité +</small><input type="number" value={f.agility_bonus} onChange={e => num('agility_bonus', e.target.value)} /></div>
+        <div className="cell"><small>Durabilité</small><input type="number" value={f.durability} onChange={e => num('durability', e.target.value)} /></div>
+        <div className="cell"><small>Armure magique</small><input type="number" value={f.magic_armor} onChange={e => num('magic_armor', e.target.value)} /></div>
+        <div className="cell"><small>Plafond (quantité)</small><input type="number" value={f.quantity_max} onChange={e => num('quantity_max', e.target.value)} /></div>
+        <div className="cell"><small>Force requise</small><input type="number" value={f.req_strength} onChange={e => num('req_strength', e.target.value)} /></div>
+        <div className="cell span-all"><small>Qui peut s'en équiper</small>
+          <div className="ux">{USABLE_KINDS.map(k =>
+            <button key={k} className={`chip${f.usable_by.includes(k) ? ' on' : ''}`} onClick={() => setU(k)}>{USABLE_LABEL[k]}</button>)}
+          </div>
+          <p className="note">Rien de coché = tout le monde peut s'en équiper.</p></div>
       </div>
-      {edit && <div className="editor panel">
-        <h3>{edit === 'new' ? 'Nouvel objet' : 'Édition'}</h3>
-        <div className="form">
-          <div className="cell"><small>Nom</small><input value={f.name} onChange={e => setF(x => ({ ...x, name: e.target.value }))} /></div>
-          <div className="cell"><small>Type (slot)</small>
-            <select value={f.slot} onChange={e => setF(x => ({ ...x, slot: e.target.value }))}>
-              <option value="">Sans type</option>{SLOTS.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></div>
-          <div className="cell"><small>Rareté</small>
-            <select value={f.rarity} onChange={e => setF(x => ({ ...x, rarity: e.target.value }))}>
-              {RARITIES.filter(x => x !== 'divin').map(r => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}</select></div>
-          <div className="cell"><small>Prix</small><input type="number" value={f.price} onChange={e => num('price', e.target.value)} /></div>
-          <div className="cell"><small>Armure</small><input type="number" value={f.armor} onChange={e => num('armor', e.target.value)} /></div>
-          <div className="cell"><small>Dégâts d'arme</small><input type="number" value={f.weapon_damage} onChange={e => num('weapon_damage', e.target.value)} /></div>
-          <div className="cell"><small>Force +</small><input type="number" value={f.strength_bonus} onChange={e => num('strength_bonus', e.target.value)} /></div>
-          <div className="cell"><small>Agilité +</small><input type="number" value={f.agility_bonus} onChange={e => num('agility_bonus', e.target.value)} /></div>
-          <div className="cell"><small>Durabilité</small><input type="number" value={f.durability} onChange={e => num('durability', e.target.value)} /></div>
-          <div className="cell"><small>Armure magique</small><input type="number" value={f.magic_armor} onChange={e => num('magic_armor', e.target.value)} /></div>
-          <div className="cell"><small>Plafond (quantité)</small><input type="number" value={f.quantity_max} onChange={e => num('quantity_max', e.target.value)} /></div>
-          <div className="cell"><small>Force requise</small><input value={f.req_strength ?? ''} onChange={e => setF(x => ({ ...x, req_strength: e.target.value === '' ? '' : Number(e.target.value) }))} /></div>
-          <div className="cell span2"><small>Qui peut s'en équiper</small>
-            <div className="ux">{USABLE_KINDS.map(k =>
-              <button key={k} className={`chip${f.usable_by.includes(k) ? ' on' : ''}`} onClick={() => setU(k)}>{USABLE_LABEL[k]}</button>)}
-            </div>
-            <p className="note">Rien de coché = tout le monde peut s'en équiper.</p></div>
-        </div>
-        <div className="actions">
-          <button onClick={save}>{edit === 'new' ? 'Créer le nouvel objet' : 'Enregistrer'}</button>
-          <button className="ghost" onClick={() => setEdit(null)}>Annuler</button>
-        </div>
-      </div>}
-      <div className="tablewrap"><table><thead><tr>
-        <th>Nom</th><th>Type</th><th>Rareté</th><th>Équipable par</th><th>Détenu par</th><th>Prix</th><th />
-      </tr></thead><tbody>
-        {view.map(r => <tr key={r.id} className={edit === r.id ? 'sel' : ''}>
-          <td><b>{r.name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
-          <td>{r.slot ? SLOT_LABEL[r.slot] ?? r.slot : '—'}</td>
-          <td><span className={`rar ${r.rarity_n ?? r.rarity ?? 'commun'}`}>{RARITY_LABEL[r.rarity_n ?? r.rarity ?? 'commun'] ?? r.rarity}</span></td>
-          <td className="ux">{usableBadge(r.usable_by)}</td>
-          <td>{r.holders ? `${r.holders} joueur(s)` : '—'}</td>
-          <td>{r.price ?? ''}</td>
-          <td><button className="sm danger" onClick={() => del(r)}>Suppr.</button></td>
-        </tr>)}</tbody></table></div>
-      {!view.length && <Empty>{rows.length ? 'Aucun résultat pour cette recherche.' : 'Aucun élément dans cette catégorie.'}</Empty>}
-
+      {f.rarity === 'divin' && edit !== 'new' && <Divine itemId={edit} onChange={load} />}
+      {f.rarity === 'divin' && edit === 'new' && <p className="note">Les exemplaires uniques se créent une fois l’objet enregistré.</p>}
+      <div className="actions">
+        <button className="ghost" onClick={() => setEdit(null)}>Annuler</button>
+        <button className="primary" onClick={save}>{edit === 'new' ? 'Créer le nouvel objet' : 'Enregistrer'}</button>
+      </div>
     </div>}
+    <div className="tablewrap"><table><thead><tr>
+      <th>Nom</th><th>Type</th><th>Rareté</th>{divine && <th>Famille · exemplaires</th>}<th>Équipable par</th><th>Détenu par</th><th>Prix</th><th />
+    </tr></thead><tbody>
+      {view.map(r => <tr key={r.id} className={edit === r.id ? 'sel' : ''}>
+        <td><b>{r.name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
+        <td>{r.slot ? SLOT_LABEL[r.slot] ?? r.slot : '—'}</td>
+        <td><span className={`rar ${r.rarity_n ?? r.rarity ?? 'commun'}`}>{RARITY_LABEL[r.rarity_n ?? r.rarity ?? 'commun'] ?? r.rarity}</span></td>
+        {divine && <td>{r.divine_family ? `${r.family_name ?? r.divine_family} · ${r.copies ?? 0} / ${r.family_cap ?? '∞'}` : <small>sans famille</small>}</td>}
+        <td>{usableBadge(r.usable_by)}</td>
+        <td>{r.holders ? `${r.holders} joueur(s)` : '—'}</td>
+        <td>{r.price ?? ''}</td>
+        <td><button className="sm danger" onClick={() => del(r)}>Suppr.</button></td>
+      </tr>)}</tbody></table></div>
+    {!view.length && <Empty>{rows.length ? 'Aucun résultat pour cette recherche.' : 'Aucun élément dans cette catégorie.'}</Empty>}
   </section>;
 };

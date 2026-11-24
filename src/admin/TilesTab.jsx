@@ -34,7 +34,7 @@ export default function TilesTab() {
       <button key={id} className={world === id ? 'on' : ''} onClick={() => { setWorld(id); setEdit(null); }}>{WORLD_LABEL[id] ?? file}</button>)}</div>
     {rows && !rows.length && <Empty>Aucun type de case en base : appliquer la migration 15_types_de_case.sql.</Empty>}
 
-    {edit && f && <div className="editor panel">
+    {edit && f && <div className="editor apanel">
       <div className="headrow"><span className="swatch lg" style={{ background: hex(COLORS[edit]) }} /><h3>{f.name || edit}</h3><small>{WORLD_LABEL[world]} · type <code>{edit}</code></small></div>
       <div className="form">
         <div className="cell"><small>Nom affiché</small><input value={f.name} maxLength={80} onChange={e => setF({ ...f, name: e.target.value })} /></div>

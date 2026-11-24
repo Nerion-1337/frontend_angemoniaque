@@ -2,7 +2,7 @@
 title: Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques
 slug: admin-dashboard
 status: done
-updated: 2026-11-23
+updated: 2026-11-24
 files:
   - src/admin/index.jsx
   - src/admin/Dashboard.jsx
@@ -68,6 +68,8 @@ descriptors (monsters/items/mounts/buildings), a races & ranks editor, a cross-c
 
 
 - Section **« Cases »** (`tiles`, icône `Grid3x3`) : `TilesTab`, card `admin-tiles-ui`.
+
+- **2026-11-24 (card `admin-players-divine-ui`)** : section **Joueurs** ; `Divine.jsx` = exemplaires d'un objet divin + panneau des familles (utilisé par `ItemsTab`). **CSS** : `.panel` → `.apanel` et neutralisation sous `.admin` des classes globales du jeu (`.cell`, `.actions`, `.item.row2`, `.empty`, `.logo`) — elles plaquaient les panneaux à gauche sous la barre latérale.
 
 ## Entry points
 - `App.jsx` renders `<Admin />` when `hash === '#admin'` and `auth.admin` (import `./admin/index.jsx`). Auto-reached after a successful admin login/registration (`postAuth`, card `admin-login-nav`); otherwise via the `#admin` links in `CharSelect` / `Account` or by hand.

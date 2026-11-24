@@ -16,7 +16,8 @@ test('rarity.js : miroir des constantes back (5 raretés, 6 kinds) + badge vide 
 test('ItemsTab : sous-onglets par rareté (Divin = objets uniques) + filtre par type + usable_by', () => {
   const s = fs.readFileSync('src/admin/ItemsTab.jsx', 'utf8');
   expect(s.includes('RARITIES')).toBe(true);
-  expect(s.includes("<Divine />")).toBe(true);                                   // le sous-onglet Divin embarque les objets uniques
+  expect(s.includes('<Divine itemId={edit}')).toBe(true);                       // Divin : même formulaire + exemplaires uniques de l'objet
+  expect(s.includes('divine_family')).toBe(true);                               // famille divine (relique / arcane / artefact / libre)
   expect(s.includes("Type d'équipement")).toBe(true);
   expect(s.includes('value="none"')).toBe(true);                                 // « sans type » dans le filtre
   expect(s.includes('Détenu par')).toBe(true);

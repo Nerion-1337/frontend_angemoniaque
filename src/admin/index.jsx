@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
-import { LayoutDashboard, Grid3x3, Crown, Skull, Sword, Sparkles, PawPrint, Castle, ArrowLeft, Menu } from 'lucide-react';
-import Dashboard from './Dashboard.jsx'; import Races from './Races.jsx'; import Entities from './Entities.jsx'; import MonsterDetails from './MonsterDetails.jsx'; import ItemsTab from './ItemsTab.jsx'; import SpellsTab from './SpellsTab.jsx'; import TilesTab from './TilesTab.jsx';
+import { LayoutDashboard, Users, Grid3x3, Crown, Skull, Sword, Sparkles, PawPrint, Castle, ArrowLeft, Menu } from 'lucide-react';
+import Dashboard from './Dashboard.jsx'; import Races from './Races.jsx'; import Entities from './Entities.jsx'; import MonsterDetails from './MonsterDetails.jsx'; import ItemsTab from './ItemsTab.jsx'; import SpellsTab from './SpellsTab.jsx'; import TilesTab from './TilesTab.jsx'; import PlayersTab from './PlayersTab.jsx';
 import { Toast } from './ui.jsx';
-const SECTIONS = [['dashboard', 'Pilotage'], ['races', 'Races & Rangs'], ['monster', 'Monstres'], ['item', 'Objets'], ['spell', 'Sorts'], ['tiles', 'Cases'], ['mount', 'Montures'], ['building', 'Bâtiments']];
-const ICONS = { dashboard: LayoutDashboard, races: Crown, monster: Skull, item: Sword, spell: Sparkles, tiles: Grid3x3, mount: PawPrint, building: Castle };
-const SUBS = { dashboard: 'Vue d’ensemble du monde et journal d’administration', races: 'Stats de base et paliers d’évolution', monster: 'Types, capacités, équipement et placement sur les cartes',
-  item: 'Catalogue par rareté et type d’équipement', spell: 'Catalogue des sorts par rareté', tiles: 'Types de case par monde : nom, description, énergie, sort en continu', mount: 'Montures et leurs caractéristiques', building: 'Bâtiments, passifs et production' };
+const SECTIONS = [['dashboard', 'Pilotage'], ['players', 'Joueurs'], ['races', 'Races & Rangs'], ['monster', 'Monstres'], ['item', 'Objets'], ['spell', 'Sorts'], ['tiles', 'Cases'], ['mount', 'Montures'], ['building', 'Bâtiments']];
+const ICONS = { dashboard: LayoutDashboard, players: Users, races: Crown, monster: Skull, item: Sword, spell: Sparkles, tiles: Grid3x3, mount: PawPrint, building: Castle };
+const SUBS = { dashboard: 'Vue d’ensemble du monde et journal d’administration', players: 'Tous les personnages par race : fiche, inventaire, coffre-fort, sorts, montures, bâtiments', races: 'Stats de base et paliers d’évolution', monster: 'Types, capacités, équipement et placement sur les cartes',
+  item: 'Catalogue par rareté et type d’équipement ; Divin : familles et exemplaires uniques', spell: 'Catalogue des sorts par rareté', tiles: 'Types de case par monde : nom, description, énergie, sort en continu', mount: 'Montures et leurs caractéristiques', building: 'Bâtiments, passifs et production' };
 const KEY = 'admin.section';   // dernière section ouverte (confort local ; absent = Pilotage)
 export default function Admin() {
   const section = useSelector(s => s.admin.section), msg = useSelector(s => s.admin.msg), tone = useSelector(s => s.admin.tone), d = useDispatch();
@@ -28,6 +28,7 @@ export default function Admin() {
       </header>
       <div className="content">
         {t === 'dashboard' && <Dashboard />}
+        {t === 'players' && <PlayersTab />}
         {t === 'races' && <Races />}
         {t === 'monster' && <MonsterDetails />}
         {t === 'item' && <ItemsTab />}

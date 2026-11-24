@@ -11,7 +11,8 @@ const raw = p => import(p + '?raw').then(m => m.default);
 const PANELS = [
   ['../src/admin/Races.jsx', /useEffect\(\s*\(\)\s*=>\s*\{\s*load\(\);\s*\}\s*,\s*\[\]\s*\)/],
   ['../src/admin/Entities.jsx', /useEffect\(\s*\(\)\s*=>\s*\{\s*list\(\);\s*\}\s*,\s*\[kind\]\s*\)/],
-  ['../src/admin/Divine.jsx', /useEffect\(\s*\(\)\s*=>\s*\{\s*load\(\);\s*\}\s*,\s*\[\]\s*\)/],
+  ['../src/admin/Divine.jsx', /useEffect\(\s*\(\)\s*=>\s*\{\s*load\(\);\s*\}\s*,\s*\[itemId\]\s*\)/],
+  ['../src/admin/PlayersTab.jsx', /useEffect\(\s*\(\)\s*=>\s*\{\s*load\(\);\s*\}\s*,\s*\[race, page, q\]\s*\)/],
 ];
 test('panneaux admin : l’effet de chargement ne retourne jamais de Promise (changement d’onglet sûr)', async () => {
   for (const [f, ok] of PANELS) {

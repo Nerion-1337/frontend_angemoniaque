@@ -31,15 +31,15 @@ export default function Entities({ kind }) {
   const F = FIELDS[kind], set = (k, v) => { setDraft({ ...draft, [k]: v }); setDirty(true); };
   const view = (rows ?? []).filter(r => matches(q, r.name, r.key, r.kind, r.id));
   return <section className="split">
-    <div className="listpane panel">
+    <div className="listpane apanel">
       <div className="headrow"><Search value={q} onChange={setQ} /><button className="sm" onClick={newOne}><Plus size={14} /> Nouveau</button></div>
       <small className="count">{rows ? `${view.length} / ${rows.length}` : 'Chargement…'}</small>
       <div className="list">{view.map(r => <button key={r.id} className={`item row2${sel?.id === r.id ? ' on' : ''}`} onClick={() => open(r.id)}><b>{r.name ?? r.key ?? r.id}</b><small>{r.slot ?? r.kind ?? r.rarity ?? ''} {r.owner ? `· ${r.owner}` : ''} · n°{r.id}</small></button>)}
         {rows && !view.length && <Empty>Aucun résultat.</Empty>}</div>
     </div>
     <div className="detailpane">
-      {!draft && <div className="panel"><Empty>Sélectionnez un élément dans la liste ou créez-en un nouveau.</Empty></div>}
-      {draft && <div className="editor panel">
+      {!draft && <div className="apanel"><Empty>Sélectionnez un élément dans la liste ou créez-en un nouveau.</Empty></div>}
+      {draft && <div className="editor apanel">
         <div className="headrow"><h3>{sel?.id ? (sel.name ?? `n°${sel.id}`) : 'Nouvel élément'}</h3>{dirty && <span className="dirty">non enregistré</span>}</div>
         {sel?.id && <div className="tabs">{['data', 'rules'].map(t => <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{t === 'data' ? 'Caractéristiques' : 'Règles transverses'}</button>)}</div>}
         {tab === 'data' && <div className="form">{F.map(([k, label, t]) =>

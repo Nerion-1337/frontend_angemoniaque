@@ -31,15 +31,15 @@ export default function Races() {
   const delRank = async s => { if (!confirmDel(`le palier « ${s.name} »`)) return; try { await api(`/admin/content/ranks/${s.id}`, undefined, 'DELETE'); d(Ad.ok('Palier supprimé')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   return <section>
     <div className="headrow"><span className="grow" /><button className="sm" onClick={newRace}>+ Race</button></div>
-    {races?.map(r => <div key={r.id} className="race panel">
+    {races?.map(r => <div key={r.id} className="race apanel">
       <div className="headrow"><b>{r.name}</b><small>({r.key}){r.active ? '' : ' · inactive'}</small>
         <button className="sm" onClick={() => openRace(r)}>✎</button>
         <button className="sm danger" onClick={() => delRace(r)}>×</button></div>
       {raceDraft?.id === r.id && <div className="form">
         {FIELDS.race.map(([k, label, t]) => t === 'check'
-          ? <label key={k} className="sm"><input type="checkbox" checked={!!raceDraft[k]} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.checked })} /> {label}</label>
+          ? <label key={k} className="sm check"><input type="checkbox" checked={!!raceDraft[k]} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.checked })} /> {label}</label>
           : t === 'json'
-            ? <div key={k}><small>{label}</small><textarea rows="2" value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>
+            ? <div key={k} className="cell span-all"><small>{label}</small><textarea rows="4" className="mono" value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>
             : <div key={k} className="cell"><small>{label}</small><input value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>)}
         <div className="row"><button onClick={saveRace}>Enregistrer</button>
           <button className="sm" onClick={() => setRaceDraft(null)}>Annuler</button></div>
@@ -56,9 +56,9 @@ export default function Races() {
     {raceDraft && !raceDraft.id && <div className="editor">
       <h3>Nouvelle race</h3>
       <div className="form">{FIELDS.race.map(([k, label, t]) => t === 'check'
-        ? <label key={k} className="sm"><input type="checkbox" checked={!!raceDraft[k]} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.checked })} /> {label}</label>
+        ? <label key={k} className="sm check"><input type="checkbox" checked={!!raceDraft[k]} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.checked })} /> {label}</label>
         : t === 'json'
-          ? <div key={k}><small>{label}</small><textarea rows="2" value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>
+          ? <div key={k} className="cell span-all"><small>{label}</small><textarea rows="4" className="mono" value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>
           : <div key={k} className="cell"><small>{label}</small><input value={raceDraft[k] ?? ''} onChange={e => setRaceDraft({ ...raceDraft, [k]: e.target.value })} /></div>)}
         <div className="row"><button onClick={saveRace}>Créer</button>
           <button className="sm" onClick={() => setRaceDraft(null)}>Annuler</button></div>
@@ -67,7 +67,7 @@ export default function Races() {
     {rank && <div className="editor">
       <h3>{rank.id ? `Rang « ${rank.values.name} »` : `Nouveau palier (${rank.values.race})`}</h3>
       <div className="form">{FIELDS.rank.map(([k, label, t]) =>
-        t === 'json' ? <div key={k}><small>{label}</small><textarea rows="2" value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })} /></div>
+        t === 'json' ? <div key={k} className="cell span-all"><small>{label}</small><textarea rows="4" className="mono" value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })} /></div>
           : k === 'race'
             ? <div key={k} className="cell"><small>{label}</small><select value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })}>{races.map(x => <option key={x.key} value={x.key}>{x.key}</option>)}</select></div>
             : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })} disabled={!rank.id && false} /></div>)}

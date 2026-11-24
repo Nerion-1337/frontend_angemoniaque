@@ -2,7 +2,7 @@
 title: Onglets admin Objets & Sorts (phase 4) : rareté + « qui peut s'en équiper / l'apprendre »
 slug: item-spell-rarity-ui
 status: done
-updated: 2026-11-23
+updated: 2026-11-24
 files:
   - src/admin/ItemsTab.jsx
   - src/admin/SpellsTab.jsx
@@ -38,6 +38,8 @@ Onglets admin « Objets » et « Sorts » (phase 4) : gestion du catalogue par r
   historiques libres et accentuées « Épique »/« unique »/« legendary » sont mappées vers les 5
   valeurs canoniques), `POST/PUT items` (`usable_by` JSON, `rarity` libre côté base),
   `GET /admin/content/spells?rarity=` (`learners`), `POST/PUT spells` (`usableBy`, `rarity` enum).
+- **2026-11-24** : le sous-onglet **Divin** n'embarque plus l'ancien panneau anonyme : même tableau et même formulaire que les autres raretés + famille divine, panneau `Families` et exemplaires `<Divine itemId>` (card `admin-players-divine-ui`). Corps d'objet construit par `itemBody` (plus de null envoyés).
+
 ## Entry points
 `src/admin/ItemsTab.jsx`, `src/admin/SpellsTab.jsx`, `src/admin/rarity.js`, `src/admin/index.jsx`.
 ## Data flow

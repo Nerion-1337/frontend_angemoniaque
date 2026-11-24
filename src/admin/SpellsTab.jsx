@@ -49,7 +49,7 @@ export default function SpellsTab() {
         <small>{view.length} sort(s)</small><span className="grow" />
         <button className="sm" onClick={() => { setEdit('new'); setF({ ...blank, rarity: rar === 'divin' ? 'divin' : (rar || 'commun') }); }}>+ Nouveau sort</button>
       </div>
-      {edit && <div className="editor panel">
+      {edit && <div className="editor apanel">
         <h3>{edit === 'new' ? 'Nouveau sort' : 'Édition du sort'}</h3>
         <div className="form">
           <div className="cell"><small>Nom</small><input value={f.name} onChange={e => setF(x => ({ ...x, name: e.target.value }))} /></div>

@@ -15,9 +15,10 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (18)
+## Features (19)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Front of the admin back-office (Étape 2 phase 1): a self-contained `src/admin/` module mounted on the existing `#admin` route. — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+6)
 - **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une **connexion ou une inscription réussie**, un compte admin doit pouvoir accéder directement à l'interface admin : la SPA le redirige sur `#admin` (l'écran d'admin s'ouvre immédiatement, avec  — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
+- **admin-players-divine-ui** [done] (.kb/cards/admin-players-divine-ui.md) Admin « Joueurs » (liste paginée, fiche) et objets divins dans l'onglet Objets ; préfixe CSS admin — Section **Joueurs** : liste paginée (20 / page) de tous les personnages, onglets par race avec effectifs, recherche pseudo/e-mail ; « Éditer » ouvre une fiche à onglets (Caractéristiques, Objets, Sort — files: src/admin/PlayersTab.jsx, src/admin/players.js, src/admin/ItemsTab.jsx, src/admin/Divine.jsx (+1)
 - **admin-tiles-ui** [done] (.kb/cards/admin-tiles-ui.md) Section admin « Cases » : types de case par monde + affichage en jeu — Section admin **« Cases »** : un onglet par monde (Hommes / Anges & Démons / Morts) listant les types de case avec leur couleur, nom, coût d'énergie, description et sort passif ; édition du nom, de la — files: src/admin/TilesTab.jsx, src/admin/tiles.js, src/lib/tiles.js
 - **bestiaire** [done] (.kb/cards/bestiaire.md) Panneau Bestiaire (SUPPRIMÉ phase 3c) : composant retiré de l'onglet Monstres — Le panneau « Bestiaire — butin & apparitions » (`Bestiary.jsx` + helpers `bestiary.js`) a été **supprimé de l'onglet Monstres** (phase 3c, à la demande du propriétaire) : sa section titre (`div.headro — files: src/admin/index.jsx
 - **guild-default-rank-ui** [done] (.kb/cards/guild-default-rank-ui.md) Guilde (UI) : option unique du rang par défaut des nouveaux arrivants (Gestion) — Front half of the "default rank for newcomers" feature: in the guild manage tab (leader only), a single-choice control lets the Chef decide which rank accepted applicants / accepted invitations receiv — files: src/components/Guild.jsx, src/styles.css
@@ -40,19 +41,22 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `package.json`
 - `src/App.jsx` — App
 - `src/admin/Dashboard.jsx` — Pilotage : compteurs, répartition par race, simulation du tick, journal d'audit filtrable. — (header), KPI, ago, Dashboard
-- `src/admin/Divine.jsx` — Arcanes, Reliques & Artefacts : objets uniques (plafond global, un seul détenteur par pièce). — Divine
+- `src/admin/Divine.jsx` — Objets divins (rareté « Divin » de l'onglet Objets) : — Divine, Families
 - `src/admin/Entities.jsx` — Éditeur générique d'entités (montures, bâtiments) : liste filtrable à gauche + fiche à droite (caractéristique — Entities
 - `src/admin/EntityRules.jsx` — Éditeur des règles transverses d'une entité : coûts, plafonds (caps), modificateurs bonus/malus & effets. — RuleForms, RulesList
-- `src/admin/ItemsTab.jsx` — Onglet admin « Objets » (phase 4) : sous-onglets par rareté (le sous-onglet Divin — (header), blank, ItemsTab
+- `src/admin/ItemsTab.jsx` — Onglet admin « Objets » : sous-onglets par rareté, filtre par type d'équipement (slot), — (header), blank, ItemsTab
 - `src/admin/MiniMap.jsx` — Mini-carte admin (détail de monstre — onglet Liste) : grille colorée par le terrain du jeu — (header), COLORS, CSS_W, MiniMap
 - `src/admin/MonsterDetails.jsx` — Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets : — TABS, EMPTY, MonsterDetails
 - `src/admin/Pick.jsx` — Menu déroulant avec recherche (catalogues du bestiaire — sorts / objets / ressources) : — Pick
+- `src/admin/PlayersTab.jsx` — Section admin « Joueurs » : liste paginée de tous les personnages par race (pseudo, rang, position, XP, or), — (header), PER, PlayersTab, TABS, PlayerSheet
 - `src/admin/Races.jsx` — Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. — Races
 - `src/admin/SpellsTab.jsx` — Onglet admin « Sorts » (phase 4) : catalogue global des sorts (blessures/bonus/malus — (header), blank, SpellsTab
 - `src/admin/TilesTab.jsx` — Section admin « Cases » : types de case par monde — nom, description, coût d'énergie d'un pas, — (header), hex, TilesTab
+- `src/admin/divine.js` — Helpers purs : objets (dont divins) et familles divines (testés dans test/adminDivine.test.js). — NUM, itemBody, familyLabel, validFamilyKey, CORE_FAMILIES
 - `src/admin/entityFields.js` — Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|js — FIELDS, jsonOr, jsonText, URL_KIND
 - `src/admin/index.jsx` — (header), SECTIONS, ICONS, SUBS, KEY, Admin
 - `src/admin/monsterDetails.js` — Détails de monstre (Étape 2 phase 3b) : aides pures du panneau (liste de types + onglets). — SLOTS, SLOT_LABEL, SLOT_POS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn
+- `src/admin/players.js` — Helpers purs de la section admin « Joueurs » (testés dans test/adminPlayers.test.js). — RACE_LABEL, PLACE_LABEL, STAT_GROUPS, STAT_KEYS, statDiff, posLabel, pageWindow
 - `src/admin/rarity.js` — Onglets admin Objets & Sorts (phase 4) : raretés et « qui peut s'en équiper / l'apprendre ». — (header), RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge
 - `src/admin/tiles.js` — Helpers purs de la section admin « Cases » (testés dans test/adminTiles.test.js). — WORLD_LABEL, hpPerHour, tileBody, spellSummary
 - `src/admin/ui.jsx` — Éléments partagés du back-office : toast auto-masqué, en-tête de panneau, état vide, confirmation. — (header), confirmDel, Toast, Search, norm, matches, Empty
@@ -72,13 +76,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/components/Panels.jsx` — (header), Panel, KV, FaithPanel, MountsPanel, OFFS, ActionsPanel, WorldPanel
 - `src/components/SidePanel.jsx` — Silhouette en étoile (bras tendus, jambes écartées) : coordonnées dans un repère 120 × 100. Chaque emplacement — (header), DEFAULT, LABEL, RACES, kindOf, History, SLOTS, LEADERS, GROUP, TYPE, statLine, fmtLock, Inventory, SidePanel
 - `src/components/TileCard.jsx` — Description du type de case + sort passif (effet continu) — textes saisis en admin, rendus comme texte. — (header), cache, useCell, cellCost, TileInfo, Entity, InfoModal, TileCard
-- `src/components/TopBar.jsx` — (header), DIRS, Wheel, Gauge, Chip, TopBar
-- `src/components/compass.css`
-- `src/components/fmtbar.jsx` — Barre d'outils de formatage compacte (Gras / Italique / Nuancier) : agit sur la sélection du — (header), rgbOf, FmtBar, PrevToggle, FmtField, useFmt
-- `src/components/legend.css`
-- `src/lib/angelDemonMap.js` — ⚠ GÉNÉRÉ par tools/gen_angel_demon_map.py — monde Anges & Démons : ne pas éditer à la main. — W2, ROWS2, FEATURES2
-- `src/lib/api.js` — token, setToken, hasToken, api
-- `src/lib/drag.js` — Drag & drop des lignes d'affichage (appui + glissement, seuil 8 px pour préserver les clics). — useDrag
-- `src/lib/energy.js` — Énergie d'un trajet (8 directions) jusqu'à stopAt cases de la cible. Miroir de game/movement.ts : — (header), water, pathEnergy, COLORS
-- `src/lib/fmt.js` — Micro-formatage du texte du forum, rendu par innerHTML APRÈS échappement HTML (donc sûr). — fmt, wrapSel
-- … 30 autres fichiers (utiliser `kb search`)
+- … 40 autres fichiers (utiliser `kb search`)
