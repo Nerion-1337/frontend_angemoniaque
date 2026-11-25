@@ -2,6 +2,7 @@
 // décompte « détenu par N », paramètre « qui peut s'en équiper » (usable_by).
 // Rareté « Divin » : MÊME tableau et MÊME formulaire que les autres objets, plus la famille divine
 // (relique / arcane / artefact ou famille créée ici, avec son plafond) et les exemplaires uniques (Divine.jsx).
+import { ElementSpells } from './SpellFx.jsx';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
@@ -103,6 +104,7 @@ export default function ItemsTab() {
           </div>
           <p className="note">Rien de coché = tout le monde peut s'en équiper.</p></div>
         <ShopFields f={f} set={setF} races={races} stock what="l’objet" />
+        {edit !== 'new' && <div className="cell span-all"><ElementSpells kind="item" refId={edit} /></div>}
       </div>
       {f.rarity === 'divin' && edit !== 'new' && <Divine itemId={edit} onChange={load} />}
       {f.rarity === 'divin' && edit === 'new' && <p className="note">Les exemplaires uniques se créent une fois l’objet enregistré.</p>}

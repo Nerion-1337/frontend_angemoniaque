@@ -1,4 +1,5 @@
-// Onglet Sorts : éditeur des effets (moteur de sorts, lot 2) et liens du sort avec monstres / objets / montures / bâtiments.
+// Onglet Sorts : éditeur des effets (moteur de sorts) dont l'invocation d'un élément ; fiches d'objet / bâtiment / monstre-monture :
+// sorts liés à l'élément avec leur mode d'application (ElementSpells).
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
@@ -6,11 +7,19 @@ import { api } from '../lib/api.js';
 import { Plus, Trash2 } from 'lucide-react';
 import Pick from './Pick.jsx';
 import { Empty, confirmDel } from './ui.jsx';
-import { STAT_LABEL, POOL_STATS, TARGET_LABEL, AFFECTS_LABEL, fxSummary, fxBody } from './spellFx.js';
+import { STAT_LABEL, POOL_STATS, TARGET_LABEL, AFFECTS_LABEL, SUMMON_LABEL, LINK_MODES, modeLabel, fxSummary, fxBody } from './spellFx.js';
+
+/** Catalogues des éléments invocables (chargés une fois par éditeur). */
+function useSummonables() {
+  const [cat, setCat] = useState({});
+  useEffect(() => { Promise.all([api('/admin/catalog'), api('/admin/content/monsters'), api('/admin/content/buildings')])
+    .then(([c, m, b]) => setCat({ monster: m, mount: m.filter(x => x.mountable), item: c.items, building: b, spells: c.spells })).catch(() => {}); }, []);
+  return cat;
+}
 
 /** Éditeur contrôlé : `fx` = brouillon (fxDraft), `set` = setter du parent. */
 export function SpellEffects({ fx, set }) {
-  const u = (k, v) => set({ ...fx, [k]: v });
+  const u = (k, v) => set({ ...fx, [k]: v }), cat = useSummonables();
   const setStat = (i, k, v) => set({ ...fx, stats: fx.stats.map((s, j) => (j === i ? { ...s, [k]: v } : s)) });
   return <div className="spellfx">
     <label className="check"><input type="checkbox" checked={fx.on} onChange={e => u('on', e.target.checked)} /> Effets paramétrés (moteur de sorts)</label>
@@ -33,29 +42,36 @@ export function SpellEffects({ fx, set }) {
         <button className="sm danger" onClick={() => set({ ...fx, stats: fx.stats.filter((_, j) => j !== i) })}><Trash2 size={13} /></button></div>)}
       <button className="sm" onClick={() => set({ ...fx, stats: [...fx.stats, { stat: 'strength', value: 1 }] })}><Plus size={14} /> Caractéristique</button>
       {fx.stats.some(s => !POOL_STATS.includes(s.stat)) && <div className="row"><small>Durée des caractéristiques</small><input type="number" min="0" className="nb" value={fx.durationH} onChange={e => u('durationH', e.target.value)} /><small>h (0 = permanent)</small></div>}
+      <h5>Invocation</h5>
+      <label className="check"><input type="checkbox" checked={fx.sumOn} onChange={e => u('sumOn', e.target.checked)} /> Le sort invoque un élément</label>
+      {fx.sumOn && <div className="row add">
+        <select value={fx.sumKind} onChange={e => set({ ...fx, sumKind: e.target.value, sumRef: '' })}>{Object.entries(SUMMON_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        <Pick options={cat[fx.sumKind] ?? []} value={fx.sumRef} onPick={v => u('sumRef', v)} labelOf={o => o.name} placeholder={fx.sumKind === 'mount' ? '— Monstre montable —' : '— Choisir —'} />
+        {fx.sumKind === 'item' && <label className="inlabel"><small>×</small><input type="number" min="1" max="99" className="nb" value={fx.sumQty} onChange={e => u('sumQty', e.target.value)} /></label>}
+        <label className="inlabel"><small>durée</small><input type="number" min="0" className="nb" value={fx.sumH} onChange={e => u('sumH', e.target.value)} /><small>h (0 = permanent)</small></label></div>}
+      {fx.sumOn && <p className="note">Monstre : invocation de combat contrôlable près du lanceur (limite d'invocations). Monture : ajoutée aux montures du lanceur. Objet : dans son sac.
+        Bâtiment : copie posée près de lui, à lui. Temporaire : retiré à l'échéance (tick horaire).</p>}
       <p className="note">« Rendre / retirer » agit sur la valeur actuelle sans dépasser le maximum ; « max » change la capacité. Aperçu : {fxSummary(fxBody(fx)) || '—'}</p>
     </>}
   </div>;
 }
 
-const KIND_LABEL = { monster: 'Monstre', item: 'Objet (équipé)', mount: 'Monture (active)', building: 'Bâtiment' };
-/** Liens d'un sort existant : actif = lançable par le porteur ; passif = appliqué chaque heure au porteur. */
-export function SpellLinks({ spellId }) {
-  const d = useDispatch(), [rows, setRows] = useState(null), [cat, setCat] = useState({}), [n, setN] = useState({ kind: 'item', refId: '', mode: 'active' });
-  const load = () => api(`/admin/content/spells/${spellId}/links`).then(setRows).catch(e => d(Ad.msg(e.message)));
-  useEffect(() => { load(); }, [spellId]);   // corps de bloc
-  useEffect(() => { Promise.all([api('/admin/catalog'), api('/admin/content/monsters'), api('/admin/content/buildings')]).then(([c, m, b]) => setCat({ item: c.items, mount: c.mounts, monster: m, building: b })).catch(() => {}); }, []);
-  const add = async () => { try { await api(`/admin/content/spells/${spellId}/links`, { kind: n.kind, refId: Number(n.refId), mode: n.mode }, 'POST'); d(Ad.ok('Lien ajouté')); setN({ ...n, refId: '' }); load(); } catch (e) { d(Ad.msg(e.message)); } };
-  const del = async l => { if (!confirmDel(`le lien avec « ${l.name} »`)) return; try { await api(`/admin/content/spells/${spellId}/links/${l.kind}/${l.id}`, undefined, 'DELETE'); d(Ad.ok('Lien retiré')); load(); } catch (e) { d(Ad.msg(e.message)); } };
+/** Sorts liés à UN élément (fiche objet, bâtiment, monstre servant de monture) avec leur mode d'application. */
+export function ElementSpells({ kind, refId }) {
+  const d = useDispatch(), cat = useSummonables(), [rows, setRows] = useState(null), [n, setN] = useState({ spellId: '', mode: LINK_MODES[kind][0][0] });
+  const load = () => api(`/admin/content/element-spells?kind=${kind}&refId=${refId}`).then(setRows).catch(e => d(Ad.msg(e.message)));
+  useEffect(() => { load(); }, [kind, refId]);   // corps de bloc
+  const add = async () => { try { await api(`/admin/content/spells/${n.spellId}/links`, { kind, refId: Number(refId), mode: n.mode }, 'POST'); d(Ad.ok('Sort lié')); setN({ ...n, spellId: '' }); load(); } catch (e) { d(Ad.msg(e.message)); } };
+  const del = async l => { if (!confirmDel(`le lien avec « ${l.spell_name} »`)) return; try { await api(`/admin/content/spells/${l.spell_id}/links/${kind}/${l.id}`, undefined, 'DELETE'); d(Ad.ok('Lien retiré')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   return <div className="spelllinks">
-    <h5>Liens du sort</h5>
+    <h5>Sorts liés</h5>
     <div className="row add">
-      <select value={n.kind} onChange={e => setN({ ...n, kind: e.target.value, refId: '' })}>{Object.entries(KIND_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
-      <Pick options={cat[n.kind] ?? []} value={n.refId} onPick={v => setN({ ...n, refId: v })} labelOf={o => o.name} placeholder="— Choisir —" />
-      <select value={n.mode} onChange={e => setN({ ...n, mode: e.target.value })}><option value="active">Actif (à la demande)</option><option value="passive">Passif (en continu)</option></select>
-      <button className="sm" disabled={!n.refId} onClick={add}><Plus size={14} /> Lier</button></div>
-    {rows && !rows.length ? <Empty>Aucun lien.</Empty> : <div className="chips">{(rows ?? []).map(l => <span key={`${l.kind}${l.id}`} className="chip on">
-      {KIND_LABEL[l.kind].split(' (')[0]} : {l.name} · {l.mode === 'passive' ? 'passif' : 'actif'}<button className="x-in" onClick={() => del(l)}>×</button></span>)}</div>}
-    <p className="note">Objet : lançable (actif) ou appliqué chaque heure (passif) quand il est équipé. Monture : idem quand elle est active. Monstre : capacité du monstre. Bâtiment : effets de la structure (lot bâtiments).</p>
+      <Pick options={cat.spells ?? []} value={n.spellId} onPick={v => setN({ ...n, spellId: v })} labelOf={o => o.name} placeholder="— Sort —" />
+      <select value={n.mode} onChange={e => setN({ ...n, mode: e.target.value })}>{LINK_MODES[kind].map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+      <button className="sm" disabled={!n.spellId} onClick={add}><Plus size={14} /> Lier</button></div>
+    {rows && !rows.length ? <Empty>Aucun sort lié.</Empty> : <div className="chips">{(rows ?? []).map(l => <span key={l.id} className="chip on">
+      {l.spell_name} · {modeLabel(kind, l.mode)}<button className="x-in" onClick={() => del(l)}>×</button></span>)}</div>}
+    <p className="note">Le sort agit selon ses propres effets (onglet Sorts). Au coup porté : sur l'adversaire touché, ou sur le porteur si le sort cible « soi-même » ;
+      à l'attaque reçue : sur l'attaquant, ou sur le porteur. Ces déclenchements ne coûtent pas d'énergie.</p>
   </div>;
 }

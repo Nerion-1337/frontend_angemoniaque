@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import Pick from './Pick.jsx'; import { confirmDel, Search, matches, Empty } from './ui.jsx'; import MiniMap from './MiniMap.jsx';
 import { Plus, Save, Trash2 } from 'lucide-react';
-import { BodyParts, RespawnPanel } from './MonsterParts.jsx';
+import { BodyParts, RespawnPanel } from './MonsterParts.jsx'; import { ElementSpells } from './SpellFx.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 import { RARITIES, RARITY_LABEL } from './rarity.js';
 import { SLOT_LABEL, MONSTER_GROUPS, LOCO, toggleLoco, locoLabel, respawnSummary, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
@@ -196,6 +196,8 @@ export default function MonsterDetails() {
         <h4>Passives ({passives?.length ?? 0})</h4>
         {(passives ?? []).map(x => <span key={x.id} className="tag"><b>{capLabel(x)}</b><button className="sm danger" onClick={() => delCap(x)}>×</button></span>)}
         {actives?.length === 0 && passives?.length === 0 && <p className="note">Aucune capacité.</p>}
+        {draft?.mountable && draft?.mount_id && <><h4>En tant que monture</h4><ElementSpells kind="mount" refId={draft.mount_id} /></>}
+        {draft?.mountable && !draft?.mount_id && <p className="note">Enregistrez le type comme monture pour lui lier des sorts de monture.</p>}
       </div>}
 
       {tab === 'spec' && <div>

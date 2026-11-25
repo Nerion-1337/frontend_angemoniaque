@@ -7,7 +7,7 @@ import { Ad } from '../store/admin.js';
 import { api } from '../lib/api.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
 import { ShopFields, shopLabel } from './shop.jsx';
-import { SpellEffects, SpellLinks } from './SpellFx.jsx'; import { fxDraft, fxBody, fxSummary } from './spellFx.js';
+import { SpellEffects } from './SpellFx.jsx'; import { fxDraft, fxBody, fxSummary } from './spellFx.js';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
 
 const blank = { name: '', kind: '', rarity: 'commun', energyCost: '', damage: '', description: '', price: '', durationH: '', usableBy: [], shop: true, shop_races: [], fx: fxDraft({}) };
@@ -78,7 +78,6 @@ export default function SpellsTab() {
             <p className="note">Rien de coché = tout le monde peut l'apprendre.</p></div>
           <ShopFields f={f} set={setF} races={races} what="le sort" />
           <div className="cell span-all"><SpellEffects fx={f.fx} set={fx => setF(x => ({ ...x, fx }))} /></div>
-          {edit !== 'new' && <div className="cell span-all"><SpellLinks spellId={edit} /></div>}
         </div>
         <div className="actions">
           <button onClick={save}>{edit === 'new' ? 'Créer le sort' : 'Enregistrer'}</button>
