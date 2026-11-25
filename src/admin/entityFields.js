@@ -2,9 +2,9 @@
 export const FIELDS = {
   monster: [
     ['name', 'Nom'], ['hp_max', 'PV max', 'number'], ['hp_current', 'PV', 'number'], ['recovery', 'Régén/h', 'number'],
-    ['see', 'Portée de vue', 'number'], ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
-    ['energy_max', 'Énergie max', 'number'], ['range', 'Portée', 'number'], ['armor', 'Armure', 'number'],
-    ['gain_xp_hour', 'XP/h', 'number'], ['gold_current', 'Or', 'number'], ['guards_item', 'Garde (relique/arcane/artefact)'],
+    ['energy_max', 'Énergie max', 'number'], ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
+    ['armor', 'Armure', 'number'], ['range', 'Portée', 'number'], ['see', 'Portée de vue', 'number'],
+    ['gain_xp_hour', 'XP/h', 'number'], ['gold_current', 'Or', 'number'],
     ['data', 'Comportement (JSON : {"behavior":"...","loot":[...]})', 'json']
   ],
   item: [

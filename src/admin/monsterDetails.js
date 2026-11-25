@@ -2,8 +2,8 @@
 /** Les 7 parties du corps équipables (contrat CHECK des migrations 12/13 — style personnage). */
 export const SLOTS = ['mains', 'tete', 'torse', 'pieds', 'collier', 'bracelet', 'bague'];
 export const SLOT_LABEL = { mains: 'Mains', tete: 'Tête', torse: 'Torse', pieds: 'Pieds', collier: 'Collier', bracelet: 'Bracelet', bague: 'Bague' };
-/** Position (en %) de chaque partie sur la silhouette (style de l'équipement personnage — SidePanel). */
-export const SLOT_POS = { tete: [50, 8], collier: [50, 41], mains: [11, 20], bague: [11, 45], torse: [50, 56], bracelet: [33, 17], pieds: [50, 90] };
+/** Position (en %) de chaque partie sur la silhouette admin (MonsterParts.jsx, même repère 100×100 que le dessin). */
+export const SLOT_POS = { tete: [50, 9], collier: [50, 21], torse: [50, 38], bracelet: [25, 46], mains: [16, 58], bague: [84, 58], pieds: [50, 94] };
 /** Un slot est-t-il autorisé ? Liste de parties vide = aucune restriction (tout est autorisé). */
 export const slotAllowed = (slots, slot) => !slots || !slots.length || slots.includes(slot);
 /** Filtrage insensible à la casse d'un catalogue par libellé (menus déroulants avec recherche). */
@@ -39,3 +39,21 @@ export const respawnIn = i => {
   const h = Math.max(0, Math.round((new Date(i.respawn_due_at).getTime() - Date.now()) / 3600e3));
   return `réincarne dans ~${h} h`;
 };
+/** Groupes de champs de la fiche monstre (clés de FIELDS.monster). */
+export const MONSTER_GROUPS = [
+  ['Identité', ['name']],
+  ['Vie et énergie', ['hp_max', 'hp_current', 'recovery', 'energy_max']],
+  ['Combat', ['strength', 'agility', 'armor', 'range', 'see']],
+  ['Récompenses', ['gain_xp_hour', 'gold_current']],
+];
+/** Réapparition (migration 24) : libellés des éléments limités. */
+export const LIMIT_KIND = { item: 'Objet', spell: 'Sort', resource: 'Ressource' };
+export const respawnDraft = m => ({ respawn: m?.respawn ?? true, delayH: m?.reincarnate_delay_h ?? 0, limits: [...(m?.respawn_limits ?? [])] });
+/** Corps PUT de la réapparition : délai entier ≥ 0, conditions sans référence retirées, max ≥ 1, objet/sort → id numérique. */
+export const respawnBody = r => ({
+  respawn: !!r.respawn, reincarnate_delay_h: Math.max(0, Math.trunc(Number(r.delayH) || 0)),
+  respawn_limits: r.limits.filter(l => l.ref !== '' && l.ref != null).map(l => ({ kind: l.kind, ref: l.kind === 'resource' ? String(l.ref) : Number(l.ref), max: Math.max(1, Math.trunc(Number(l.max) || 1)) })),
+});
+/** « Ne réapparaît pas · … » / « Réapparaît après 6 h · 2 condition(s) » / « Réapparaît aussitôt » */
+export const respawnSummary = m => (m.respawn === false ? 'Non recréé après sa mort'
+  : `${m.reincarnate_delay_h > 0 ? `Réapparaît après ${m.reincarnate_delay_h} h` : 'Réapparaît aussitôt'}${m.respawn_limits?.length ? ` · ${m.respawn_limits.length} condition(s)` : ''}`);

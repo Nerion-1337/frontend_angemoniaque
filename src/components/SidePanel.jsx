@@ -19,17 +19,19 @@ const GROUP = { weapon: ['weapon_main', 'weapon_off'], shield: ['weapon_off'], b
 const TYPE = { weapon: 'Arme', shield: 'Bouclier', bow: 'Arc', head: 'Casque', chest: 'Plastron', foot: 'Chaussures', amulet: 'Collier', ring: 'Bague', bracelet: 'Bracelet', special: 'Objet spécial', scroll: 'Parchemin', tool: 'Outil' };
 const statLine = i => [i.weapon_damage ? `Arme ×${i.weapon_damage}` : null, i.armor || i.magic_armor ? `Armure ${i.armor}/${i.magic_armor}` : null, i.strength_bonus ? `+${i.strength_bonus} Force` : null, i.agility_bonus ? `+${i.agility_bonus} Agilité` : null, i.req_strength ? `Force req. ${i.req_strength}` : null].filter(Boolean).join(' · ');
 const fmtLock = sec => { const h = Math.floor(sec / 3600), m = Math.ceil((sec % 3600) / 60); return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`; };
-/** Passage au rang suivant par conditions (objets du sac, ressources, énergie, XP) ; rang temporaire affiché avec son échéance. */
+/** Passage au rang suivant par conditions : une ligne et un bouton par voie proposée (définitive, temporaire) ; rang temporaire affiché avec son échéance. */
+const condText = (c, xp) => [...(c.items ?? []).map(i => `objet n°${i.itemId} ×${i.qty}`), ...Object.entries(c.resources ?? {}).map(([k, q]) => `${k} ×${q}`), c.energyCost ? `⚡${c.energyCost}` : null, xp != null ? `${xp} XP` : null].filter(Boolean).join(', ') || 'aucune condition';
 function RankUp({ me, after }) {
   const run = useDo(), [r, load] = useData(`/characters/${me.id}/rank-up`, [me.xp, me.energy_current]);
   if (!r) return null;
-  const req = r.requirements;
+  const req = r.requirements, paths = req ? [['permanent', 'définitif'], ['temporary', 'temporaire']].filter(([m]) => req[m]) : [];
   return <div className="item rankup"><div><b>Rang : {me.rank?.rank_name ?? '—'}</b>
     {r.temp && <><br /><small>Rang temporaire jusqu'au {new Date(r.temp.until).toLocaleString()}</small></>}
-    {r.next ? req ? <><br /><small>Prochain : <b>{r.next.name}</b> — {[...(req.items ?? []).map(i => `objet n°${i.itemId} ×${i.qty}`), ...Object.entries(req.resources ?? {}).map(([k, q]) => `${k} ×${q}`), req.energyCost ? `⚡${req.energyCost}` : null, r.next.prereq_xp != null ? `${r.next.prereq_xp} XP` : null].filter(Boolean).join(', ') || 'aucune condition'}{req.mode === 'temporary' ? ` · temporaire ${req.durationH} h` : ''}{req.consume === false ? ' · non consommés' : ''}</small>
-      {r.missing?.length > 0 && <><br /><small className="err">Manque : {r.missing.join(', ')}</small></>}</>
-      : <><br /><small>Prochain : {r.next.name} — passage non disponible par conditions.</small></> : <><br /><small>Rang maximal.</small></>}</div>
-    {r.next && req && <button className="primary" disabled={!!r.temp || r.missing?.length > 0} onClick={() => run(() => api(`/characters/${me.id}/rank-up`, undefined, 'POST'), () => { load(); after(); })}>Passer {r.next.name}</button>}</div>;
+    {!r.next ? <><br /><small>Rang maximal.</small></> : !paths.length ? <><br /><small>Prochain : {r.next.name} — passage non disponible par conditions.</small></>
+      : paths.map(([m, l]) => { const c = req[m], miss = r.missing?.[m] ?? [];
+        return <div key={m} className="rankpath"><small>Prochain : <b>{r.next.name}</b> ({l}{m === 'temporary' ? ` ${c.durationH} h` : ''}) — {condText(c, r.next.prereq_xp)}{c.consume === false ? ' · non consommés' : ''}</small>
+          {miss.length > 0 && <><br /><small className="err">Manque : {miss.join(', ')}</small></>}
+          <br /><button className="primary sm" disabled={!!r.temp || miss.length > 0} onClick={() => run(() => api(`/characters/${me.id}/rank-up`, { mode: m }), () => { load(); after(); })}>Passer {r.next.name} ({l})</button></div>; })}</div></div>;
 }
 function Inventory({ close }) {
   const { me } = useSelector(s => s.game), refresh = useRefreshMe(), run = useDo(), [inv, load] = useData(`/inventory/${me.id}`), [up, loadUp] = useData(`/characters/${me.id}/upgrades`, [me.xp]), [sel, setSel] = useState(null), [tab, setTab] = useState('equip'), st = me.stats;

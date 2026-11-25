@@ -2,7 +2,7 @@
 title: Admin Parchemins, boutique par race (Objets, Sorts) et fabrication en jeu
 slug: scrolls-shop-ui
 status: done
-updated: 2026-11-24
+updated: 2026-11-25
 files:
   - src/admin/ScrollsTab.jsx
   - src/admin/scrolls.js
@@ -20,7 +20,7 @@ Section admin « Parchemins » (recettes), options « boutique de l'hôtel de vi
 capitale filtrée par race et section « Fabrication » du panneau Actions en jeu.
 
 ## Business rules
-- Parchemins : créer un nouveau parchemin (nom) ou choisir un objet existant ; lier un objet, un sort ou un bâtiment ; ressources consommées ; parchemin consommé ou conservé ; hôtel de ville seulement ou partout ; coût en énergie ; quantité produite seulement pour un objet (`recipeBody`).
+- Parchemins : la création d'une recette crée son parchemin (nom saisi ; plus de choix d'un « objet existant ») ; lier un objet, un sort ou un bâtiment ; ressources consommées ; parchemin consommé ou conservé ; hôtel de ville seulement ou partout ; coût en énergie ; quantité produite seulement pour un objet (`recipeBody`).
 - Boutique (Objets, Sorts) : case « en vente », races autorisées (rien coché = toutes), stock pour un objet ; hors boutique, le formulaire rappelle que l'élément ne s'obtient qu'en jeu ou par fabrication.
 - La boutique de la capitale appelle `/shop?characterId=` (filtrée par race par le serveur).
 - Fabrication en jeu : seulement les recettes dont le parchemin est dans le sac ; ressources manquantes affichées et bouton désactivé ; un bâtiment se pose sur la case adjacente ciblée du panneau.

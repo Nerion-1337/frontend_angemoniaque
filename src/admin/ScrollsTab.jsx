@@ -35,12 +35,8 @@ export default function ScrollsTab() {
     {edit && <div className="editor apanel">
       <h3>{edit === 'new' ? 'Nouveau parchemin' : `Parchemin — ${rows?.find(r => r.id === edit)?.scroll_name ?? ''}`}</h3>
       <div className="form">
-        {edit === 'new' && <div className="cell span2"><small>Parchemin</small>
-          <div className="seg2">{[['new', 'Créer un parchemin'], ['pick', 'Objet existant']].map(([k, l]) =>
-            <button key={k} className={`chip${f.scrollMode === k ? ' on' : ''}`} onClick={() => setF({ ...f, scrollMode: k })}>{l}</button>)}</div>
-          {f.scrollMode === 'new'
-            ? <input placeholder="Nom du parchemin (ex. Parchemin de la lame runique)" value={f.newScrollName} onChange={e => setF({ ...f, newScrollName: e.target.value })} />
-            : <Pick options={cat.items ?? []} value={f.scrollItemId} onPick={v => setF({ ...f, scrollItemId: v })} labelOf={o => o.name} placeholder="— Objet servant de parchemin —" />}</div>}
+        {edit === 'new' && <div className="cell span2"><small>Nom du parchemin (créé avec la recette)</small>
+          <input placeholder="ex. Parchemin de la lame runique" value={f.newScrollName} onChange={e => setF({ ...f, newScrollName: e.target.value })} /></div>}
         <div className="cell"><small>Fabrique</small><select value={f.targetKind} onChange={e => setF({ ...f, targetKind: e.target.value, targetId: '', qtyOut: 1 })}>
           {Object.entries(TARGET_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
         <div className="cell span2"><small>{TARGET_LABEL[f.targetKind]} lié</small>

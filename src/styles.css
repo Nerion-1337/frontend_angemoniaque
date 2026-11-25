@@ -457,7 +457,28 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .rank{grid-template-columns:auto auto 1fr auto}.admin .rankbtns{display:inline-flex;gap:6px}.admin .rankbtns button.on{background:rgba(240,210,138,.18);color:var(--gold)}
 .admin .rankreq{margin:4px 0 10px;padding:14px;border:1px dashed var(--line);border-radius:12px;background:rgba(0,0,0,.15);display:flex;flex-direction:column;gap:8px}
 .admin .rankreq h5{margin:8px 0 0;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.admin .reqpaths{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.admin .reqpath{display:flex;flex-direction:column;gap:8px;padding:12px;min-width:0}
+.admin .reqpath.off{opacity:.65}
 .admin .seg2 .chip.on{color:var(--gold);border-color:var(--gold);background:rgba(240,210,138,.12)}
 .admin .bldextras{display:flex;flex-direction:column;gap:8px;margin:10px 0;padding:12px;border:1px dashed var(--line);border-radius:10px}
 .admin .bldextras h5{margin:4px 0 0;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .admin .stockbar{display:inline-block;width:70px;height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;vertical-align:middle}.admin .stockbar i{display:block;height:100%;width:calc(var(--p)*1%);background:linear-gradient(90deg,var(--bronze),var(--gold))}
+/* Fiche monstre (lot A) : groupes de champs, silhouette des parties équipables, réapparition */
+.admin .fgroup{margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:rgba(0,0,0,.12)}
+.admin .fgroup h5{margin:0 0 8px;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em;display:inline}
+.admin details.fgroup summary{cursor:pointer;list-style-position:inside}
+.admin details.fgroup textarea{width:100%;margin-top:8px}
+.admin .bodyparts{display:grid;grid-template-columns:minmax(200px,260px) 1fr;gap:16px;align-items:start;margin-top:8px}
+.admin .bodymap{position:relative;aspect-ratio:3/4;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.2)}
+.admin .bodymap svg{position:absolute;inset:0;width:100%;height:100%;fill:rgba(255,255,255,.06);stroke:rgba(255,255,255,.18);stroke-width:.6}
+.admin .bodymap svg *{vector-effect:non-scaling-stroke;stroke-width:1}
+.admin .bpart{position:absolute;transform:translate(-50%,-50%);display:inline-flex;align-items:center;gap:3px;padding:3px 8px;font-size:11px;border-radius:999px;
+  border:1px dashed var(--line);background:var(--glass2);color:var(--mute);white-space:nowrap;cursor:pointer}
+.admin .bpart.on{border-style:solid;border-color:var(--gold);color:var(--gold);background:rgba(240,210,138,.14)}
+.admin .bpart:hover{color:var(--ink)}
+.admin .bodylist{display:flex;flex-direction:column;gap:8px;min-width:0}
+.admin .respawn{display:flex;flex-direction:column;gap:10px}
+.admin .respawn h5{margin:6px 0 0;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.admin .inlabel{display:inline-flex;align-items:center;gap:6px}
+@media (max-width:640px){.admin .bodyparts{grid-template-columns:1fr}.admin .bodymap{max-width:260px}}

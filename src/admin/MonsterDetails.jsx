@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
-import Pick from './Pick.jsx'; import { confirmDel } from './ui.jsx'; import MiniMap from './MiniMap.jsx';
+import Pick from './Pick.jsx'; import { confirmDel, Search, matches, Empty } from './ui.jsx'; import MiniMap from './MiniMap.jsx';
+import { Plus, Save, Trash2 } from 'lucide-react';
+import { BodyParts, RespawnPanel } from './MonsterParts.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { SLOTS, SLOT_LABEL, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
+import { SLOT_LABEL, MONSTER_GROUPS, respawnSummary, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
 /**
  * Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets :
  *  1. Caractéristiques (édition des champs du type),
@@ -12,12 +14,12 @@ import { SLOTS, SLOT_LABEL, spellLabel, capLabel, equipLabel, capsToMaxCaps, pla
  *     déplacer / éditer or + butin + équipement, ou ajouter un nouveau avec les mêmes options),
  *  5. Règles transverses (coûts / plafonds / modificateurs — phase 1, conservées).
  */
-const TABS = [['data', 'Caractéristiques'], ['caps', 'Capacité'], ['spec', 'Spécificités'], ['list', 'Liste']];
+const TABS = [['data', 'Caractéristiques'], ['caps', 'Capacités'], ['spec', 'Équipement et quantité'], ['respawn', 'Réapparition'], ['list', 'Sur les cartes']];
 const EMPTY = () => Object.fromEntries(FIELDS.monster.map(([k, , t]) => [k, t === 'check' ? false : '']));
 export default function MonsterDetails() {
   const d = useDispatch();
   const [monsters, setMonsters] = useState([]), [cats, setCats] = useState(null), [status, setStatus] = useState(null);
-  const [sel, setSel] = useState(''), [tab, setTab] = useState('data'), [draft, setDraft] = useState(null);
+  const [sel, setSel] = useState(''), [tab, setTab] = useState('data'), [draft, setDraft] = useState(null), [q, setQ] = useState(''), [dirty, setDirty] = useState(false);
   const [caps, setCaps] = useState([]), [actives, setActives] = useState(null), [passives, setPassives] = useState(null);
   const [slots, setSlots] = useState([]);
   const [capF, setCapF] = useState({ spellId: '', mode: 'active', target: 'enemy', radius: 3 });
@@ -34,8 +36,10 @@ export default function MonsterDetails() {
     api('/admin/bestiary/status').then(setStatus).catch(() => {});
   };
   useEffect(() => { load(); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader
-  const open = async id => {
-    setSel(id); setTab('data'); setInstSel(null);
+  const leave = () => !dirty || window.confirm('Modifications non enregistrées : les abandonner ?');
+  const open = async (id, force) => {
+    if (!force && !leave()) return;
+    setSel(id); setTab(t => (force ? t : 'data')); setInstSel(null); setDirty(false); setLMode('');
     const det = await api(`/admin/content/monsters/${id}`).catch(e => { d(Ad.msg(e.message)); return null; });
     if (!det) return;
     setDraft({ ...det }); setCaps(det.caps ?? []); setMaxCaps(capsToMaxCaps(det.caps ?? []));
@@ -43,8 +47,8 @@ export default function MonsterDetails() {
     setActives(sp.filter(x => x.mode === 'active')); setPassives(sp.filter(x => x.mode === 'passive'));
     setSlots((await api(`/admin/content/monsters/${id}/slots`).catch(() => [])).map(x => x.slot));
   };
-  const newOne = () => { setSel('new'); setTab('data'); setDraft(EMPTY()); setCaps([]); setActives([]); setPassives([]); setSlots([]); };
-  const set = (k, v) => setDraft({ ...draft, [k]: v });
+  const newOne = () => { if (!leave()) return; setDirty(false); setSel('new'); setTab('data'); setDraft(EMPTY()); setCaps([]); setActives([]); setPassives([]); setSlots([]); };
+  const set = (k, v) => { setDraft({ ...draft, [k]: v }); setDirty(true); };
   const save = async () => {
     const body = {};
     for (const [k, , t] of FIELDS.monster) {
@@ -56,10 +60,10 @@ export default function MonsterDetails() {
     }
     try {
       const r = sel === 'new' ? await api('/admin/content/monsters', body, 'POST') : await api(`/admin/content/monsters/${sel}`, body, 'PUT');
-      d(Ad.ok('Enregistré')); load(); open(r.id);
+      d(Ad.ok('Enregistré')); setDirty(false); load(); open(r.id, true);
     } catch (e) { d(Ad.msg(e.message)); }
   };
-  const remove = async () => { if (!confirmDel('ce type de monstre')) return; try { await api(`/admin/content/monsters/${sel}`, undefined, 'DELETE'); d(Ad.ok('Supprimé')); setSel(''); load(); } catch (e) { d(Ad.msg(e.message)); } };
+  const remove = async () => { if (!confirmDel('ce type de monstre')) return; try { await api(`/admin/content/monsters/${sel}`, undefined, 'DELETE'); d(Ad.ok('Supprimé')); setSel(''); setDraft(null); setDirty(false); load(); } catch (e) { d(Ad.msg(e.message)); } };
   const run = f => async (...a) => { try { await f(...a); } catch (e) { d(Ad.msg(e.message)); } };
   const refresh = () => { api('/admin/bestiary/status').then(setStatus).catch(() => {}); };
   const addCap = run(async () => {
@@ -76,7 +80,7 @@ export default function MonsterDetails() {
     const on = slots.includes(slot);
     on ? await api(`/admin/content/monsters/${sel}/slots/${slot}`, undefined, 'DELETE') : await api(`/admin/content/monsters/${sel}/slots`, { slot });
     setSlots(on ? slots.filter(x => x !== slot) : [...slots, slot]);
-    d(Ad.msg(on ? `${SLOT_LABEL[slot]} : non équipables` : `${SLOT_LABEL[slot]} : équipables`));
+    d(Ad.ok(on ? `${SLOT_LABEL[slot]} : non équipable` : `${SLOT_LABEL[slot]} : équipable`));
   });
   const saveCaps = run(async () => {
     const base = `/admin/content/monsters/${sel}/caps`;
@@ -138,23 +142,33 @@ export default function MonsterDetails() {
   const F = FIELDS.monster;
   const typeOf = i => i.spawned ? 'sauvage (spawn)' : i.placed ? 'placé' : 'ancré (prototype)';
   const lootTag = l => l.item_name ? `objet ${l.item_name}` : (l.divine_ref || l.divine_kind) ? `divin ${l.divine_kind} n°${l.divine_ref}` : l.resource === 'or' ? `or x${l.qty_min ?? 1}` : `ressource ${l.resource} x${l.qty_min ?? 1}`;
-  return <section>
-    {sel === '' && <div className="actions"><button className="sm" onClick={newOne}>+ Nouveau type</button></div>}
-    {sel === '' && <div className="list">{monsters.map(m =>
-      <button key={m.id} className="item row2" onClick={() => open(m.id)}><b>{m.name}</b>
-        <small>{m.guards_item ? `garde ${m.guards_item} · ` : ''}PV {m.hp_max} · n°{m.id}{(status?.instances ?? []).some(i => i.prototype === m.id || i.id === m.id) ? ' · sur map(s)' : ''}</small></button>)}
-      {monsters.length === 0 && <p className="note">Aucun type de monstre.</p>}</div>}
-    {sel !== '' && <div className="editor">
-      <div className="actions"><button className="sm back" onClick={() => setSel('')}>← Retour à la liste des types</button></div>
-      <div className="tabs">{TABS.map(([k, label]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>)}</div>
+  const fieldOf = k => F.find(f => f[0] === k);
+  const input = ([k, label, t]) => <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft?.[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>;
+  const view = monsters.filter(m => matches(q, m.name, m.id));
+  const onMap = m => (status?.instances ?? []).some(i => i.prototype === m.id || i.id === m.id);
+  return <section className="split">
+    <div className="listpane apanel">
+      <div className="headrow"><Search value={q} onChange={setQ} /><button className="sm" onClick={newOne}><Plus size={14} /> Nouveau type</button></div>
+      <small className="count">{view.length} / {monsters.length}</small>
+      <div className="list">{view.map(m => <button key={m.id} className={`item row2${String(sel) === String(m.id) ? ' on' : ''}`} onClick={() => open(m.id)}><b>{m.name}</b>
+        <small>PV {m.hp_max} · {respawnSummary(m)}{onMap(m) ? ' · sur carte(s)' : ''} · n°{m.id}</small></button>)}
+        {!view.length && <Empty>Aucun type de monstre.</Empty>}</div>
+    </div>
+    <div className="detailpane">
+    {sel === '' && <div className="apanel"><Empty>Sélectionnez un type de monstre dans la liste ou créez-en un nouveau.</Empty></div>}
+    {sel !== '' && <div className="editor apanel">
+      <div className="headrow"><h3>{sel === 'new' ? 'Nouveau type de monstre' : draft?.name ?? `n°${sel}`}</h3>{dirty && <span className="dirty">non enregistré</span>}</div>
+      {sel !== 'new' && <div className="tabs">{TABS.map(([k, label]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>)}</div>}
 
-      {tab === 'data' && <div className="form">{F.map(([k, label, t]) =>
-        t === 'check' ? <label key={k} className="sm"><input type="checkbox" checked={!!draft?.[k]} onChange={e => set(k, e.target.checked)} /> {label}</label>
-          : t === 'json' ? <div key={k}><small>{label}</small><textarea rows="3" value={jsonText(draft?.[k] ?? null)} onChange={e => set(k, e.target.value)} /></div>
-            : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft?.[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>)}
-        <button onClick={save}>{sel === 'new' ? 'Créer' : 'Enregistrer'}</button>
-        {sel !== 'new' && <button className="danger sm" onClick={remove}>Supprimer le type</button>}
-      </div>}
+      {tab === 'data' && <>
+        {MONSTER_GROUPS.map(([title, keys]) => <div key={title} className="fgroup"><h5>{title}</h5><div className="form">{keys.map(k => input(fieldOf(k)))}</div></div>)}
+        <details className="fgroup"><summary><h5>Avancé : comportement (JSON)</h5></summary>
+          <textarea className="mono" rows="4" value={typeof draft?.data === 'string' ? draft.data : jsonText(draft?.data ?? null)} onChange={e => set('data', e.target.value)} /></details>
+        <div className="actions sticky">
+          {sel !== 'new' && <button className="danger" onClick={remove}><Trash2 size={14} /> Supprimer le type</button>}
+          <span className="grow" /><button className="primary" onClick={save}><Save size={14} /> {sel === 'new' ? 'Créer' : 'Enregistrer'}</button>
+        </div>
+      </>}
 
       {tab === 'caps' && <div>
         <p className="note">Capacités piochées dans la base de sorts globale (recherche). <b>Actives</b> : sorts que le monstre peut lancer. <b>Passives</b> : sorts qu'il possède par défaut, appliqués en continu et sans consommation d'énergie (cible + périmètre).</p>
@@ -177,25 +191,24 @@ export default function MonsterDetails() {
       </div>}
 
       {tab === 'spec' && <div>
-        <p className="note">Quantité maximale (dans le jeu / par joueur) et parties du corps pouvant être équipées (même style que l'équipement personnage) : cochez les parties — rien coché = aucune restriction.</p>
+        <h5>Quantité maximale</h5>
         <div className="form">
           <div className="cell"><small>Quantité max dans le jeu</small><input type="number" min="1" value={maxCaps.inGame} onChange={e => setMaxCaps({ ...maxCaps, inGame: e.target.value })} /></div>
           <div className="cell"><small>Quantité max par joueur</small><input type="number" min="1" value={maxCaps.perPlayer} onChange={e => setMaxCaps({ ...maxCaps, perPlayer: e.target.value })} /></div>
-          <button className="sm" onClick={saveCaps}>Enregistrer</button>
         </div>
+        <div className="actions"><button className="sm" onClick={saveCaps}>Enregistrer les quantités</button></div>
         {(caps ?? []).map(c => <span key={c.scope} className="tag"><b>{c.scope === 'global' ? `jeu ≤ ${c.value}` : c.scope === 'per_player' ? `joueur ≤ ${c.value}` : `${c.scope} ≤ ${c.value}`}</b>
           <button className="sm danger" onClick={() => delCapScope(c.scope)}>×</button></span>)}
-        <div className="chips">{SLOTS.map(s =>
-          <button key={s} className={`chip${slots.includes(s) ? ' on' : ''}`} onClick={() => toggleSlot(s)}>{SLOT_LABEL[s]}</button>)}
-        </div>
-        <p className="note">Ces parties bornent l'équipement des instances (onglet Liste) : une pièce ne peut être portée que sur une partie cochée.
-          Sans partie cochée, aucun équipement ne pourra être ajouté aux monstres de ce type sur les maps.</p>
+        <h5>Parties du corps équipables</h5>
+        <BodyParts slots={slots} toggle={toggleSlot} />
       </div>}
+
+      {tab === 'respawn' && draft && <RespawnPanel key={sel} monster={draft} cats={cats} onSaved={() => { load(); open(sel, true); }} />}
 
       {tab === 'list' && <div>
         <div className="actions"><button className="sm" onClick={() => { setNw({ type: sel, mapId: '', x: 1, y: 1 }); setLMode('new'); }}>+ Ajouter</button></div>
         {mine.length === 0 && <p className="note">Aucun monstre de ce type sur les maps.</p>}
-        {mine.length > 0 && <table>
+        {mine.length > 0 && <div className="tablewrap"><table>
           <thead><tr><th>Monstre</th><th>Type</th><th>Carte</th><th>Position</th><th>PV</th><th>Liaison</th><th>Réincarnation</th><th></th></tr></thead>
           <tbody>{mine.map(i => <tr key={i.id}>
             <td>{i.name}</td><td>{typeOf(i)}</td><td>{i.map_id}</td><td>{i.x},{i.y}</td>
@@ -204,7 +217,7 @@ export default function MonsterDetails() {
             <td>{i.reincarnate_h > 0 ? `${i.reincarnate_h} h${respawnIn(i) ? ` · ${respawnIn(i)}` : ''}` : '—'}</td>
             <td><button className={`sm${instSel?.id === i.id && lMode === 'edit' ? ' on' : ''}`} onClick={() => selectInst(i.id)}>Sélectionner</button></td>
           </tr>)}</tbody>
-        </table>}
+        </table></div>}
         {lMode !== '' && <div className="editor">
           {lMode === 'edit'
             ? <h3>Édition — {instSel?.name} (n°{instSel?.id})</h3>
@@ -269,5 +282,6 @@ export default function MonsterDetails() {
       </div>}
 
     </div>}
+    </div>
   </section>;
 }

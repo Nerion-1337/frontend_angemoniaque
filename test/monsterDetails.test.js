@@ -82,12 +82,13 @@ test('guardes : le dropdown Pick est visible (pas de display:none sur .picklist)
   expect(m).toBeTruthy();
   expect(m[0]).not.toContain('display:none');
 });
-test('guardes : Spécificités = puce de sélection en ligne (pas de grille silhouette) + retour à la liste des types', () => {
-  const s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
-  expect(s.includes('className="chips"')).toBe(true);
-  expect(s.includes('SLOT_POS')).toBe(false);
-  expect(s.includes('Retour à la liste des types')).toBe(true);
-  expect(s.includes('setPend')).toBe(false);                          // plus de crash au clic sur un type
+test('guardes : parties du corps = silhouette à bascule + liste retirable ; liste des types à gauche (plus de « Retour »)', () => {
+  const p = fs.readFileSync('src/admin/MonsterParts.jsx', 'utf8'), s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
+  expect(p.includes('aria-pressed')).toBe(true);                       // chaque partie de la silhouette se coche ET se décoche
+  expect(p.includes('onClick={() => toggle(s)}>×')).toBe(true);         // retrait aussi depuis la liste
+  expect(s.includes('className="split"')).toBe(true);
+  expect(s.includes('Retour à la liste des types')).toBe(false);
+  expect(s.includes('setPend')).toBe(false);
 });
 test('guardes : équipement d\'instance borné par la grille du type (grille vide = impossible)', () => {
   const s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
