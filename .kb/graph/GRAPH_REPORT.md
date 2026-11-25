@@ -1,17 +1,17 @@
 # Graph Report - front  (2026-11-25)
 
 ## Corpus Check
-- 120 files · ~69,635 words
+- 120 files · ~69,907 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: (none) 4, .css 3, .conf 1)
 
 ## Summary
-- 629 nodes · 2019 edges · 18 communities (17 shown, 1 thin omitted)
+- 629 nodes · 2020 edges · 18 communities (17 shown, 1 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5b45229a`
+- Built from commit: `fd2bad39`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -138,7 +138,7 @@ Nodes (5): AGENTS.md — ia_agent / front, Conventions de code et architecture d
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `api()` connect `api` to `Empty`, `vitest`, `ResourcesTab.jsx`, `Guild.jsx`, `Races.jsx`, `MonsterDetails.jsx`, `TileCard.jsx`?**
-  _High betweenness centrality (0.148) - this node is a cross-community bridge._
+  _High betweenness centrality (0.147) - this node is a cross-community bridge._
 - **Should `api` be split into smaller, more focused modules?**
   _Cohesion score 0.06798245614035088 - nodes in this community are weakly interconnected._
 - **Why does `vitest` connect `vitest` to `api`, `Empty`, `ResourcesTab.jsx`, `Guild.jsx`, `Races.jsx`, `MonsterDetails.jsx`, `TileCard.jsx`, `ResourceMap.jsx`, `terrain`?**

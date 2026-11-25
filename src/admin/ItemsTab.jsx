@@ -13,7 +13,7 @@ import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from 
 import { itemBody, familyLabel, ITEM_STATS, statsLine } from './divine.js';
 import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, xp_use: '' };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, xp_use: '', reach: '', full_power_at: '' };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -94,6 +94,9 @@ export default function ItemsTab() {
         <div className="cell"><small>Dégâts d'arme</small><input type="number" value={f.weapon_damage} onChange={e => num('weapon_damage', e.target.value)} /></div>
         {f.slot === 'scroll' && <><div className="cell"><small>Agrandit le sac de (emplacements)</small><input type="number" min="0" value={f.bag_add} placeholder="0 = non" onChange={e => setF(x => ({ ...x, bag_add: e.target.value }))} /></div>
           <div className="cell"><small>… jusqu'à (capacité max du sac)</small><input type="number" min="1" value={f.bag_max} placeholder="ex. 30" onChange={e => setF(x => ({ ...x, bag_max: e.target.value }))} /></div></>}
+        {f.slot === 'weapon' && <><div className="cell"><small>Portée (cases ; 1 = corps à corps)</small><input type="number" min="1" max="20" value={f.reach} placeholder="1" onChange={e => num('reach', e.target.value)} /></div>
+          {Number(f.reach) > 1 && <div className="cell"><small>Pleine puissance jusqu'à (cases)</small><input type="number" min="1" max={Number(f.reach) - 1} value={f.full_power_at ?? ''} placeholder="vide = partout"
+            onChange={e => num('full_power_at', e.target.value)} /><small className="note">Au-delà, les dégâts baissent jusqu'à 50 % à {f.reach} cases.</small></div>}</>}
         {f.slot === 'weapon' && <div className="cell"><small>Mains</small><label className="check"><input type="checkbox" checked={!!f.two_handed} onChange={e => setF(x => ({ ...x, two_handed: e.target.checked }))} /> Deux mains (arc, grande arme : l'autre main reste vide)</label></div>}
         <div className="cell"><small>XP par utilisation {f.slot === 'weapon' ? '(chaque coup porté)' : f.slot === 'scroll' ? '(parchemin utilisé)' : ''}</small><input type="number" min="0" value={f.xp_use} onChange={e => num('xp_use', e.target.value)} /></div>
         <div className="cell"><small>Durabilité</small><input type="number" value={f.durability} onChange={e => num('durability', e.target.value)} /></div>

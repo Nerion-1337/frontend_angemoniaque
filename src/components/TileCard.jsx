@@ -68,6 +68,8 @@ export default function TileCard() {
       <div className="tc-ent"><Entity e={e} /></div>
       {e && dist === 1 && !attackable && e.kind !== 'building' && <div className="note"><Ban size={14} /> Case occupée (vous êtes juste à côté).</div>}
       {prev?.hitChance != null && <div className="tc-hit"><Dices size={14} /> Toucher <b>{prev.hitChance}%</b><span className="tc-bar"><i style={{ width: `${prev.hitChance}%` }} /></span><small>esquive {prev.dodge}%</small></div>}
+      {prev?.range != null && <div className={`tc-reach${prev.reachable ? '' : ' no'}`}><Crosshair size={14} />{!prev.reachable ? <span>Hors d'atteinte : {prev.height} niveau(x) d'écart de hauteur, votre portée ({prev.range}) ne suffit pas</span>
+        : <span>Distance <b>{prev.distance}</b>{prev.height ? ` (dont ${prev.height} de hauteur)` : ''} · portée {prev.range}{prev.inRange ? '' : ' · il faut s\'approcher'}{prev.power < 100 ? ` · puissance ${prev.power} %` : ''}</span>}</div>}
       <div className="tc-acts">{acts.map(a => { const [k, l, mv] = a, I = ICON[k] ?? Zap, c = costOf(a);
         return <button key={k} className={`tc-act${k === 'attack' || k === 'breath' ? ' danger' : ''}${k === 'build' && building ? ' on' : ''}`} disabled={mv === Infinity} onClick={() => (k === 'build' ? setBuilding(!building) : run(k))}>
           <I size={15} /><span className="grow">{l}</span>{c && <em>{c}</em>}</button>; })}</div>

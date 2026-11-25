@@ -4,6 +4,7 @@ slug: item-stats-ui
 status: done
 updated: 2026-11-25
 files:
+  - src/components/TileCard.jsx
   - src/admin/SpellsTab.jsx
   - src/admin/divine.js
   - src/admin/ItemsTab.jsx
@@ -33,6 +34,7 @@ bâtiment, sort et joueur connaissent l'armure magique.
 - Admin Objets : parchemin (`scroll`) → champs « Agrandit le sac de » / « jusqu'à » (`data = { kind: 'bag', add, max }`) ; les autres parchemins gardent leur data.
 - Admin « Améliorations » (`StatCostsTab`, `statCosts.js`) : une carte par caractéristique améliorable (base, par palier, ×1/×2/×3, aperçu des coûts) ; ajout parmi les caractéristiques restantes ; retrait confirmé.
 - Objets : champ « XP par utilisation » (`xp_use` ; arme : chaque coup porté, parchemin : à l'utilisation). Sorts : « XP par lancer » (`xpUse`).
+- Arme : « Portée (cases) » et, si portée > 1, « Pleine puissance jusqu'à (cases) » (`itemBody` : portée ≥ 1, pleine puissance envoyée seulement sous la portée, rien pour un non-arme) ; l'inventaire affiche « Portée N (pleine puissance jusqu'à M) ». Carte de case : ligne portée (distance, hauteur, à portée ou non, puissance, hors d'atteinte).
 
 ## Gotchas
 - Les champs Armure / Force + / Agilité + / Armure magique isolés ont été remplacés par le groupe : ne pas les remettre (doublons).

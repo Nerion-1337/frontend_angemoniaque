@@ -1,5 +1,5 @@
 // Helpers purs : objets (dont divins) et familles divines (testés dans test/adminDivine.test.js).
-const NUM = ['price', 'armor', 'strength_bonus', 'agility_bonus', 'durability', 'weapon_damage', 'magic_armor', 'quantity_max', 'req_strength', 'xp_use'];
+const NUM = ['price', 'armor', 'strength_bonus', 'agility_bonus', 'durability', 'weapon_damage', 'magic_armor', 'quantity_max', 'req_strength', 'xp_use', 'reach'];
 /** Caractéristiques qu'un objet peut offrir (valeur négative = malus) : [clé, libellé, colonne historique de l'objet].
  *  Sans colonne : rangée dans `bonuses` et reportée sur la fiche à l'équipement (migration 26). */
 export const ITEM_STATS = [['strength', 'Force', 'strength_bonus'], ['agility', 'Agilité', 'agility_bonus'], ['armor', 'Armure', 'armor'], ['magic_armor', 'Armure magique', 'magic_armor'],
@@ -20,6 +20,9 @@ export const itemBody = f => {
   else if (f.was_bag) b.data = {};
   for (const k of NUM) if (f[k] !== '' && f[k] != null && !Number.isNaN(Number(f[k]))) b[k] = Number(f[k]);
   b.bonuses = bonusesBody(f.bonuses);
+  // Portée (migration 36) : armes seulement ; pleine puissance (arme à distance) envoyée seulement si elle est sous la portée.
+  if (f.slot === 'weapon') { const reach = Math.max(1, Math.trunc(Number(f.reach) || 1)), full = Math.trunc(Number(f.full_power_at) || 0);
+    b.reach = reach; b.full_power_at = reach > 1 && full >= 1 && full < reach ? full : null; } else delete b.reach;
   b.divine_family = b.rarity === 'divin' && f.divine_family ? f.divine_family : null;
   b.shop = !!f.shop; b.shop_races = f.shop ? [...(f.shop_races ?? [])] : [];
   if (f.shop_stock !== '' && f.shop_stock != null && !Number.isNaN(Number(f.shop_stock))) b.shop_stock = Math.max(0, Math.trunc(Number(f.shop_stock)));
