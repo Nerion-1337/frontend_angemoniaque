@@ -7,7 +7,7 @@ const noiseTex = () => { const c = document.createElement('canvas'); c.width = c
     for (let i = 0; i < n * n; i++) { const v = Math.random() * 255; id.data.set([v, v, v, 255], i * 4); } sg.putImageData(id, 0, 0); g.globalAlpha = a; g.drawImage(s, 0, 0, 256, 256); }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
 
-/** Scène réaliste : terrain en colonnes de cubes (niveaux −4 à +5, ciel à +8, lib/levels), ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, végétation instanciée,
+/** Scène réaliste : terrain en colonnes de cubes (niveaux −4 à +5, volants à +6, ciel à +8, lib/levels), ciel physique (cycle jour/nuit sur l'heure locale), ombres, eau, végétation instanciée,
  *  brume aux limites de la vision. Caméra asservie au personnage ; clic droit = pivoter, molette = zoom. */
 export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit = false } = {}) {
   const W = () => el.clientWidth || innerWidth, H = () => el.clientHeight || innerHeight;
@@ -149,7 +149,7 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
     for (const e of list) { if (Math.max(Math.abs(e.x - me.pos.x), Math.abs(e.y - me.pos.y)) > see) continue; const key = `${e.kind}:${e.char_id ?? e.monster_id ?? e.summon_id ?? e.building_id ?? e.x + ',' + e.y}:${e.mount_name ?? ''}`; keep.add(key);
       const y = e.flying ? FLY_Y : SY(e.x, e.y); let o = ents.get(key); if (!o) { o = { g: makeEntity(e, e.char_id === me.id), t: new THREE.Vector3(e.x, y, e.y) }; o.g.position.copy(o.t); root.add(o.g); ents.set(key, o); }
       o.t.set(e.x, y, e.y); o.g.userData.cell = { x: e.x, y: e.y };
-      if (e.flying) {   // volant au ciel (+8) : fil et anneau vers la case survolée
+      if (e.flying) {   // volant au niveau +6 : fil et anneau vers la case survolée
         if (!o.tether) { o.tether = new THREE.Group(); const m = new THREE.MeshBasicMaterial({ color: 0xbfe3ff, transparent: true, opacity: 0.35, depthWrite: false });
           o.tether.add(new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1, 6).translate(0, -0.5, 0), m), new THREE.Mesh(new THREE.RingGeometry(0.3, 0.38, 28).rotateX(-Math.PI / 2), m)); o.g.add(o.tether); }
         const drop = y - SY(e.x, e.y) - 0.02; o.tether.children[0].scale.y = drop; o.tether.children[1].position.y = -drop; } }
@@ -176,7 +176,7 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   }
   applyTime(); const clock = setInterval(applyTime, 60000); raf = requestAnimationFrame(frame);
   return {
-    update(me, entities) { const w0 = world; world = me.actor.pos.map_id ?? 1; setWorld(world); curFly = me.actor.kind === 'hero' && !!me.mount?.flying; if (w0 !== world) last = null; me = { ...me, pos: me.actor.pos, see_eff: me.actor.see }; const s = me.see_eff; if (s !== see || !geo) allocate(s); const moved = !last || me.pos.x !== cur.x || me.pos.y !== cur.y || s !== last.s;
+    update(me, entities) { const w0 = world; world = me.actor.pos.map_id ?? 1; setWorld(world); curFly = me.actor.kind === 'hero' ? !!me.mount?.flying : !!me.actor.loco?.flying; /* caméra au niveau des volants (héros sur monture volante ou créature volante contrôlée) */ if (w0 !== world) last = null; me = { ...me, pos: me.actor.pos, see_eff: me.actor.see }; const s = me.see_eff; if (s !== see || !geo) allocate(s); const moved = !last || me.pos.x !== cur.x || me.pos.y !== cur.y || s !== last.s;
       if (moved) { cur.x = me.pos.x; cur.y = me.pos.y; if (!last) focus.set(cur.x, SY(cur.x, cur.y), cur.y); last = { s }; buildTerrain(); buildGrid(); placeCardinals(); }
       syncEntities(me, entities); buildVegetation(new Set(entities.map(e => e.x + ',' + e.y))); },
     setSelected: c => put2(selc, c),

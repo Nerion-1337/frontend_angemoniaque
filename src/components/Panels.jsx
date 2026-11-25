@@ -38,7 +38,7 @@ export function FaithPanel() {
 }
 
 const SLOT_FR = { mains: 'Mains', tete: 'Tête', torse: 'Torse', pieds: 'Pieds', collier: 'Collier', bracelet: 'Bracelet', bague: 'Bague' };
-const LOCO_FR = { land: 'terrestre', air: 'aérienne', water: 'aquatique' };
+const LOCO_FR = { land: 'terrestre', air: 'volante', water: 'aquatique' };
 /** Équipement d'une monture : une pièce par partie autorisée par son type ; objets pris dans le sac. */
 function MountGear({ x, bag, act, me, locked }) {
   const [pick, setPick] = useState({});
@@ -49,39 +49,42 @@ function MountGear({ x, bag, act, me, locked }) {
           <button className="sm" disabled={locked || !pick[sl]} onClick={() => act(() => api('/mounts/equip', { characterId: me.id, cmId: x.cm_id, itemId: Number(pick[sl]), slot: sl }))}>Équiper</button></span>}</div>; })}
     {locked && <small className="note">Renvoyez la créature pour changer son équipement.</small>}</div>;
 }
+/** Créatures (une seule catégorie) : celles que l'on possède — invocables, et montables si leur type le permet — et celles
+ *  invoquées par un sort. Statut : au repos, invoquée (contrôlable), montée. */
 export function MountsPanel() {
   const { me } = useSelector(s => s.game), run = useDo(), refresh = useRefreshMe(), [m, load] = useData(`/mounts/${me.id}`), [inv, loadInv] = useData(`/inventory/${me.id}`), act = f => run(f, () => { load(); loadInv(); refresh(); });
   const bag = (inv?.items ?? []).filter(i => !i.equipped_slot && !i.in_chest);
-  const hp = me.pos, near = sid => { const sm = me.summons.find(x => x.id === sid); return !!sm && Math.max(Math.abs(sm.x - hp.x), Math.abs(sm.y - hp.y)) <= 1; };   // monter sur la créature : case voisine du héros
-  const [tab, setTab] = useTab('mounts', ['mounts', 'summons']);
+  const hp = me.pos, near = sid => { const sm = me.summons.find(x => x.id === sid); return !!sm && Math.max(Math.abs(sm.x - hp.x), Math.abs(sm.y - hp.y)) <= 1; };   // monter dessus : case voisine du héros
+  const hero = me.actor.kind === 'hero', ctlOf = id => me.actor.kind === 'summon' && me.actor.id === id;
+  const control = id => act(() => api('/summons/control', { characterId: me.id, summonId: ctlOf(id) ? null : id }));
+  const dismiss = id => act(() => api(`/summons/${id}/dismiss`, { characterId: me.id }, 'POST'));
+  const spellOnly = me.summons.filter(s => !s.char_mount_id);   // créatures invoquées par un sort (non possédées)
   return <Panel title="Invocations" wide>
-    <Tabs label="Invocations" value={tab} onChange={setTab} tabs={[['mounts', 'Montures', PawPrint, m?.length], ['summons', 'Créatures invoquées', Ghost, `${me.summons.length}/${me.maxSummons}`]]} />
-    {tab === 'mounts' && <>
-    <p className="note">Montée : vos déplacements et ses capacités consomment son énergie, pas la vôtre. Invoquée à pied : une créature à côté de vous, que vous pouvez contrôler (elle se déplace et lance ses capacités avec sa propre énergie) ; vous restez libre de vos mouvements.</p>
-    {m?.length ? m.map(x => { const st = x.stats ?? {}, ctl = me.actor.kind === 'summon' && me.actor.id === x.summon_id;
+    <div className="crhead"><p className="note">Une créature s'invoque à côté de vous ; vous pouvez la contrôler (elle se déplace et lance ses capacités avec sa propre énergie). Si son type le permet, vous pouvez aussi monter dessus : vos déplacements consomment alors son énergie. Volante : 1 énergie par case, au niveau +6.</p>
+      <span className="pill">Invoquées : {me.summons.length} / {me.maxSummons}</span></div>
+    {m && !m.length && !spellOnly.length && <p className="empty">Aucune créature.</p>}
+    {m?.map(x => { const st = x.stats ?? {}, ctl = ctlOf(x.summon_id), loco = (x.locomotion ?? []).map(l => LOCO_FR[l] ?? l).join(' · ') || [x.flying && 'volante', x.aquatic && 'aquatique'].filter(Boolean).join(' · ') || 'terrestre';
       return <div key={x.cm_id} className={`item mount${x.active ? ' riding' : x.summon_id ? ' called' : ''}`}>
-      <div className="head"><b>{x.name}</b><span className="pill">{x.active ? 'Montée' : x.summon_id ? 'Invoquée à pied' : 'Au repos'}</span></div>
-      <small>{(x.locomotion ?? []).map(l => LOCO_FR[l] ?? l).join(' · ') || [x.flying && 'aérienne', x.aquatic && 'aquatique'].filter(Boolean).join(' · ') || 'terrestre'}{!x.can_ride ? ' · ne se monte pas' : ''}</small>
+      <div className="head"><b>{x.name}</b><span className="pill">{x.active ? 'Montée' : x.summon_id ? (ctl ? 'Invoquée · contrôlée' : 'Invoquée') : 'Au repos'}</span></div>
+      <small>{loco} · {x.can_ride ? 'peut être montée' : 'ne se monte pas'}</small>
       <KV items={[['Vie', `${x.hp_current}/${st.hp_max ?? x.hp_max}`], ['Énergie', `${x.energy_current}/${st.energy_max ?? x.energy_max}`], ['Régén.', `+${st.recovery ?? x.recovery}/h`], ['Vision', `+${x.bonus_see}`], ['Portée', `+${x.bonus_range}`], ['Force', st.strength ?? x.strength], ['Agilité', st.agility ?? x.agility], ['Armure', `${st.armor ?? x.armor}/${st.magic_armor ?? 0}`]]} />
       {x.capacities.length > 0 && <><h5>Capacités</h5><div className="chips">{x.capacities.map(c => <span key={c.id} className="chip" title={fxSummary(c.effects)}>{c.name} · ⚡{c.energy_cost}</span>)}</div>
-        <small className="note">{x.active ? 'Lançables depuis « Actions » (énergie de la monture).' : x.summon_id ? 'Lançables en contrôlant la créature.' : 'Lançables quand vous la montez ou la contrôlez.'}</small></>}
+        <small className="note">{x.active ? 'Lançables depuis « Actions » (énergie de la créature).' : 'Lançables en la contrôlant ou en la montant.'}</small></>}
       {x.slots.length > 0 && <><h5>Équipement</h5><MountGear x={x} bag={bag} act={act} me={me} locked={!!x.summon_id} /></>}
       <div className="row">
-        {x.active ? <button className="danger" onClick={() => act(() => api('/mounts/dismount', { characterId: me.id }))}>Descendre</button>
-          : x.summon_id ? <>{x.can_ride && me.actor.kind === 'hero' && !me.mount && <button className="primary" disabled={!near(x.summon_id)} title={near(x.summon_id) ? '' : 'Approchez-vous (case voisine)'} onClick={() => act(() => api('/mounts/summon', { characterId: me.id, cmId: x.cm_id }))}>Monter dessus</button>}
-            <button className={x.can_ride ? '' : 'primary'} onClick={() => act(() => api('/summons/control', { characterId: me.id, summonId: ctl ? null : x.summon_id }))}>{ctl ? `Revenir sur ${me.pseudo}` : 'Contrôler'}</button>
-            <button className="danger" onClick={() => act(() => api(`/summons/${x.summon_id}/dismiss`, { characterId: me.id }, 'POST'))}>Renvoyer</button></>
-          : <>{x.can_ride && <button className="primary" disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/summon', { characterId: me.id, cmId: x.cm_id }))}>Monter dessus</button>}
-            <button disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/call', { characterId: me.id, cmId: x.cm_id }))}>Invoquer (sans monter)</button></>}
-      </div>{x.summon_id && x.can_ride && !near(x.summon_id) && <small className="note">Pour monter dessus, rejoignez une case voisine de la créature.</small>}{x.hp_current <= 0 && <small className="err">À terre : attendez sa régénération.</small>}</div>; }) : <p className="note">Aucune monture.</p>}
-    </>}
-    {tab === 'summons' && <>
-    <h4>Créatures invoquées <span className="pill">Actives : {me.summons.length} / {me.maxSummons}</span></h4>
-    {!me.summons.length && <p className="empty">Aucune créature invoquée.</p>}
-    <small>Limite de base : 1 invocation (augmentable par le sort « Lien d'Invocateur » ou des objets spéciaux). Prendre le contrôle déplace la caméra et affiche ses caractéristiques.</small>
-    {me.summons.map(s => { const ctl = me.actor.kind === 'summon' && me.actor.id === s.id; return <div key={s.id} className="item"><div className="head"><b>🔮 {s.name}</b><small>({s.x}, {s.y})</small></div>
+        {x.active ? <><button className="danger" onClick={() => act(() => api('/mounts/dismount', { characterId: me.id }))}>Descendre</button>
+            <button onClick={() => act(async () => { await api('/mounts/dismount', { characterId: me.id }); await api('/mounts/call', { characterId: me.id, cmId: x.cm_id }); })}>Descendre et la laisser invoquée</button></>
+          : x.summon_id ? <>{x.can_ride && hero && !me.mount && <button className="primary" disabled={!near(x.summon_id)} title={near(x.summon_id) ? '' : 'Approchez-vous (case voisine)'} onClick={() => act(() => api('/mounts/summon', { characterId: me.id, cmId: x.cm_id }))}>Monter dessus</button>}
+            <button className={x.can_ride ? '' : 'primary'} onClick={() => control(x.summon_id)}>{ctl ? `Revenir sur ${me.pseudo}` : 'Contrôler'}</button>
+            <button className="danger" onClick={() => dismiss(x.summon_id)}>Renvoyer</button></>
+          : <><button className="primary" disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/call', { characterId: me.id, cmId: x.cm_id }))}>Invoquer</button>
+            {x.can_ride && <button disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/summon', { characterId: me.id, cmId: x.cm_id }))}>Invoquer et monter</button>}</>}
+      </div>{x.summon_id && x.can_ride && hero && !me.mount && !near(x.summon_id) && <small className="note">Pour monter dessus, rejoignez une case voisine de la créature.</small>}{x.hp_current <= 0 && <small className="err">À terre : attendez sa régénération.</small>}</div>; })}
+    {spellOnly.map(s => { const ctl = ctlOf(s.id); return <div key={s.id} className="item called"><div className="head"><b>{s.name}</b><span className="pill">{ctl ? 'Invoquée par un sort · contrôlée' : 'Invoquée par un sort'}</span></div>
+      <small>({s.x}, {s.y})</small>
       <KV items={[['Vie', `${s.hp_current}/${s.hp_max}`], ['Énergie', `${s.energy_current}/${s.energy_max}`], ['Régén.', `+${s.recovery}/h`], ['Vision', s.see], ['Agilité', s.agility], ['Force', s.strength], ['Dégâts', s.damage], ['Armure', `${s.armor}/${s.magic_armor ?? 0}`]]} />
-      <div className="row"><button className="primary" onClick={() => act(() => api('/summons/control', { characterId: me.id, summonId: ctl ? null : s.id }))}>{ctl ? `Revenir sur ${me.pseudo}` : `Prendre le contrôle de ${s.name}`}</button><button className="danger" onClick={() => act(() => api(`/summons/${s.id}/dismiss`, { characterId: me.id }, 'POST'))}>Renvoyer</button></div></div>; })}</>}</Panel>;
+      <div className="row"><button className="primary" onClick={() => control(s.id)}>{ctl ? `Revenir sur ${me.pseudo}` : 'Contrôler'}</button><button className="danger" onClick={() => dismiss(s.id)}>Renvoyer</button></div></div>; })}
+  </Panel>;
 }
 
 const OFFS = [[-1, -1, 'NO'], [0, -1, 'N'], [1, -1, 'NE'], [-1, 0, 'O'], [0, 0, ''], [1, 0, 'E'], [-1, 1, 'SO'], [0, 1, 'S'], [1, 1, 'SE']], BUILD = [['wall', 'Muraille de pierre'], ['tower', 'Tour de garde'], ['factory', 'Usine de production'], ['totem', 'Totem de zone'], ['ship', 'Navire (monture aquatique)']];

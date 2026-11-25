@@ -1,8 +1,8 @@
 // Niveaux verticaux : chaque case est une colonne de cubes. Niveau 0 = sol par défaut ; eau peu profonde −1 (−2 au bord de l'eau
 // profonde) ; eau profonde −4 ; massifs (montagne, glace, éther, volcan) de +1 au bord à +5 au cœur ; les arbres occupent +1 à +3 ;
-// le ciel est à +8 (créatures volantes). Affichage seulement : le serveur ne connaît pas encore les niveaux.
+// le ciel est à +8 ; les créatures volantes évoluent au niveau +6. Affichage seulement : le serveur ne connaît pas encore les niveaux.
 import { terrain } from './terrain';
-export const LEVEL_H = 0.5, SKY = 8, WATER_Y = -0.12, FLY_Y = SKY * LEVEL_H;
+export const LEVEL_H = 0.5, SKY = 8, FLY = 6, WATER_Y = -0.12, FLY_Y = FLY * LEVEL_H;
 const ROCK = new Set(['mountain', 'snow', 'ether', 'volcano']);
 const memo = new Map();
 /** Un voisin à distance de Chebyshev exactement r vérifie f(kind) ? */
