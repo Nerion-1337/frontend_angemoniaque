@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react';
+import { Tabs, useTab } from './Tabs';
 import { fxSummary } from '../admin/spellFx.js';
 import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend';
 export const Panel = ({ title, wide, children }) => { const d = useDispatch(); return <div className={'panel' + (wide ? ' wide' : '')} role="dialog" aria-label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={() => d(A.setPanel(null))}><X size={14} /></button></header><div className="pbody">{children}</div></div>; };
@@ -7,21 +8,31 @@ const KV = ({ items }) => <div className="kv">{items.map(([k, v]) => <span key={
 export function FaithPanel() {
   const d = useDispatch(), { me } = useSelector(s => s.game), run = useDo(), [pacts, lp] = useData(`/pacts/${me.id}`), [f, lf] = useData(`/faiths/${me.id}`), [q, setQ] = useState(''), [god, setGod] = useState(''); const reload = () => { lp(); lf(); };
   const human = me.race === 'human', isGod = me.rank.current_rank >= 5, partner = p => (human ? p.ethereal : p.human);
+  const [tab, setTab] = useTab('faith', ['pacts', 'requests', 'faith', ...(isGod ? ['altar'] : [])]);
+  const nReq = (pacts?.incoming.length ?? 0) + (pacts?.outgoing.length ?? 0);
   return <Panel title="Pactes & Fidèles" wide>
+    <Tabs label="Pactes et fidèles" value={tab} onChange={setTab} tabs={[['pacts', 'Pactes', Handshake, pacts?.active.length], ['requests', 'Demandes', Inbox, pacts?.incoming.length || null], ['faith', 'Foi', Flame], ...(isGod ? [['altar', 'Autel', Crown, f?.asGod.length]] : [])]} />
+    {tab === 'requests' && <>
     <h4>Demander un pacte {human ? '(1 pacte maximum)' : '(3 de base, selon le rang)'}</h4>
     <small>{human ? 'Nommez l\'Ange ou le Démon avec qui vous voulez vous lier' : 'Nommez l\'Humain avec qui vous voulez vous lier'} : l'autre partie doit accepter pour que le pacte soit conclu. Vous pouvez envoyer et recevoir plusieurs demandes.</small>
     <div className="row"><input placeholder={human ? 'Nom de l\'Ange ou du Démon' : 'Nom de l\'Humain'} value={q} onChange={e => setQ(e.target.value)} /><button className="primary" onClick={() => run(() => api('/pacts/request', { characterId: me.id, targetPseudo: q }), () => { setQ(''); reload(); d(A.toast('Demande envoyée')); })}>Envoyer</button></div>
-    <h4>Demandes reçues ({pacts?.incoming.length ?? 0})</h4>{!pacts?.incoming.length && <p className="empty">Aucune demande reçue.</p>}
-    {pacts?.incoming.map(p => <div key={p.id} className="item row2"><span><b>{partner(p)}</b> souhaite conclure un pacte avec vous</span><span className="row"><button className="primary" onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: true }), () => { reload(); d(A.toast('Pacte conclu')); })}>Accepter</button><button onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: false }), reload)}>Refuser</button></span></div>)}
-    <h4>Demandes envoyées ({pacts?.outgoing.length ?? 0})</h4>{!pacts?.outgoing.length && <p className="empty">Aucune demande en attente.</p>}
+    {nReq === 0 && <p className="empty">Aucune demande en cours.</p>}
+    {pacts?.incoming.length > 0 && <h4>Demandes reçues ({pacts.incoming.length})</h4>}    {pacts?.incoming.map(p => <div key={p.id} className="item row2"><span><b>{partner(p)}</b> souhaite conclure un pacte avec vous</span><span className="row"><button className="primary" onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: true }), () => { reload(); d(A.toast('Pacte conclu')); })}>Accepter</button><button onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: false }), reload)}>Refuser</button></span></div>)}
+    {pacts?.outgoing.length > 0 && <h4>Demandes envoyées ({pacts.outgoing.length})</h4>}
     {pacts?.outgoing.map(p => <div key={p.id} className="item row2"><span>En attente de <b>{partner(p)}</b></span><button onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Annuler</button></div>)}
+    </>}
+    {tab === 'pacts' && <>
     <h4>Pactes conclus ({pacts?.active.length ?? 0})</h4>{human && <small>Activer le pacte donne temporairement 50 % de la Force et de l'Agilité de l'être lié ; celui-ci perd moitié moins que votre gain.</small>}
-    {!pacts?.active.length && <p className="empty">Aucun pacte conclu.</p>}
+    {!pacts?.active.length && <p className="empty">Aucun pacte conclu. Envoyez une demande depuis l'onglet « Demandes ».</p>}
     {pacts?.active.map(p => <div key={p.id} className="item row2"><span>{p.ethereal} ⇄ {p.human}</span><span className="row">{human && <button onClick={() => run(() => api(`/pacts/${p.id}/activate`, { characterId: me.id }), () => d(A.toast('Bonus de pacte actif (1 h)')))}>Activer le bonus</button>}<button className="danger" onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Résilier</button></span></div>)}
+    </>}
+    {tab === 'faith' && <>
     <h4>Foi & prières de bénédiction (toutes les 72 h)</h4>
+    {!f?.asFollower.length && <p className="empty">Vous n'êtes fidèle d'aucun Dieu.</p>}
     {f?.asFollower.map(x => <div key={x.id} className="item row2"><span>Dieu : <b>{x.god}</b> ({x.status})</span>{x.status === 'accepted' && <select defaultValue="" onChange={e => e.target.value && run(() => api(`/faiths/${x.id}/request`, { characterId: me.id, choice: e.target.value }), reload)}><option value="">Requête…</option><option value="strength">Force +1</option><option value="agility">Agilité +1</option><option value="hp_max">PV max +1</option><option value="recovery">Régénération +1</option><option value="heal">Soin complet</option></select>}{x.request_choice && <small>en attente : {x.request_choice}</small>}</div>)}
     <div className="row"><input placeholder="Devenir fidèle de…" value={god} onChange={e => setGod(e.target.value)} /><button onClick={() => run(() => api('/faiths/join', { characterId: me.id, godPseudo: god }), reload)}>Demander</button></div>
-    {isGod && <><h4>Autel du Dieu — mes fidèles <small>ÉD {me.divine_energy_current}/{me.divine_energy_max}</small></h4>{f?.asGod.map(x => <div key={x.id} className="item row2"><span>{x.follower} ({x.status})</span>
+    </>}
+    {tab === 'altar' && isGod && <><h4>Autel du Dieu — mes fidèles <small>ÉD {me.divine_energy_current}/{me.divine_energy_max}</small></h4>{f?.asGod.map(x => <div key={x.id} className="item row2"><span>{x.follower} ({x.status})</span>
       {x.status === 'pending' && <><button onClick={() => run(() => api(`/faiths/${x.id}/accept`, { characterId: me.id, accept: true }), reload)}>Accepter</button><button onClick={() => run(() => api(`/faiths/${x.id}/accept`, { characterId: me.id, accept: false }), reload)}>Refuser</button></>}
       {x.request_choice && <button onClick={() => run(() => api(`/faiths/${x.id}/answer`, { characterId: me.id }), reload)}>Exaucer « {x.request_choice} » (−5 ÉD)</button>}</div>)}</>}</Panel>;
 }
@@ -41,8 +52,11 @@ function MountGear({ x, bag, act, me, locked }) {
 export function MountsPanel() {
   const { me } = useSelector(s => s.game), run = useDo(), refresh = useRefreshMe(), [m, load] = useData(`/mounts/${me.id}`), [inv, loadInv] = useData(`/inventory/${me.id}`), act = f => run(f, () => { load(); loadInv(); refresh(); });
   const bag = (inv?.items ?? []).filter(i => !i.equipped_slot && !i.in_chest);
-  return <Panel title="Invocations & Montures" wide>
-    <h4>Montures</h4>
+  const hp = me.pos, near = sid => { const sm = me.summons.find(x => x.id === sid); return !!sm && Math.max(Math.abs(sm.x - hp.x), Math.abs(sm.y - hp.y)) <= 1; };   // monter sur la créature : case voisine du héros
+  const [tab, setTab] = useTab('mounts', ['mounts', 'summons']);
+  return <Panel title="Invocations" wide>
+    <Tabs label="Invocations" value={tab} onChange={setTab} tabs={[['mounts', 'Montures', PawPrint, m?.length], ['summons', 'Créatures invoquées', Ghost, `${me.summons.length}/${me.maxSummons}`]]} />
+    {tab === 'mounts' && <>
     <p className="note">Montée : vos déplacements et ses capacités consomment son énergie, pas la vôtre. Invoquée à pied : une créature à côté de vous, que vous pouvez contrôler (elle se déplace et lance ses capacités avec sa propre énergie) ; vous restez libre de vos mouvements.</p>
     {m?.length ? m.map(x => { const st = x.stats ?? {}, ctl = me.actor.kind === 'summon' && me.actor.id === x.summon_id;
       return <div key={x.cm_id} className={`item mount${x.active ? ' riding' : x.summon_id ? ' called' : ''}`}>
@@ -54,16 +68,20 @@ export function MountsPanel() {
       {x.slots.length > 0 && <><h5>Équipement</h5><MountGear x={x} bag={bag} act={act} me={me} locked={!!x.summon_id} /></>}
       <div className="row">
         {x.active ? <button className="danger" onClick={() => act(() => api('/mounts/dismount', { characterId: me.id }))}>Descendre</button>
-          : x.summon_id ? <><button className="primary" onClick={() => act(() => api('/summons/control', { characterId: me.id, summonId: ctl ? null : x.summon_id }))}>{ctl ? `Revenir sur ${me.pseudo}` : 'Contrôler'}</button>
+          : x.summon_id ? <>{x.can_ride && me.actor.kind === 'hero' && !me.mount && <button className="primary" disabled={!near(x.summon_id)} title={near(x.summon_id) ? '' : 'Approchez-vous (case voisine)'} onClick={() => act(() => api('/mounts/summon', { characterId: me.id, cmId: x.cm_id }))}>Monter dessus</button>}
+            <button className={x.can_ride ? '' : 'primary'} onClick={() => act(() => api('/summons/control', { characterId: me.id, summonId: ctl ? null : x.summon_id }))}>{ctl ? `Revenir sur ${me.pseudo}` : 'Contrôler'}</button>
             <button className="danger" onClick={() => act(() => api(`/summons/${x.summon_id}/dismiss`, { characterId: me.id }, 'POST'))}>Renvoyer</button></>
           : <>{x.can_ride && <button className="primary" disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/summon', { characterId: me.id, cmId: x.cm_id }))}>Monter dessus</button>}
             <button disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/call', { characterId: me.id, cmId: x.cm_id }))}>Invoquer (sans monter)</button></>}
-      </div>{x.hp_current <= 0 && <small className="err">À terre : attendez sa régénération.</small>}</div>; }) : <p className="note">Aucune monture.</p>}
-    <h4>Invocations contrôlables <span className="pill">Actives : {me.summons.length} / {me.maxSummons}</span></h4>
+      </div>{x.summon_id && x.can_ride && !near(x.summon_id) && <small className="note">Pour monter dessus, rejoignez une case voisine de la créature.</small>}{x.hp_current <= 0 && <small className="err">À terre : attendez sa régénération.</small>}</div>; }) : <p className="note">Aucune monture.</p>}
+    </>}
+    {tab === 'summons' && <>
+    <h4>Créatures invoquées <span className="pill">Actives : {me.summons.length} / {me.maxSummons}</span></h4>
+    {!me.summons.length && <p className="empty">Aucune créature invoquée.</p>}
     <small>Limite de base : 1 invocation (augmentable par le sort « Lien d'Invocateur » ou des objets spéciaux). Prendre le contrôle déplace la caméra et affiche ses caractéristiques.</small>
     {me.summons.map(s => { const ctl = me.actor.kind === 'summon' && me.actor.id === s.id; return <div key={s.id} className="item"><div className="head"><b>🔮 {s.name}</b><small>({s.x}, {s.y})</small></div>
       <KV items={[['Vie', `${s.hp_current}/${s.hp_max}`], ['Énergie', `${s.energy_current}/${s.energy_max}`], ['Régén.', `+${s.recovery}/h`], ['Vision', s.see], ['Agilité', s.agility], ['Force', s.strength], ['Dégâts', s.damage], ['Armure', `${s.armor}/${s.magic_armor ?? 0}`]]} />
-      <div className="row"><button className="primary" onClick={() => act(() => api('/summons/control', { characterId: me.id, summonId: ctl ? null : s.id }))}>{ctl ? `Revenir sur ${me.pseudo}` : `Prendre le contrôle de ${s.name}`}</button><button className="danger" onClick={() => act(() => api(`/summons/${s.id}/dismiss`, { characterId: me.id }, 'POST'))}>Renvoyer</button></div></div>; })}</Panel>;
+      <div className="row"><button className="primary" onClick={() => act(() => api('/summons/control', { characterId: me.id, summonId: ctl ? null : s.id }))}>{ctl ? `Revenir sur ${me.pseudo}` : `Prendre le contrôle de ${s.name}`}</button><button className="danger" onClick={() => act(() => api(`/summons/${s.id}/dismiss`, { characterId: me.id }, 'POST'))}>Renvoyer</button></div></div>; })}</>}</Panel>;
 }
 
 const OFFS = [[-1, -1, 'NO'], [0, -1, 'N'], [1, -1, 'NE'], [-1, 0, 'O'], [0, 0, ''], [1, 0, 'E'], [-1, 1, 'SO'], [0, 1, 'S'], [1, 1, 'SE']], BUILD = [['wall', 'Muraille de pierre'], ['tower', 'Tour de garde'], ['factory', 'Usine de production'], ['totem', 'Totem de zone'], ['ship', 'Navire (monture aquatique)']];
@@ -86,22 +104,33 @@ export function ActionsPanel() {
   const targets = entities.filter(e => ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && dist(e) <= Math.max(2, me.range_eff)), bldgs = entities.filter(e => e.kind === 'building' && dist(e) <= 1);
   const [hits, setHits] = useState({}); useEffect(() => { targets.forEach(e => api(`/combat/preview/${me.id}/${e.x}/${e.y}`).then(r => setHits(h => ({ ...h, [`${e.x},${e.y}`]: r.hitChance }))).catch(() => {})); }, [entities.length, P.x, P.y]);
   const attack = (e, breath) => run(async () => { const r = await api('/combat/attack', { characterId: me.id, targetCharacterId: e.char_id, targetMonsterId: e.monster_id, targetSummonId: e.summon_id, useMountBreath: breath }); d(A.toast(r.missed ? `Raté ! (${r.hitChance}%)` : `Touché : -${r.dmg} PV${r.killed ? ' — vaincu !' : ''}`)); }, after);
+  const [tab, setTab] = useTab('actions', ['spells', 'build', 'gather', 'combat']);
   return <Panel title="Actions autour du personnage" wide>
-    <h4><Castle size={14} /> 1. Case adjacente ciblée</h4><small>Les cases occupées sont interdites pour bâtir ou invoquer.</small>
+    <Tabs label="Actions" value={tab} onChange={setTab} tabs={[['spells', 'Sorts', Sparkles, sp?.spells.length], ['build', 'Construire', Hammer], ['gather', 'Récolte & bâtiments', Pickaxe, bldgs.length || null], ['combat', 'Combat', Swords, targets.length || null]]} />
+    {(tab === 'spells' || tab === 'build') && <>
+    <h4><Castle size={14} /> Case adjacente ciblée</h4><small>Les cases occupées sont interdites pour bâtir ou invoquer.</small>
     <div className="grid33">{OFFS.map(([dx, dy, l]) => { const x = P.x + dx, y = P.y + dy; if (!dx && !dy) return <div key="c" className="cell you"><b>Vous</b><small>({x},{y})</small></div>; const b = occ(x, y) || terrain(x, y).kind === 'deep';
       return <button key={l} className={'cell' + (sel.x === x && sel.y === y ? ' on' : '') + (b ? ' busy' : '')} onClick={() => setSel({ x, y })}><b>{l}</b><small>{b ? 'Occupée' : 'Libre'}</small></button>; })}</div>
     <p className="status">Case ({sel.x}, {sel.y}) — {blk ? <span className="err">occupée par {blk.name}</span> : <span style={{ color: 'var(--ok)' }}>libre</span>}</p>
+    </>}
+    {tab === 'build' && <>
     <h4><Hammer size={14} /> Poser une structure <small>(parchemin requis · ⚡10)</small></h4>
     {BUILD.filter(([k]) => me.scrolls?.[k] > 0).length ? <div className="grid2">{BUILD.filter(([k]) => me.scrolls?.[k] > 0).map(([k, l]) => <button key={k} disabled={k !== 'ship' && !!blk} onClick={() => run(() => api('/buildings/place', k === 'ship' ? { characterId: me.id, kind: k } : { characterId: me.id, kind: k, x: sel.x, y: sel.y }), after)}>{l} <small>×{me.scrolls[k]}</small></button>)}</div> : <p className="empty">Nécessite un parchemin de construction.</p>}
     <Craft rc={rc} me={me} sel={sel} blk={blk} run={run} after={() => { after(); loadRc(); }} />
-    <h4><Sparkles size={14} /> 2. Sorts & invocations <span className="pill">{sp?.active ?? 0}/{sp?.maxSummons ?? 1} invoc.</span></h4>
+    </>}
+    {tab === 'spells' && <>
+    <h4><Sparkles size={14} /> Sorts & invocations <span className="pill">{sp?.active ?? 0}/{sp?.maxSummons ?? 1} invoc.</span></h4>
     {sp && !sp.spells.length && <p className="empty">Aucun sort appris. Les sorts de base s'apprennent à la boutique de la capitale.</p>}
     {sp?.spells.map(s => { const off = (s.kind === 'summon' && (!!blk || sp.active >= sp.maxSummons)) || (s.kind === 'attack' && !occ(sel.x, sel.y)); return <div key={s.id} className="item row2"><div><b>{s.name}</b>{s.source && s.source !== 'appris' && <small> · {s.source}</small>}<br /><small>{fxSummary(s.effects) || s.description}</small></div><button disabled={off} onClick={() => run(() => api('/spells/cast', { characterId: me.id, spellId: s.id, x: sel.x, y: sel.y }), after)}>Lancer ⚡{s.energy_cost}</button></div>; })}
-    <h4><Pickaxe size={14} /> 3. Bâtiments adjacents & récolte</h4>
+    </>}
+    {tab === 'gather' && <>
+    <h4><Pickaxe size={14} /> Bâtiments adjacents & récolte</h4>{!bldgs.length && <p className="empty">Aucun bâtiment sur une case voisine.</p>}
     {bldgs.map(b => <div key={b.building_id} className="item row2"><span>{b.name}</span><button onClick={() => run(async () => { const r = await api(`/buildings/${b.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital')); else d(A.toast(r.name)); }, refresh)}>Interagir ⚡0</button></div>)}
     <button className="wide" onClick={() => run(() => api('/actions/gather', { characterId: me.id }), refresh)}>Récolter la ressource sous vos pieds — ⚡4</button>
-    <h4><Swords size={14} /> 4. Cibles à portée d'attaque ({targets.length})</h4>{!targets.length && <small>Aucun adversaire à portée immédiate.</small>}
-    {targets.map(e => <div key={e.x + ',' + e.y} className="item row2"><span>{e.name} <small className="hit"><Dices size={12} /> {hits[`${e.x},${e.y}`] ?? '…'}%</small></span><span className="row"><button className="danger" onClick={() => attack(e, false)}>Attaquer ⚡5</button>{me.mount?.special_attack_name && me.actor.kind === 'hero' && <button onClick={() => attack(e, true)}><Crosshair size={13} /> {me.mount.special_attack_name}</button>}</span></div>)}</Panel>;
+    </>}
+    {tab === 'combat' && <>
+    <h4><Swords size={14} /> Cibles à portée d'attaque ({targets.length})</h4>{!targets.length && <small>Aucun adversaire à portée immédiate.</small>}
+    {targets.map(e => <div key={e.x + ',' + e.y} className="item row2"><span>{e.name} <small className="hit"><Dices size={12} /> {hits[`${e.x},${e.y}`] ?? '…'}%</small></span><span className="row"><button className="danger" onClick={() => attack(e, false)}>Attaquer ⚡5</button>{me.mount?.special_attack_name && me.actor.kind === 'hero' && <button onClick={() => attack(e, true)}><Crosshair size={13} /> {me.mount.special_attack_name}</button>}</span></div>)}</>}</Panel>;
 }
 
 export function WorldPanel() {

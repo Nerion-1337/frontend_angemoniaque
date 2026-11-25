@@ -10,11 +10,16 @@ files:
   - src/components/Panels.jsx
   - src/App.jsx
   - src/lib/chat.js
+  - src/components/Tabs.jsx
+  - src/components/Capital.jsx
+  - src/components/GameCanvas.jsx
+  - src/components/TileCard.jsx
 symbols:
   - src/lib/chat.js:ago
   - src/lib/chat.js:groupChat
 tests:
   - test/chat.test.js
+  - test/gameTabs.test.js
 ---
 ## Purpose
 Habillage de l'interface de jeu (hors guilde) : barre d'accès Messagerie / Paramètres, fenêtre de messagerie, paramètres du
@@ -29,6 +34,10 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Navigation du haut : disques libellés (Pactes, Montures, Guilde, Carte) ; un second clic referme le panneau ouvert.
 - Panneau Montures : par monture, état (Au repos / Montée / Invoquée à pied), modes de déplacement, caractéristiques équipement compris, capacités ; boutons « Monter dessus » (si le type sert de monture) et « Invoquer (sans monter) », puis « Descendre » ou « Contrôler / Revenir » et « Renvoyer » ; équipement par partie du corps autorisée, verrouillé pendant l'invocation à pied (règles serveur : card back `mount-call`).
 - Les styles ajoutés ne visent que `.panel`, `.inv:not(.guild)`, `.scroll`, `.dock`, `.portrait`, `.mainico` : la guilde garde son apparence.
+- Fenêtres en onglets (`Tabs` / `useTab`, un seul onglet affiché, dernier onglet retenu par fenêtre en localStorage, onglet disparu → le premier) : Actions (Sorts, Construire, Récolte & bâtiments, Combat ; la case ciblée s'affiche pour Sorts et Construire), Pactes & Fidèles (Pactes, Demandes, Foi, Autel pour un Dieu), Invocations (Montures, Créatures invoquées).
+- « Montures » devient « Invocations » (navigation et titre). Monture invoquée à pied : « Monter dessus » actif depuis une case voisine (sinon grisé + rappel), aussi dans la carte de case (« Monter sur X » : approche puis montée).
+- Changement de personnage : `useRefreshMe` lit `charId` au moment de l'appel et ignore une réponse arrivée après un changement ; l'intervalle de rafraîchissement est relancé au changement (sinon l'ancien personnage revenait).
+- Hôtel de ville (`Capital`) : en-tête (nom, or), onglets Boutique, Sorts, Marché (offres + vente : objet du sac, prix), Coffre (jauge, extension, colonnes Coffre ⇄ Sac) ; cartes d'objets en grille ; bouton grisé si or insuffisant / épuisé / coffre plein.
 
 ## Gotchas
 - Classe globale `.inl` déjà prise par le jeu (ligne d'insertion) : ne pas réutiliser de classes génériques sans préfixe.

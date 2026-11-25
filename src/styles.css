@@ -579,3 +579,32 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin div.shareline .form{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px}.admin div.shareline .form .cell{min-width:0}
 .admin .reslock{color:var(--gold);flex:none;margin-left:2px}
 .admin .resside .bldextras.activation .actgroup{margin:8px 0}
+/* Onglets des fenêtres de jeu (Hôtel de ville, Actions, Pactes, Invocations) */
+.gtabs{display:flex;gap:4px;padding:4px;margin:0 0 14px;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:14px;overflow-x:auto;scrollbar-width:none;position:sticky;top:-18px;z-index:2;backdrop-filter:blur(6px)}
+.gtabs::-webkit-scrollbar{display:none}
+:is(.panel,.inv) .gtabs button{flex:1 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:6px 10px;border:0;border-radius:10px;background:none;color:var(--mute);white-space:nowrap;font-weight:500}
+:is(.panel,.inv) .gtabs button:hover{color:var(--ink);background:rgba(255,255,255,.05)}
+:is(.panel,.inv) .gtabs button.on{color:var(--halo);background:linear-gradient(180deg,rgba(240,210,138,.2),rgba(240,210,138,.08));box-shadow:inset 0 0 0 1px rgba(240,210,138,.35)}
+.gtabs em{font-style:normal;font-size:.75em;min-width:18px;padding:1px 6px;border-radius:99px;background:rgba(240,210,138,.22);color:var(--halo)}
+/* Hôtel de ville */
+.capital{width:min(940px,calc(100vw - 32px))}
+.cap-head{display:flex;align-items:center;gap:12px;margin:0 0 14px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:radial-gradient(120% 140% at 0 0,rgba(240,210,138,.16),transparent 60%),rgba(255,255,255,.03)}
+.cap-head h3{font-family:var(--serif);font-weight:500;margin:0;font-size:1.3em}.cap-head small{color:var(--mute)}.cap-head .grow{flex:1}
+.cap-gold{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:99px;background:rgba(240,210,138,.14);color:var(--halo);font-weight:600;font-variant-numeric:tabular-nums}.cap-gold small{color:var(--halo);opacity:.7}
+.cap-pane{animation:pop .15s ease-out}.cap-pane h4{display:flex;align-items:center;gap:6px;margin:16px 0 8px}
+.cap-hint{color:var(--mute);margin:0 0 12px;font-size:.92em}
+.cap-empty{color:var(--mute);font-style:italic;padding:14px;text-align:center;border:1px dashed var(--line);border-radius:12px;margin:0}
+.cap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.cap-card{display:flex;flex-direction:column;gap:4px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.04);transition:border-color .15s,transform .15s}
+.cap-card:hover{border-color:rgba(240,210,138,.45);transform:translateY(-1px)}.cap-card.out,.cap-card.owned{opacity:.65}
+.cap-card>small{color:var(--mute);flex:1}
+.cap-foot{display:flex;align-items:center;gap:8px;margin-top:8px}.cap-foot .stock{font-size:.82em;color:var(--mute)}.cap-foot .stock.none{color:var(--hp)}.cap-foot .grow,.cap-foot .stock{flex:1}
+.pill.ok{color:var(--ok);background:rgba(120,220,150,.12);display:inline-flex;align-items:center;gap:4px}
+.cap-sell{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.cap-sell select{flex:1 1 220px;min-height:38px}
+.cap-price{display:inline-flex;align-items:center;gap:6px}.cap-price input{width:96px;text-align:right;min-height:38px}
+.cap-chesthead{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+.cap-chesthead>div{display:flex;flex-direction:column}.cap-chesthead small{color:var(--mute)}
+.cap-meter{flex:1;min-width:120px;height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}.cap-meter i{display:block;height:100%;width:calc(var(--p)*1%);background:linear-gradient(90deg,#a87b3c,var(--halo))}
+.cap-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media (max-width:640px){.cap-cols{grid-template-columns:1fr}}
+.cap-row{display:flex;align-items:center;gap:8px;padding:8px 10px;margin:0 0 6px;border-radius:10px;background:rgba(255,255,255,.04)}.cap-row span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.capital .x{flex:none}
