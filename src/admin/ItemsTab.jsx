@@ -13,7 +13,7 @@ import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from 
 import { itemBody, familyLabel, ITEM_STATS, statsLine } from './divine.js';
 import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, xp_use: '', reach: '', full_power_at: '' };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, xp_use: '', reach: '', full_power_at: '', power_start: '', power_end: '' };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -95,8 +95,11 @@ export default function ItemsTab() {
         {f.slot === 'scroll' && <><div className="cell"><small>Agrandit le sac de (emplacements)</small><input type="number" min="0" value={f.bag_add} placeholder="0 = non" onChange={e => setF(x => ({ ...x, bag_add: e.target.value }))} /></div>
           <div className="cell"><small>… jusqu'à (capacité max du sac)</small><input type="number" min="1" value={f.bag_max} placeholder="ex. 30" onChange={e => setF(x => ({ ...x, bag_max: e.target.value }))} /></div></>}
         {f.slot === 'weapon' && <><div className="cell"><small>Portée (cases ; 1 = corps à corps)</small><input type="number" min="1" max="20" value={f.reach} placeholder="1" onChange={e => num('reach', e.target.value)} /></div>
-          {Number(f.reach) > 1 && <div className="cell"><small>Pleine puissance jusqu'à (cases)</small><input type="number" min="1" max={Number(f.reach) - 1} value={f.full_power_at ?? ''} placeholder="vide = partout"
-            onChange={e => num('full_power_at', e.target.value)} /><small className="note">Au-delà, les dégâts baissent jusqu'à 50 % à {f.reach} cases.</small></div>}</>}
+          {Number(f.reach) > 1 && <div className="cell span2 powercurve"><small>Puissance selon la distance (grande portée)</small>
+            <div className="pc-row"><label><small>Case 1</small><input type="number" min="0" max="100" value={f.power_start ?? ''} placeholder="100" onChange={e => num('power_start', e.target.value)} /> %</label>
+              <label><small>100 % à la case</small><input type="number" min="1" max={Number(f.reach)} value={f.full_power_at ?? ''} placeholder="—" onChange={e => num('full_power_at', e.target.value)} /></label>
+              <label><small>Case {f.reach} (dernière)</small><input type="number" min="0" max="100" value={f.power_end ?? ''} placeholder="100" onChange={e => num('power_end', e.target.value)} /> %</label></div>
+            <small className="note">{f.full_power_at ? `Montée de ${f.power_start === '' ? 100 : f.power_start} % (case 1) à 100 % (case ${f.full_power_at}), puis baisse jusqu'à ${f.power_end === '' ? 100 : f.power_end} % (case ${f.reach}). Dégâts arrondis au supérieur.` : 'Sans case de pleine puissance : 100 % à toute distance.'}</small></div>}</>}
         {f.slot === 'weapon' && <div className="cell"><small>Mains</small><label className="check"><input type="checkbox" checked={!!f.two_handed} onChange={e => setF(x => ({ ...x, two_handed: e.target.checked }))} /> Deux mains (arc, grande arme : l'autre main reste vide)</label></div>}
         <div className="cell"><small>XP par utilisation {f.slot === 'weapon' ? '(chaque coup porté)' : f.slot === 'scroll' ? '(parchemin utilisé)' : ''}</small><input type="number" min="0" value={f.xp_use} onChange={e => num('xp_use', e.target.value)} /></div>
         <div className="cell"><small>Durabilité</small><input type="number" value={f.durability} onChange={e => num('durability', e.target.value)} /></div>

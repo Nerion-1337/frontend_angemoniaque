@@ -20,9 +20,12 @@ export const itemBody = f => {
   else if (f.was_bag) b.data = {};
   for (const k of NUM) if (f[k] !== '' && f[k] != null && !Number.isNaN(Number(f[k]))) b[k] = Number(f[k]);
   b.bonuses = bonusesBody(f.bonuses);
-  // Portée (migration 36) : armes seulement ; pleine puissance (arme à distance) envoyée seulement si elle est sous la portée.
+  // Portée (migrations 36-37) : armes seulement. Grande portée : puissance à la case 1 → 100 % à la case X (≤ portée) → puissance à la
+  // dernière case ; sans case X, 100 % partout. Pourcentages bornés 0..100 (vide = 100).
   if (f.slot === 'weapon') { const reach = Math.max(1, Math.trunc(Number(f.reach) || 1)), full = Math.trunc(Number(f.full_power_at) || 0);
-    b.reach = reach; b.full_power_at = reach > 1 && full >= 1 && full < reach ? full : null; } else delete b.reach;
+    const pct = v => (v === '' || v == null || Number.isNaN(Number(v)) ? 100 : Math.max(0, Math.min(100, Math.trunc(Number(v)))));
+    b.reach = reach; b.full_power_at = reach > 1 && full >= 1 && full <= reach ? full : null;
+    if (b.full_power_at) { b.power_start = pct(f.power_start); b.power_end = pct(f.power_end); } } else delete b.reach;
   b.divine_family = b.rarity === 'divin' && f.divine_family ? f.divine_family : null;
   b.shop = !!f.shop; b.shop_races = f.shop ? [...(f.shop_races ?? [])] : [];
   if (f.shop_stock !== '' && f.shop_stock != null && !Number.isNaN(Number(f.shop_stock))) b.shop_stock = Math.max(0, Math.trunc(Number(f.shop_stock)));

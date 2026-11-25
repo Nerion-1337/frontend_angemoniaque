@@ -13,9 +13,10 @@ test('inventaire : arme à deux mains → main principale seulement ; détail au
   expect(src).toMatch(/<StatDetail keys=\{keys\} B=\{B\}/);
   expect(src).not.toMatch(/req\. \$\{st\.reqStrength\}/);   // plus de « req. » sous la Force : valeur finale + détail
 });
-test('portée d\'arme : défaut 1, pleine puissance seulement sous la portée, rien pour un non-arme', () => {
+test('portée d\'arme : défaut 1 ; grande portée : départ → 100 % à la case X (≤ portée) → fin ; rien pour un non-arme', () => {
   expect(itemBody({ name: 'Épée', slot: 'weapon', reach: '' })).toMatchObject({ reach: 1, full_power_at: null });
-  expect(itemBody({ name: 'Arc', slot: 'weapon', reach: 6, full_power_at: 3 })).toMatchObject({ reach: 6, full_power_at: 3 });
-  expect(itemBody({ name: 'Arc', slot: 'weapon', reach: 3, full_power_at: 3 }).full_power_at).toBeNull();
+  expect(itemBody({ name: 'Arc', slot: 'weapon', reach: 6, full_power_at: 3, power_start: 40, power_end: 20 })).toMatchObject({ reach: 6, full_power_at: 3, power_start: 40, power_end: 20 });
+  expect(itemBody({ name: 'Arc', slot: 'weapon', reach: 6, full_power_at: 6, power_start: '', power_end: 150 })).toMatchObject({ full_power_at: 6, power_start: 100, power_end: 100 });
+  const far = itemBody({ name: 'Arc', slot: 'weapon', reach: 3, full_power_at: 4, power_start: 10 }); expect(far.full_power_at).toBeNull(); expect(far.power_start).toBeUndefined();
   const helm = itemBody({ name: 'Casque', slot: 'head', reach: 4 }); expect(helm.reach).toBeUndefined(); expect(helm.full_power_at).toBeUndefined();
 });
