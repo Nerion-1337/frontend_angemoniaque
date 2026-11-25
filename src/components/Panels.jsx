@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { fxSummary } from '../admin/spellFx.js';
 import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend';
-export const Panel = ({ title, wide, children }) => { const d = useDispatch(); return <div className={'panel' + (wide ? ' wide' : '')} role="dialog" aria-label={title}><button className="x" aria-label="Fermer" onClick={() => d(A.setPanel(null))}><X size={14} /></button><h3>{title}</h3>{children}</div>; };
+export const Panel = ({ title, wide, children }) => { const d = useDispatch(); return <div className={'panel' + (wide ? ' wide' : '')} role="dialog" aria-label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={() => d(A.setPanel(null))}><X size={14} /></button></header><div className="pbody">{children}</div></div>; };
 const KV = ({ items }) => <div className="kv">{items.map(([k, v]) => <span key={k}>{k} <b>{v}</b></span>)}</div>;
 
 export function FaithPanel() {

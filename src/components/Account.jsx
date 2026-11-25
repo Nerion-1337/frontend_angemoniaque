@@ -1,11 +1,38 @@
-import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Lock, UserPlus, Clock, Shield, LogOut } from 'lucide-react'; import { api, setToken } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { Panel } from './Panels';
+// Compte & paramètres : personnage actif, personnages du compte (changer, créer), administration, session.
+import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux';
+import { Lock, UserPlus, Clock, Shield, LogOut, Play, MapPin, Users, ChevronRight } from 'lucide-react';
+import { api, setToken } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { Panel } from './Panels';
+const RACE = { human: 'Humain', angel: 'Ange', demon: 'Démon' };
+export const raceName = k => RACE[k] ?? k;
 export default function Account() {
-  const { me, auth } = useSelector(s => s.game), d = useDispatch(), run = useDo(), [list, load] = useData('/characters'), [pseudo, setPseudo] = useState(''); const race = list?.[0]?.race ?? me.race;
-  return <Panel title="Compte & paramètres" wide><h4>Personnages du compte ({list?.length ?? 0}/3) <span className="pill">Race unique : {race}</span></h4>
-    <div className="item"><small>Personnage actif (pseudo non modifiable)</small><div><b>{me.pseudo}</b> <Lock size={13} /> · {me.rank.rank_name}</div></div>
-    {list?.map(c => <button key={c.id} className={'row2 sel' + (c.id === me.id ? ' on' : '')} onClick={() => { d(A.setMe(null)); d(A.setChar(c.id)); d(A.setPanel(null)); }}><span>{c.pseudo}</span><small>({c.x},{c.y})</small></button>)}
-    {(list?.length ?? 0) < 3 && <div className="row"><input placeholder="Pseudo du nouveau héros…" value={pseudo} onChange={e => setPseudo(e.target.value)} /><button className="primary" onClick={() => run(() => api('/characters', { pseudo, race }), () => { setPseudo(''); load(); })}><UserPlus size={14} /> Créer</button></div>}
-    {auth?.admin && <><h4>Administration</h4><div className="item row2"><div><b>Simuler la mise à jour horaire (+1 h)</b><br /><small>Régénère Vie et Énergie du héros, de sa monture et des invocations ; +XP/h et +Or/h.</small></div><button onClick={() => run(() => api('/admin/tick', undefined, 'POST'), () => d(A.toast('+1 heure appliquée')))}><Clock size={14} /> +1 h</button></div>
-      <a className="item row2" href="#admin"><span><b>Espace administrateur</b><br /><small>Joueurs, blocage, téléportation, création d'objets/boss.</small></span><Shield size={18} /></a></>}
-    <button className="danger wide" onClick={() => { setToken(null); location.reload(); }}><LogOut size={14} /> Déconnexion</button></Panel>;
+  const { me, auth } = useSelector(s => s.game), d = useDispatch(), run = useDo(), [list, load] = useData('/characters'), [pseudo, setPseudo] = useState('');
+  const race = list?.[0]?.race ?? me.race, max = auth?.admin ? null : 3, full = max != null && (list?.length ?? 0) >= max;
+  const play = c => { d(A.setMe(null)); d(A.setChar(c.id)); d(A.setPanel(null)); };
+  const create = e => { e.preventDefault(); run(() => api('/characters', { pseudo: pseudo.trim(), race }), () => { setPseudo(''); load(); d(A.toast('Personnage créé')); }); };
+  return <Panel title="Compte & paramètres" wide>
+    <section className="acc-card hero">
+      <div className="avatar" aria-hidden="true">{me.pseudo.slice(0, 1).toUpperCase()}</div>
+      <div className="grow"><b className="name">{me.pseudo} <Lock size={13} aria-label="pseudo définitif" /></b>
+        <small>{raceName(me.race)} · {me.rank?.rank_name ?? '—'}</small>
+        <small><MapPin size={12} /> Case {me.pos?.x}, {me.pos?.y}</small></div>
+      <span className="pill">Actif</span>
+    </section>
+
+    <h4><Users size={15} /> Vos personnages <small>{list?.length ?? 0}{max != null ? ` / ${max}` : ''} · race unique : {raceName(race)}</small></h4>
+    <div className="acc-list">{list?.map(c => <div key={c.id} className={`acc-char${c.id === me.id ? ' on' : ''}`}>
+      <div className="avatar sm" aria-hidden="true">{c.pseudo.slice(0, 1).toUpperCase()}</div>
+      <div className="grow"><b>{c.pseudo}</b><small>Case {c.x}, {c.y}</small></div>
+      {c.id === me.id ? <span className="pill">En jeu</span> : <button className="sm" onClick={() => play(c)}><Play size={13} /> Jouer</button>}</div>)}</div>
+    {!full && <form className="acc-new" onSubmit={create}><input placeholder="Pseudo du nouveau personnage (définitif)" maxLength={20} value={pseudo} onChange={e => setPseudo(e.target.value)} />
+      <button className="primary" disabled={!pseudo.trim()}><UserPlus size={14} /> Créer</button></form>}
+    {full && <p className="note">Limite de personnages atteinte pour ce compte.</p>}
+
+    {auth?.admin && <><h4><Shield size={15} /> Administration</h4>
+      <div className="acc-card"><div className="grow"><b>Simuler l'heure suivante</b><small>Régénération, gains par heure, effets horaires.</small></div>
+        <button onClick={() => run(() => api('/admin/tick', undefined, 'POST'), () => d(A.toast('+1 heure appliquée')))}><Clock size={14} /> +1 h</button></div>
+      <a className="acc-card link" href="#admin"><div className="grow"><b>Espace administrateur</b><small>Joueurs, contenus du jeu, cartes.</small></div><ChevronRight size={18} /></a></>}
+
+    <h4>Session</h4>
+    <button className="danger wide" onClick={() => { setToken(null); location.reload(); }}><LogOut size={14} /> Se déconnecter</button>
+  </Panel>;
 }

@@ -12,9 +12,9 @@ const Gauge = ({ I, v, m, c, label }) => <div className="gauge" style={{ '--c': 
 const Chip = ({ I, v, t }) => <span className="chip" title={t}><I size={15} />{v}</span>;
 export default function TopBar() {
   const { me, panel } = useSelector(s => s.game), d = useDispatch();
-  const nav = (k, I, t) => <button key={k} className={'mainico' + (panel === k ? ' on' : '')} title={t} aria-label={t} onClick={() => d(A.setPanel(k))}><I size={46} strokeWidth={1.5} /></button>;
+  const nav = (k, I, t, l) => <button key={k} className={'mainico' + (panel === k ? ' on' : '')} title={t} aria-label={t} aria-pressed={panel === k} onClick={() => d(A.setPanel(panel === k ? null : k))}><span className="disc"><I size={30} strokeWidth={1.6} /></span><span className="lbl">{l}</span></button>;
   const a = me?.actor, hero = a?.kind === 'hero', m = hero ? me.mount : null, burning = !!(hero && me.burn_until && new Date(me.burn_until) > new Date());
-  return <><a className="logo" href="/">Angemoniaque</a><header className="hud"><nav className="mainnav">{nav('faith', Handshake, 'Pactes & Fidèles')}{nav('mounts', PawPrint, 'Invocations & Montures')}{me ? <Wheel /> : <span className="wheel" />}{nav('guild', Shield, 'Guilde')}{nav('world', MapIcon, 'Carte du monde')}</nav>
+  return <><a className="logo" href="/">Angemoniaque</a><header className="hud"><nav className="mainnav">{nav('faith', Handshake, 'Pactes & Fidèles', 'Pactes')}{nav('mounts', PawPrint, 'Invocations & Montures', 'Montures')}{me ? <Wheel /> : <span className="wheel" />}{nav('guild', Shield, 'Guilde', 'Guilde')}{nav('world', MapIcon, 'Carte du monde', 'Carte')}</nav>
     {me && <div className={'glass gauges' + (hero ? '' : ' summoned')}>{!hero && <span className="tagline"><Sparkles size={15} /> Invocation : {a.name}</span>}
       <div className="grp"><Gauge I={Heart} v={a.hp_current} m={a.hp_max} c="var(--hp)" label="Points de vie" /><Gauge I={Zap} v={a.energy_current} m={a.energy_max} c="var(--en)" label="Énergie" />
         {hero && me.hasDivine && <Gauge I={Sparkles} v={me.divine_energy_current} m={me.divine_energy_max} c="var(--div)" label="Énergie divine" />}</div>

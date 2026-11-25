@@ -484,3 +484,63 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 @media (max-width:640px){.admin .bodyparts{grid-template-columns:1fr}.admin .bodymap{max-width:260px}}
 /* Bâtiments (lot E) : options d'activation */
 .admin .activation .actgroup{display:flex;flex-direction:column;gap:8px;padding:10px 12px;margin:0 0 8px}
+/* ==== Interface de jeu (2026-11-25) : boutons, barre d'accès, messagerie, paramètres, panneaux. La guilde (.guild) n'est pas concernée. ==== */
+:is(.panel,.inv:not(.guild),.scroll,.dock,.portrait) button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;border-radius:12px;font-weight:500}
+:is(.panel,.inv:not(.guild),.scroll,.dock,.portrait) button.sm{min-height:30px;padding:4px 10px;font-size:.88em;border-radius:10px}
+:is(.panel,.inv:not(.guild),.scroll,.dock) button:focus-visible,.mainico:focus-visible,.dockbtn:focus-visible{outline:2px solid var(--halo);outline-offset:2px}
+:is(.panel,.inv:not(.guild),.scroll,.dock) button.ghost{background:none;border-color:transparent;color:var(--mute)}
+:is(.panel,.inv:not(.guild),.scroll,.dock) button.ghost:hover:not(:disabled){color:var(--ink);background:rgba(255,255,255,.06)}
+:is(.panel,.inv:not(.guild),.scroll,.dock) .grow{flex:1}
+/* Panneaux latéraux : en-tête fixe, corps défilant */
+.panel{padding:0;display:flex;flex-direction:column}.panel .phead{position:sticky;top:0;z-index:1;display:flex;align-items:center;gap:10px;padding:14px 16px 12px 18px;background:var(--glass2);border-bottom:1px solid var(--line);border-radius:18px 18px 0 0}
+.panel .phead h3{margin:0;flex:1;font-size:1.15em}.panel .phead .x{position:static;flex:none;width:32px;height:32px;min-height:0;border-radius:50%}
+.panel .pbody{padding:10px 18px 18px}.panel h4{display:flex;align-items:center;gap:7px;flex-wrap:wrap}.panel h4 small{color:var(--mute);font-weight:400}
+.panel .item{transition:border-color .15s,background .15s}.panel .item:hover{border-color:rgba(240,210,138,.22)}
+/* Navigation du haut : disques de verre libellés */
+.mainico{gap:4px;padding:2px;filter:none}.mainico .disc{display:grid;place-items:center;width:58px;height:58px;border-radius:50%;background:var(--glass);border:1px solid var(--line);
+  backdrop-filter:blur(8px);box-shadow:0 8px 22px rgba(0,0,0,.45);transition:border-color .15s,box-shadow .15s,background .15s}
+.mainico .lbl{font-size:12px;font-weight:600;letter-spacing:.04em;padding:1px 8px;border-radius:99px;background:rgba(13,11,22,.72);color:var(--ink)}
+.mainico:hover:not(:disabled){transform:translateY(-2px)}.mainico:hover:not(:disabled) .disc{border-color:var(--halo);box-shadow:0 0 22px -4px rgba(240,210,138,.7)}
+.mainico.on .disc{background:rgba(240,210,138,.2);border-color:var(--halo);box-shadow:0 0 26px -2px rgba(240,210,138,.75)}.mainico.on .lbl{color:var(--halo)}
+/* Barre d'accès (bas à droite) */
+.dock{position:fixed;right:14px;bottom:14px;z-index:8;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.dockbar{display:flex;gap:8px;padding:6px;border-radius:999px;background:var(--glass);border:1px solid var(--line);backdrop-filter:blur(10px);box-shadow:0 10px 28px rgba(0,0,0,.45)}
+.dock .dockbtn{position:relative;min-height:44px;padding:0 16px;border-radius:999px;background:rgba(255,255,255,.05);border-color:transparent}
+.dock .dockbtn.on{background:rgba(240,210,138,.2);border-color:var(--halo);color:var(--halo)}
+.dockbtn .count{position:absolute;top:-5px;right:-4px;min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--hp);color:#fff;font:700 11px/20px var(--sans);font-style:normal;box-shadow:0 0 0 2px var(--bg)}
+/* Messagerie */
+.dock .chatbox{width:min(400px,calc(100vw - 28px));height:min(540px,calc(100vh - 190px));padding:0;gap:0;display:flex;flex-direction:column;overflow:hidden;
+  background:var(--glass2);border:1px solid var(--line);border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.chatbox header{display:flex;align-items:center;gap:8px;padding:12px 14px 10px;border-bottom:1px solid var(--line);color:var(--halo)}.chatbox header h3{margin:0;font-family:var(--serif);font-weight:500;color:var(--ink)}
+.chatbox header .x{position:static;width:32px;height:32px;min-height:0;border-radius:50%}
+.chantabs{display:flex;gap:4px;margin:10px 12px 0;padding:4px;border-radius:12px;background:rgba(0,0,0,.25)}
+.dock .chantabs button{flex:1;min-height:34px;border:0;border-radius:9px;background:none;color:var(--mute);font-size:.92em}
+.dock .chantabs button.on{background:rgba(255,255,255,.1);color:var(--ink);box-shadow:inset 0 -2px 0 var(--c)}
+.chantabs .cdot{width:8px;height:8px;border-radius:50%;background:var(--c);flex:none}
+.chantabs em{font-style:normal;font-size:11px;font-weight:700;min-width:18px;padding:0 5px;border-radius:99px;background:var(--c);color:#10131a}
+.chanhint{display:block;padding:6px 14px 4px;color:var(--mute);font-size:.78em}
+.chatbox .msgs{flex:1;height:auto;min-height:0;overflow:auto;padding:6px 12px 10px;display:flex;flex-direction:column;gap:2px}
+.bubble{align-self:flex-start;max-width:82%;margin-top:8px;padding:7px 11px;border-radius:14px 14px 14px 4px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.06)}
+.bubble.cont{margin-top:2px}.bubble.mine{align-self:flex-end;border-radius:14px 14px 4px 14px;background:rgba(240,210,138,.16);border-color:rgba(240,210,138,.28)}
+.bubble .who{display:flex;gap:8px;align-items:baseline;margin-bottom:2px}.bubble .who b{color:var(--halo);font-size:.88em}.bubble .who small{font-size:.72em}
+.bubble p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.35}
+.mails{gap:6px}.mail{border:1px solid rgba(255,255,255,.08);border-radius:12px;background:rgba(255,255,255,.04);overflow:hidden}
+.mail.unread{border-color:rgba(240,210,138,.45)}.mail.unread .mailhead b::before{content:'';display:inline-block;width:7px;height:7px;margin-right:7px;border-radius:50%;background:var(--halo);vertical-align:middle}
+.dock .mail .mailhead{width:100%;min-height:0;padding:9px 12px;display:flex;flex-direction:column;align-items:flex-start;gap:2px;border:0;border-radius:0;background:none;text-align:left}
+.mail p{margin:0;padding:0 12px 8px;white-space:pre-wrap;overflow-wrap:anywhere}.mail.open{background:rgba(255,255,255,.07)}.mail .sm{margin:0 12px 10px}
+.compose{flex:1;display:flex;flex-direction:column;gap:8px;padding:8px 12px 12px;overflow:auto}.compose textarea{resize:vertical;min-height:110px}.compose .row{display:flex;align-items:center;gap:8px}
+.sendrow{display:flex;gap:8px;padding:10px 12px 12px;border-top:1px solid var(--line)}.sendrow input{flex:1;min-width:0;border-radius:999px;padding:9px 14px}
+.dock .sendrow .send{width:42px;height:42px;padding:0;border-radius:50%;border:0;color:#1a1208;background:linear-gradient(135deg,#f6dfa4,var(--halo))}
+.chatbox>.primary.wide{margin:8px 12px 12px;width:auto}
+.chatbox .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;color:var(--mute);font-style:italic}
+/* Paramètres */
+.acc-card{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:8px 0;border-radius:14px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);color:inherit;text-decoration:none}
+.acc-card .grow,.acc-char .grow{display:flex;flex-direction:column;gap:2px;min-width:0}.acc-card small{display:inline-flex;align-items:center;gap:4px}
+.acc-card.hero{background:linear-gradient(120deg,rgba(240,210,138,.14),rgba(255,255,255,.03));border-color:rgba(240,210,138,.3)}.acc-card .name{font-size:1.15em;display:inline-flex;align-items:center;gap:6px}
+.acc-card.link:hover{border-color:var(--halo)}
+.avatar{display:grid;place-items:center;flex:none;width:52px;height:52px;border-radius:50%;font:600 22px var(--serif);color:#1a1208;background:linear-gradient(135deg,#f6dfa4,#c9a36b)}.avatar.sm{width:36px;height:36px;font-size:16px}
+.acc-list{display:flex;flex-direction:column;gap:6px}
+.acc-char{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.07);background:rgba(255,255,255,.03)}.acc-char.on{border-color:rgba(240,210,138,.45)}
+.acc-new{display:flex;gap:8px;margin-top:10px}.acc-new input{flex:1;min-width:0}
+@media (max-width:900px){.mainico .disc{width:46px;height:46px}.mainico .disc svg{width:24px;height:24px}.mainico .lbl{font-size:10px}}
+@media (max-width:600px){.dockbtn span{display:none}.dock .dockbtn{padding:0 12px}.dock .chatbox{height:min(520px,calc(100vh - 140px))}.mainico .lbl{display:none}}
