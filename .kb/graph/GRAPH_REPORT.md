@@ -1,17 +1,17 @@
 # Graph Report - front  (2026-11-25)
 
 ## Corpus Check
-- 106 files · ~61,828 words
+- 106 files · ~62,200 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: (none) 4, .css 3, .conf 1)
 
 ## Summary
-- 566 nodes · 1818 edges · 17 communities (16 shown, 1 thin omitted)
-- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 3 edges (avg confidence: 0.85)
+- 566 nodes · 1829 edges · 17 communities (16 shown, 1 thin omitted)
+- Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `6f089910`
+- Built from commit: `9cf5f3fa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -43,19 +43,19 @@
 7. `vitest` - 27 edges
 8. `MonsterDetails()` - 25 edges
 9. `Pick()` - 24 edges
-10. `confirmDel()` - 24 edges
+10. `ResourcesTab()` - 24 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `stepInto()` --calls--> `pathEnergy()`  [EXTRACTED]
   test/lib.test.js → src/lib/energy.js
 - `find()` --calls--> `terrain()`  [EXTRACTED]
   test/lib.test.js → src/lib/terrain.js
+- `ResourcesTab()` --indirect_call--> `groupDraft()`  [INFERRED]
+  src/admin/ResourcesTab.jsx → src/admin/building.js
 - `App()` --calls--> `Admin()`  [EXTRACTED]
   src/App.jsx → src/admin/index.jsx
 - `App()` --calls--> `ChatDock()`  [EXTRACTED]
   src/App.jsx → src/components/ChatDock.jsx
-- `App()` --calls--> `GuildModal()`  [EXTRACTED]
-  src/App.jsx → src/components/Guild.jsx
 
 ## Import Cycles
 - None detected.
@@ -72,7 +72,7 @@ Nodes (63): lucide-react, ago(), Dashboard(), KPI, bonusesBody(), CORE_FAMILIES,
 
 ### Community 2 - "Entities.jsx"
 Cohesion: 0.08
-Nodes (40): vitest, activationBody(), activationSummary(), buildingBody(), buildingDraft(), groupDraft(), groupSummary(), ActivationEditor() (+32 more)
+Nodes (41): vitest, activationBody(), activationSummary(), buildingBody(), buildingDraft(), groupDraft(), groupSummary(), ActivationEditor() (+33 more)
 
 ### Community 3 - "relief.js"
 Cohesion: 0.08
@@ -83,8 +83,8 @@ Cohesion: 0.11
 Nodes (40): Confirm(), FmtBar(), FmtField(), PrevToggle(), rgbOf(), useFmt(), AddCard(), Arrows() (+32 more)
 
 ### Community 5 - "MonsterDetails.jsx"
-Cohesion: 0.15
-Nodes (28): COLORS, MiniMap(), capLabel(), capsToMaxCaps(), EMPTY(), equipLabel(), LIMIT_KIND, linkedLabel() (+20 more)
+Cohesion: 0.16
+Nodes (27): COLORS, MiniMap(), capLabel(), capsToMaxCaps(), EMPTY(), equipLabel(), LIMIT_KIND, linkedLabel() (+19 more)
 
 ### Community 6 - "TileCard.jsx"
 Cohesion: 0.15
@@ -137,12 +137,12 @@ _Questions this graph is uniquely positioned to answer:_
 - **Should `api` be split into smaller, more focused modules?**
   _Cohesion score 0.07871148459383753 - nodes in this community are weakly interconnected._
 - **Why does `vitest` connect `Entities.jsx` to `api`, `ItemsTab.jsx`, `Guild.jsx`, `MonsterDetails.jsx`, `TileCard.jsx`, `ResourcesTab.jsx`, `package.json`, `world2.test.js`, `ChatDock.jsx`?**
-  _High betweenness centrality (0.103) - this node is a cross-community bridge._
+  _High betweenness centrality (0.096) - this node is a cross-community bridge._
 - **Should `ItemsTab.jsx` be split into smaller, more focused modules?**
   _Cohesion score 0.0757314974182444 - nodes in this community are weakly interconnected._
 - **Why does `react` connect `api` to `ItemsTab.jsx`, `Entities.jsx`, `Guild.jsx`, `MonsterDetails.jsx`, `TileCard.jsx`, `ResourcesTab.jsx`, `package.json`, `ChatDock.jsx`?**
-  _High betweenness centrality (0.083) - this node is a cross-community bridge._
+  _High betweenness centrality (0.082) - this node is a cross-community bridge._
 - **Should `Entities.jsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.08005427408412483 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08056265984654731 - nodes in this community are weakly interconnected._
 - **Should `relief.js` be split into smaller, more focused modules?**
   _Cohesion score 0.08127721335268505 - nodes in this community are weakly interconnected._

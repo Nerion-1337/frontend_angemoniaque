@@ -43,3 +43,9 @@ test('zoneLabel', () => {
   expect(zoneLabel({ x_min: 1, x_max: 1, y_min: 2, y_max: 2 })).toBe('case 1, 2');
   expect(zoneLabel({ x_min: 1, x_max: 3, y_min: 2, y_max: 3 })).toBe('1–3 × 2–3 (6 cases)');
 });
+test('conditions de récolte : éditeur branché (objets équipés ou sac, sort), texte public sur la carte de case', async () => {
+  const fs = await import('node:fs');
+  const tab = fs.readFileSync(new URL('../src/admin/ResourcesTab.jsx', import.meta.url), 'utf8'), card = fs.readFileSync(new URL('../src/components/TileCard.jsx', import.meta.url), 'utf8');
+  expect(tab).toMatch(/resource-rules\/\$\{encodeURIComponent\(rule\.resource\)\}/); expect(tab).toMatch(/<ActivationEditor/);
+  expect(card).toMatch(/Récolte : nécessite \{sc\.harvestNeeds\}/);
+});

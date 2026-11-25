@@ -48,19 +48,21 @@ export function BuildingSpells({ id }) {
 }
 
 /** Conditions d'activation (lot E) : options alternatives ; dans une option, tout ce qui est renseigné est exigé. */
-export function ActivationEditor({ groups, set, cat }) {
+const ACT_NOTE = <>Portail : conditions pour le franchir (remplacent l'objet divin historique). Autre bâtiment : conditions pour déclencher ses sorts « à activer »
+  au profit de l'activateur. Il suffit de remplir UNE option ; dans une option, tout ce qui est renseigné est exigé. Aucune option : comportement historique.</>;
+/** Groupes de conditions alternatifs (bâtiments ; aussi conditions de récolte des ressources, avec `title` / `note` / `itemHint`). */
+export function ActivationEditor({ groups, set, cat, title = 'Activation de la capacité', note = ACT_NOTE, itemHint = '— Objet (sac) —', consumeLabel = "Consommés à l'activation (objets, ressources, or ; objets divins rendus)" }) {
   const [pick, setPick] = useState({});   // sélections en cours par option : { [i]: { item, qty, res, rq } }
   const g = groups ?? [], up = (i, v) => set(g.map((x, j) => (j === i ? { ...x, ...v } : x)));
   const P = i => pick[i] ?? { item: '', qty: 1, res: '', rq: 1 }, setP = (i, v) => setPick({ ...pick, [i]: { ...P(i), ...v } });
   const name = (list, id) => (list ?? []).find(o => String(o.id) === String(id))?.name ?? id;
   const rankLabel = r => `${r.name} (${r.race}, palier ${r.current_rank})`;
   return <div className="bldextras activation">
-    <h5>Activation de la capacité</h5>
-    <p className="note">Portail : conditions pour le franchir (remplacent l'objet divin historique). Autre bâtiment : conditions pour déclencher ses sorts « à activer »
-      au profit de l'activateur. Il suffit de remplir UNE option ; dans une option, tout ce qui est renseigné est exigé. Aucune option : comportement historique.</p>
+    {title && <h5>{title}</h5>}
+    <p className="note">{note}</p>
     {g.map((x, i) => <div key={i} className="actgroup apanel">
       <div className="headrow"><b>Option {i + 1}</b><span className="grow" /><button className="sm danger" onClick={() => set(g.filter((_, j) => j !== i))}>Retirer l'option</button></div>
-      <div className="row add"><Pick options={cat.items ?? []} value={P(i).item} onPick={v => setP(i, { item: v })} labelOf={o => o.name} placeholder="— Objet (sac) —" />
+      <div className="row add"><Pick options={cat.items ?? []} value={P(i).item} onPick={v => setP(i, { item: v })} labelOf={o => o.name} placeholder={itemHint} />
         <input type="number" min="1" className="nb" value={P(i).qty} onChange={e => setP(i, { qty: e.target.value })} />
         <button className="sm" disabled={!P(i).item} onClick={() => up(i, { items: [...x.items.filter(y => String(y.itemId) !== String(P(i).item)), { itemId: Number(P(i).item), qty: Math.max(1, Number(P(i).qty) || 1) }] })}><Plus size={14} /> Objet</button></div>
       {x.items.length > 0 && <div className="chips">{x.items.map(y => <span key={y.itemId} className="chip on">{name(cat.items, y.itemId)} ×{y.qty}<button className="x-in" onClick={() => up(i, { items: x.items.filter(z => z !== y) })}>×</button></span>)}</div>}
@@ -79,7 +81,7 @@ export function ActivationEditor({ groups, set, cat }) {
         <div className="cell"><small>Rang minimum (palier, 0 = aucun)</small><input type="number" min="0" value={x.minRank} onChange={e => up(i, { minRank: e.target.value })} /></div>
         <div className="cell span2"><small>Ou l'un de ces rangs</small><Pick options={(cat.ranks ?? []).filter(r => !x.ranks.includes(r.id))} value="" onPick={v => up(i, { ranks: [...x.ranks, Number(v)] })} labelOf={rankLabel} placeholder="— Ajouter un rang —" />
           {x.ranks.length > 0 && <div className="chips">{x.ranks.map(r => <span key={r} className="chip on">{(cat.ranks ?? []).find(o => o.id === r)?.name ?? r}<button className="x-in" onClick={() => up(i, { ranks: x.ranks.filter(z => z !== r) })}>×</button></span>)}</div>}</div>
-        <div className="cell span-all"><label className="check"><input type="checkbox" checked={x.consume} onChange={e => up(i, { consume: e.target.checked })} /> Consommés à l'activation (objets, ressources, or ; objets divins rendus)</label></div>
+        <div className="cell span-all"><label className="check"><input type="checkbox" checked={x.consume} onChange={e => up(i, { consume: e.target.checked })} /> {consumeLabel}</label></div>
       </div>
     </div>)}
     <button className="sm" onClick={() => set([...g, groupDraft()])}><Plus size={14} /> Ajouter une option</button>

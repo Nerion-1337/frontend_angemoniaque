@@ -577,3 +577,5 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .natlist .chip small{color:var(--mute)}.admin .natlist .chip.on{border-color:var(--gold);color:var(--gold)}
 .admin .resmapcol .chip{display:inline-flex;align-items:center;gap:6px}
 .admin div.shareline .form{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 8px}.admin div.shareline .form .cell{min-width:0}
+.admin .reslock{color:var(--gold);flex:none;margin-left:2px}
+.admin .resside .bldextras.activation .actgroup{margin:8px 0}

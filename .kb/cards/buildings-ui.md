@@ -26,6 +26,7 @@ production horaire par ressource et sorts de la structure.
 - Sorts de la structure (bâtiment enregistré) : en continu ou à la demande ; liés / retirés immédiatement ; effets réglés dans l'onglet Sorts.
 - Activation de la capacité (lot E) : options alternatives ajoutées / retirées ; par option : objets du sac (quantité), ressources, objets divins (famille ou toutes, nombre), sort connu, or, rang minimum, rangs précis, consommation ; enregistrées avec la fiche (`activationBody`, `groupDraft`).
 - En jeu : « Interagir » sur un bâtiment à options l'active (résultat des sorts affiché) ; une porte se franchit (mêmes conditions côté serveur).
+- `ActivationEditor` est réutilisé par les conditions de récolte (admin Ressources) : props `title`, `note`, `itemHint`, `consumeLabel` (défauts = textes des bâtiments).
 
 ## Gotchas
 - La production saisie dans l'éditeur remplace `data.production` du JSON brut à l'enregistrement.

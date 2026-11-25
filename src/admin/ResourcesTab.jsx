@@ -6,7 +6,8 @@ import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
 import { api } from '../lib/api.js';
 import { terrain } from '../lib/terrain';
-import { Plus, Trash2, Move, SquareDashed, X } from 'lucide-react';
+import { Plus, Trash2, Move, SquareDashed, X, Lock } from 'lucide-react';
+import { ActivationEditor } from './BuildingExtras.jsx'; import { groupDraft, activationBody, activationSummary } from './building.js';
 import Pick from './Pick.jsx';
 import { Empty, confirmDel } from './ui.jsx';
 import ResourceMap, { RES_COLOR } from './ResourceMap.jsx';
@@ -16,17 +17,26 @@ import { WORLD_LABEL } from './tiles.js';
 const Dot = ({ id }) => <i className="resdot" style={{ background: RES_COLOR[id] ?? '#ccc' }} />;
 export default function ResourcesTab() {
   const d = useDispatch();
+  const [cat, setCat] = useState({}), [rules, setRules] = useState([]), [rule, setRule] = useState(null);
   const [maps, setMaps] = useState([]), [res, setRes] = useState([]), [world, setWorld] = useState(1), [rows, setRows] = useState(null);
   const [edit, setEdit] = useState(null), [f, setF] = useState(sectorDraft()), [tool, setTool] = useState('select'), [showRes, setShowRes] = useState(true), [focus, setFocus] = useState(null), [hover, setHover] = useState(null);
   const load = () => api(`/admin/content/deposits?mapId=${world}`).then(setRows).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { load(); setEdit(null); setFocus(null); }, [world]);   // corps de bloc
-  useEffect(() => { api('/admin/catalog').then(c => { setMaps(c.maps ?? []); setRes(c.resources ?? []); }).catch(() => {}); }, []);
+  const loadRules = () => api('/admin/content/resource-rules').then(setRules).catch(e => d(Ad.msg(e.message)));
+  useEffect(() => { api('/admin/catalog').then(c => { setCat(c); setMaps(c.maps ?? []); setRes(c.resources ?? []); }).catch(() => {}); loadRules(); }, []);
   const m = maps.find(x => x.id === world) ?? { width: 200, height: 200 };
   const nameOf = Object.fromEntries(res.map(r => [r.id, r.name]));
+  const ruleOf = Object.fromEntries(rules.map(r => [r.resource, r.harvest]));
+  const openRule = id => { setEdit(null); setRule({ resource: id, groups: (ruleOf[id]?.groups ?? []).map(groupDraft) }); };
+  const saveRule = async () => {
+    try { await api(`/admin/content/resource-rules/${encodeURIComponent(rule.resource)}`, activationBody(rule.groups), 'PUT'); d(Ad.ok(rule.groups.length ? 'Conditions de récolte enregistrées' : 'Récolte libre')); setRule(null); loadRules(); }
+    catch (e) { d(Ad.msg(e.message)); }
+  };
+  const Locked = ({ id }) => (ruleOf[id] ? <Lock size={11} className="reslock" aria-label="conditions de récolte" /> : null);
   const natural = useMemo(() => naturalScan(m.width, m.height, (x, y) => terrain(x, y, world)), [world, m.width, m.height]);
   const natList = Object.entries(natural).sort((a, b) => b[1].n - a[1].n);
 
-  const open = (r, zone) => { setEdit(r ? r.id : 'new'); setF(sectorDraft(r, world, zone)); };
+  const open = (r, zone) => { setRule(null); setEdit(r ? r.id : 'new'); setF(sectorDraft(r, world, zone)); };
   const u = (k, v) => setF({ ...f, [k]: v });
   const us = (i, k, v) => setF({ ...f, resources: f.resources.map((s, j) => (j === i ? { ...s, [k]: v } : s)) });
   const body = edit ? sectorBody(f, world) : null, over = edit ? overLimit(f.resources) : [];
@@ -70,7 +80,13 @@ export default function ResourcesTab() {
       </div>
 
       <aside className="resside">
-        {edit ? <div className="editor apanel">
+        {rule ? <div className="editor apanel">
+          <h3><Dot id={rule.resource} /> Conditions de récolte — {nameOf[rule.resource] ?? rule.resource}</h3>
+          <ActivationEditor groups={rule.groups} set={g => setRule({ ...rule, groups: g })} cat={cat} title={null} itemHint="— Objet (équipé ou sac) —"
+            consumeLabel="Consommés à chaque récolte (objets, ressources, or)"
+            note="Valent partout : terrain naturel et secteurs. Il suffit de remplir UNE option ; dans une option, tout ce qui est renseigné est exigé (ex. une hache OU le sort « Sève »). Un objet compte s'il est équipé ou dans le sac. Aucune option : récolte libre." />
+          <div className="actions"><span className="grow" /><button className="ghost" onClick={() => setRule(null)}>Annuler</button><button className="primary" onClick={saveRule}>Enregistrer</button></div>
+        </div> : edit ? <div className="editor apanel">
           <h3>{edit === 'new' ? 'Nouveau secteur' : 'Secteur'} — {WORLD_LABEL[world] ?? `monde ${world}`}</h3>
           <div className="form">
             <div className="cell span2"><small>Nom</small><input value={f.name} maxLength={60} placeholder="ex. Forêt des Brumes" onChange={e => u('name', e.target.value)} /></div>
@@ -84,7 +100,8 @@ export default function ResourcesTab() {
           <h4>Ressources du secteur</h4>
           {!f.resources.length && <Empty>Ajoutez au moins une ressource.</Empty>}
           {f.resources.map((s, i) => <div key={s.resource} className="shareline">
-            <div className="sharehead"><Dot id={s.resource} /><b>{nameOf[s.resource] ?? s.resource}</b><span className="grow" />
+            <div className="sharehead"><Dot id={s.resource} /><b>{nameOf[s.resource] ?? s.resource}</b><Locked id={s.resource} /><span className="grow" />
+              <button className="sm" title="Objets ou sorts exigés pour récolter cette ressource" onClick={() => openRule(s.resource)}>Conditions</button>
               <button className="sm danger" title="Retirer" onClick={() => setF({ ...f, resources: f.resources.filter((_, j) => j !== i) })}><Trash2 size={13} /></button></div>
             <div className="form">
               <div className="cell"><small>Part des cases</small><div className="pct"><input type="number" min="1" max="100" value={s.percent} onChange={e => us(i, 'percent', e.target.value)} /><span>%</span></div></div>
@@ -109,12 +126,16 @@ export default function ResourcesTab() {
           {rows && !rows.length && <Empty>Aucun secteur : tracez-en un sur la carte.</Empty>}
           <div className="sectorlist">{rows?.map(r => <button key={r.id} className={`sector${r.active ? '' : ' off'}`} onClick={() => open(r)}>
             <b>{r.name || 'Secteur sans nom'}</b><small>{zoneLabel(r)}{r.active ? '' : ' · inactif'}</small>
-            {r.resources.map(s => <span key={s.id} className="shareline sm"><Dot id={s.resource} />{s.resource_name} <small>{s.percent} %{s.kind ? ` · ${KIND_NAME[s.kind]}` : ''}</small><span className="grow" />
+            {r.resources.map(s => <span key={s.id} className="shareline sm"><Dot id={s.resource} />{s.resource_name}<Locked id={s.resource} /> <small>{s.percent} %{s.kind ? ` · ${KIND_NAME[s.kind]}` : ''}</small><span className="grow" />
               <span className={`stockbar${s.stock ? '' : ' empty0'}`}><i style={{ '--p': (100 * s.stock) / s.stock_max }} /></span><small>{s.stock}/{s.stock_max}</small></span>)}
           </button>)}</div>
+          <h4>Conditions de récolte <small>objets ou sorts exigés</small></h4>
+          {rules.length > 0 && <div className="sectorlist">{rules.map(r => <button key={r.resource} className="sector" onClick={() => openRule(r.resource)}>
+            <span className="shareline sm"><Dot id={r.resource} /><b>{r.resource_name}</b></span><small>{r.needs ?? activationSummary(r.harvest)}</small></button>)}</div>}
+          <Pick options={res.filter(r => !ruleOf[r.id])} value="" placeholder="+ Exiger un objet ou un sort pour une ressource" labelOf={o => o.name} onPick={id => id && openRule(id)} />
           <h4>Ressources naturelles <small>{natList.length} · cliquez pour les repérer</small></h4>
           <div className="natlist">{natList.map(([id, e]) => <button key={id} className={`chip${focus === id ? ' on' : ''}`} onClick={() => setFocus(focus === id ? null : id)}>
-            <Dot id={id} />{nameOf[id] ?? id}<small>{e.n} · {KIND_NAME[e.kind]}</small></button>)}</div>
+            <Dot id={id} />{nameOf[id] ?? id}<Locked id={id} /><small>{e.n} · {KIND_NAME[e.kind]}</small></button>)}</div>
         </>}
       </aside>
     </div>
