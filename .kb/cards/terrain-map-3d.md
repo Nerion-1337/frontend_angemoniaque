@@ -16,6 +16,7 @@ files:
   - src/components/TileCard.jsx
   - src/components/MapLegend.jsx
   - src/components/Compass.jsx
+  - src/lib/levels.js
 symbols:
   - src/lib/terrain.js:terrain
   - src/lib/terrain.js:noiseAt
@@ -30,9 +31,11 @@ symbols:
   - src/three/entities.js:makeEntity
   - src/components/GameCanvas.jsx:GameCanvas
   - src/components/TileCard.jsx:TileCard
+  - src/lib/levels.js:levelAt
 tests:
   - test/lib.test.js
   - test/world.test.js
+  - test/levels.test.js
 ---
 ## Purpose
 Rendu client du monde : miroir exact du modèle du back (carte 1 dessinée, monde 2 par zones, carte 3 générée), règles d'énergie
@@ -46,6 +49,9 @@ et de montures pour les estimations, scène 3D, carte de case, légende et bouss
 - La carte de case affiche le type réglé en admin (nom, description, effet continu, coût) ; jamais de PV exacts (état public).
 - Le serveur reste seul juge : le front ne fait que prévisualiser.
 - La carte de case affiche le gisement de la case et propose sa récolte (card `resources-ui`).
+- Niveaux verticaux (`lib/levels.js`, affichage seulement) : chaque case est une colonne de cubes de `LEVEL_H` = 0,5 ; sol 0 ; eau peu profonde −1 (−2 au contact de l'eau profonde) ; eau profonde −4 ; massifs (montagne, glace, éther, volcan) = distance au bord du massif, de +1 à +5 (champ de lave plat = +1) ; arbres de +1 à +3 ; ciel +8.
+- Scène : dessus de colonne + faces latérales découpées par niveau là où le voisin est plus bas (teinte alternée) ; végétation, curseurs, quadrillage (contour de chaque case à sa hauteur), points cardinaux et entités posés sur le dessus (à la surface sur l'eau, `standY`) ; volants (`flying` de `/map/area`) à `FLY_Y` (+8) avec fil + anneau vers la case survolée ; la caméra suit un héros sur monture volante au ciel.
+- Clic sur une face latérale = case de la colonne (point reculé selon la normale). La carte de case affiche « niveau +n ».
 
 ## Gotchas
 - Toute modification du terrain ou de l'énergie se fait des DEUX côtés (back et front) ; les fichiers générés se régénèrent par `tools/gen_*`.
