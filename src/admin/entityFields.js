@@ -5,6 +5,9 @@ export const FIELDS = {
     ['energy_max', 'Énergie max', 'number'], ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
     ['armor', 'Armure', 'number'], ['range', 'Portée', 'number'], ['see', 'Portée de vue', 'number'],
     ['gain_xp_hour', 'XP/h', 'number'], ['gold_current', 'Or', 'number'],
+    ['rarity', 'Rareté', 'rarity'], ['locomotion', 'Déplacement', 'loco'],
+    ['mountable', 'Peut servir de monture', 'check'], ['speed', 'Vitesse (monture)', 'number'], ['carry', 'Portage (monture)', 'number'],
+    ['bonus_see', 'Bonus de vue (monture)', 'number'], ['bonus_range', 'Bonus de portée (monture)', 'number'],
     ['data', 'Comportement (JSON : {"behavior":"...","loot":[...]})', 'json']
   ],
   item: [
@@ -46,8 +49,8 @@ export const FIELDS = {
     ['base_stats', 'Stats de base (JSON : {"hp_max":100,"strength":5,...})', 'json']
   ]
 };
-/** Parse JSON tolérant : renvoie la valeur par défaut (ou undefined si JSON invalide). */
-export const jsonOr = (v, def = null) => { if (v == null || v === '') return def; try { return JSON.parse(v); } catch { return def; } };
+/** Parse JSON tolérant : un objet déjà parsé (valeur reçue de l'API, champ non retouché) est rendu tel quel ; JSON invalide → `def`. */
+export const jsonOr = (v, def = null) => { if (v == null || v === '') return def; if (typeof v === 'object') return v; try { return JSON.parse(v); } catch { return def; } };
 export const jsonText = v => (v == null ? '' : JSON.stringify(v, null, 1));
 /** Segment d'URL (pluriel) de l'entité : les routes admin utilisent les noms de tables. */
 export const URL_KIND = { monster: 'monsters', item: 'items', mount: 'mounts', building: 'buildings' };

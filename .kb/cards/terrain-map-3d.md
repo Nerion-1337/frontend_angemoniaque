@@ -2,7 +2,7 @@
 title: 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions
 slug: terrain-map-3d
 status: done
-updated: 2026-11-24
+updated: 2026-11-25
 files:
   - src/lib/terrain.js
   - src/lib/humanMap.js
@@ -40,7 +40,7 @@ et de montures pour les estimations, scène 3D, carte de case, légende et bouss
 
 ## Business rules
 - Le miroir `terrain.js` / `humanMap.js` / `resources.js` est identique au back : même type, coût, ressource (nom affiché, id stocké) pour chaque case.
-- Estimation d'énergie (`pathEnergy`) : pas Chebyshev ; monture volante = 1 ; aquatique = 1 sur l'eau, impossible sur terre ; à pied = coût admin du type de case du monde (`costOf`), eau profonde impossible.
+- Estimation d'énergie (`pathEnergy`) : pas Chebyshev ; monture aérienne = 1 ; aquatique = 1 sur l'eau ; terre ferme impossible si la monture n'est pas terrestre (`terrestrial`, défaut : un aquatique ne l'est pas) — amphibie = les deux ; à pied = coût admin du type de case du monde (`costOf`), eau profonde impossible.
 - `pathEnergy` calcule toujours sur le monde COURANT (`setWorld`, appelé à chaque rafraîchissement du personnage).
 - L'option d'attaque est masquée dans la zone sacrée (drapeau `safe` de `/map/{id}/cell`), comme le refus 403 du back.
 - La carte de case affiche le type réglé en admin (nom, description, effet continu, coût) ; jamais de PV exacts (état public).

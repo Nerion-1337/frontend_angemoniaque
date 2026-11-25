@@ -2,7 +2,7 @@
 title: Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques
 slug: admin-dashboard
 status: done
-updated: 2026-11-24
+updated: 2026-11-25
 files:
   - src/admin/index.jsx
   - src/admin/Dashboard.jsx
@@ -25,14 +25,14 @@ tests:
 ---
 ## Purpose
 Back-office d'administration (`src/admin/`, route `#admin`) : application plein écran à sections (Pilotage, Joueurs, Races & Rangs,
-Monstres, Objets, Sorts, Cases, Montures, Bâtiments), éditeur générique d'entités, règles transverses, toasts et éléments partagés.
+Monstres (dont les montures), Objets, Sorts, Parchemins, Cases, Ressources, Bâtiments), éditeur générique d'entités, règles transverses, toasts et éléments partagés.
 
 ## Business rules
 - Accès : `#admin` ET `auth.admin` ; sinon « Accès réservé ».
 - Toute suppression demande confirmation (`confirmDel`) ; toute action affiche un toast : succès `Ad.ok` (vert, 4 s), erreur `Ad.msg` (rouge, 6 s).
 - La dernière section ouverte est retenue dans `localStorage` (`admin.section`), lecture/écriture protégées par try/catch.
 - Pilotage : compteurs, personnages par race, journal d'audit filtrable (jusqu'à 200 lignes), état de l'horloge ; « Simuler +1 heure » = tick supplémentaire.
-- Éditeur générique (Montures, Bâtiments) : champs décrits par `FIELDS` (`[colonne, libellé, number|check|json]`) ; un JSON invalide bloque l'enregistrement ; quitter une fiche modifiée demande confirmation.
+- Éditeur générique (Bâtiments) : champs décrits par `FIELDS` (`[colonne, libellé, number|check|json]`) ; un JSON invalide bloque l'enregistrement ; quitter une fiche modifiée demande confirmation.
 - Routes au nom de table PLURIEL : `URL_KIND` (front) doit rester identique au `URL_KIND` du back.
 - Le contenu venant de l'API est rendu comme texte React, jamais en HTML.
 - CSS : aucune classe admin ne reprend un nom global du jeu ; `.apanel` remplace `.panel`, et `.cell`, `.actions`, `.item.row2`, `.empty`, `.logo` sont neutralisés sous `.admin`.

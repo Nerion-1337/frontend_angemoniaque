@@ -45,7 +45,14 @@ export const MONSTER_GROUPS = [
   ['Vie et énergie', ['hp_max', 'hp_current', 'recovery', 'energy_max']],
   ['Combat', ['strength', 'agility', 'armor', 'range', 'see']],
   ['Récompenses', ['gain_xp_hour', 'gold_current']],
+  ['Rareté et déplacement', ['rarity', 'locomotion']],
+  ['Monture', ['mountable', 'speed', 'carry', 'bonus_see', 'bonus_range']],
 ];
+/** Déplacement : combinaison de 1 à 3 modes (CHECK migration 25). */
+export const LOCO = [['land', 'Terrestre'], ['air', 'Aérien'], ['water', 'Aquatique']];
+/** Bascule un mode ; refuse de retirer le dernier (au moins un mode). */
+export const toggleLoco = (cur, k) => { const a = cur?.length ? cur : ['land']; return a.includes(k) ? (a.length > 1 ? a.filter(x => x !== k) : a) : [...a, k]; };
+export const locoLabel = a => (a?.length ? a : ['land']).map(k => LOCO.find(l => l[0] === k)?.[1] ?? k).join(' + ');
 /** Réapparition (migration 24) : libellés des éléments limités. */
 export const LIMIT_KIND = { item: 'Objet', spell: 'Sort', resource: 'Ressource' };
 export const respawnDraft = m => ({ respawn: m?.respawn ?? true, delayH: m?.reincarnate_delay_h ?? 0, limits: [...(m?.respawn_limits ?? [])] });

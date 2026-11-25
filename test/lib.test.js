@@ -26,6 +26,9 @@ test('monture aquatique = 1 sur l’eau / rien sur terre ; monture volante = 1 p
   expect(stepInto(find('deep', 2), { aquatic: true })).toBe(1);
   expect(stepInto(find('plain', 2), { aquatic: true })).toBe(Infinity);
   expect(stepInto(find('mountain', 2), { flying: true })).toBe(1);
+  // amphibie (lot B) : eau à 1 ET terre ferme au coût du type de case
+  expect(stepInto(find('deep', 2), { aquatic: true, terrestrial: true })).toBe(1);
+  expect(stepInto(find('plain', 2), { aquatic: true, terrestrial: true })).toBe(stepInto(find('plain', 2)));
 });
 test('nouvelles cases du Monde des Hommes : aride = 2, volcan = 3 (traversable ; la brûlure se paie côté serveur)', () => {
   setWorld(1);

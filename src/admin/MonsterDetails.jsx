@@ -4,7 +4,8 @@ import Pick from './Pick.jsx'; import { confirmDel, Search, matches, Empty } fro
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { BodyParts, RespawnPanel } from './MonsterParts.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
-import { SLOT_LABEL, MONSTER_GROUPS, respawnSummary, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
+import { RARITIES, RARITY_LABEL } from './rarity.js';
+import { SLOT_LABEL, MONSTER_GROUPS, LOCO, toggleLoco, locoLabel, respawnSummary, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
 /**
  * Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets :
  *  1. Caractéristiques (édition des champs du type),
@@ -56,6 +57,7 @@ export default function MonsterDetails() {
       if (draft[k] === undefined || draft[k] === '') continue;
       if (t === 'json') { const v = jsonOr(draft[k], undefined); if (v === undefined) { d(Ad.msg(`JSON invalide : ${k}`)); return; } body[k] = v; }
       else if (t === 'number') body[k] = Number(draft[k]);
+      else if (t === 'loco') body[k] = draft[k].length ? draft[k] : ['land'];
       else body[k] = String(draft[k]);
     }
     try {
@@ -143,7 +145,13 @@ export default function MonsterDetails() {
   const typeOf = i => i.spawned ? 'sauvage (spawn)' : i.placed ? 'placé' : 'ancré (prototype)';
   const lootTag = l => l.item_name ? `objet ${l.item_name}` : (l.divine_ref || l.divine_kind) ? `divin ${l.divine_kind} n°${l.divine_ref}` : l.resource === 'or' ? `or x${l.qty_min ?? 1}` : `ressource ${l.resource} x${l.qty_min ?? 1}`;
   const fieldOf = k => F.find(f => f[0] === k);
-  const input = ([k, label, t]) => <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft?.[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>;
+  const input = ([k, label, t]) => t === 'check' ? <div key={k} className="cell span-all"><label className="check"><input type="checkbox" checked={!!draft?.[k]} onChange={e => set(k, e.target.checked)} /> {label}</label></div>
+    : t === 'rarity' ? <div key={k} className="cell"><small>{label}</small><select value={draft?.[k] || 'commun'} onChange={e => set(k, e.target.value)}>{RARITIES.map(r => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}</select></div>
+      : t === 'loco' ? <div key={k} className="cell span2"><small>{label} (combinable)</small><div className="seg2">{LOCO.map(([v, l]) =>
+        <button key={v} type="button" className={`chip${(draft?.[k] || ['land']).includes(v) ? ' on' : ''}`} aria-pressed={(draft?.[k] || ['land']).includes(v)} onClick={() => set(k, toggleLoco(draft?.[k], v))}>{l}</button>)}</div></div>
+        : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft?.[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>;
+  /** Groupe « Monture » : seulement la case à cocher tant que le type ne sert pas de monture. */
+  const groupKeys = (title, keys) => (title === 'Monture' && !draft?.mountable ? ['mountable'] : keys);
   const view = monsters.filter(m => matches(q, m.name, m.id));
   const onMap = m => (status?.instances ?? []).some(i => i.prototype === m.id || i.id === m.id);
   return <section className="split">
@@ -151,7 +159,7 @@ export default function MonsterDetails() {
       <div className="headrow"><Search value={q} onChange={setQ} /><button className="sm" onClick={newOne}><Plus size={14} /> Nouveau type</button></div>
       <small className="count">{view.length} / {monsters.length}</small>
       <div className="list">{view.map(m => <button key={m.id} className={`item row2${String(sel) === String(m.id) ? ' on' : ''}`} onClick={() => open(m.id)}><b>{m.name}</b>
-        <small>PV {m.hp_max} · {respawnSummary(m)}{onMap(m) ? ' · sur carte(s)' : ''} · n°{m.id}</small></button>)}
+        <small>{RARITY_LABEL[m.rarity] ?? 'Commun'}{m.mountable ? ` · monture (${locoLabel(m.locomotion)})` : ''} · PV {m.hp_max} · {respawnSummary(m)}{onMap(m) ? ' · sur carte(s)' : ''} · n°{m.id}</small></button>)}
         {!view.length && <Empty>Aucun type de monstre.</Empty>}</div>
     </div>
     <div className="detailpane">
@@ -161,7 +169,7 @@ export default function MonsterDetails() {
       {sel !== 'new' && <div className="tabs">{TABS.map(([k, label]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>)}</div>}
 
       {tab === 'data' && <>
-        {MONSTER_GROUPS.map(([title, keys]) => <div key={title} className="fgroup"><h5>{title}</h5><div className="form">{keys.map(k => input(fieldOf(k)))}</div></div>)}
+        {MONSTER_GROUPS.map(([title, keys]) => <div key={title} className="fgroup"><h5>{title}</h5><div className="form">{groupKeys(title, keys).map(k => input(fieldOf(k)))}</div></div>)}
         <details className="fgroup"><summary><h5>Avancé : comportement (JSON)</h5></summary>
           <textarea className="mono" rows="4" value={typeof draft?.data === 'string' ? draft.data : jsonText(draft?.data ?? null)} onChange={e => set('data', e.target.value)} /></details>
         <div className="actions sticky">

@@ -27,7 +27,7 @@ export default function TileCard() {
   useEffect(() => { setAct(''); }, [selected?.x, selected?.y]);
   useEffect(() => { if (mapId) api(`/map/${mapId}/tile-types`).then(setTileCosts).catch(() => setTileCosts([])); }, [mapId]);   // coûts admin « Cases » du monde
   useEffect(() => { const e = sc?.entity; setPrev(null); if (selected && e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id) api(`/combat/preview/${me.id}/${selected.x}/${selected.y}`).then(setPrev).catch(() => {}); }, [sc]);
-  if (!me) return null; const P = me.actor.pos, hero = me.actor.kind === 'hero', mount = hero ? me.mount : null, fly = !!mount?.flying, aq = !!mount?.aquatic, pe = (t, o = {}) => pathEnergy(P, t, { flying: fly, aquatic: aq, ...o }), kinds = Object.keys(me.scrolls ?? {}).filter(k => k !== 'ship' && me.scrolls[k] > 0),
+  if (!me) return null; const P = me.actor.pos, hero = me.actor.kind === 'hero', mount = hero ? me.mount : null, fly = !!mount?.flying, aq = !!mount?.aquatic, land = mount ? mount.terrestrial ?? !aq : true, pe = (t, o = {}) => pathEnergy(P, t, { flying: fly, aquatic: aq, terrestrial: land, ...o }), kinds = Object.keys(me.scrolls ?? {}).filter(k => k !== 'ship' && me.scrolls[k] > 0),
     E = (mv, ac = 0) => mv === Infinity ? '∞' : mount && mv ? `⚡${mv} monture${ac ? ` + ⚡${ac}` : ''}` : `⚡${mv + ac}`;   // seuls les déplacements paient la monture
   if (selected) {
     const e = sc?.entity, t = { x: selected.x, y: selected.y }, dist = Math.max(Math.abs(t.x - P.x), Math.abs(t.y - P.y)), range = me.range_eff, attackable = e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && !(e.kind !== 'monster' && (inSafeZone(P.map_id, P.x, P.y) || inSafeZone(P.map_id, t.x, t.y))), res = sc?.terrain;

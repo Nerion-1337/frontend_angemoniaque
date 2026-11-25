@@ -16,3 +16,12 @@ test('fiche : plus de champ « Garde », chaque champ groupé existe', () => {
   expect(keys).not.toContain('guards_item');
   for (const [, ks] of MONSTER_GROUPS) for (const k of ks) expect(keys).toContain(k);
 });
+// Lot B : fusion monstres / montures — déplacement combinable, jamais vide.
+import { toggleLoco, locoLabel } from '../src/admin/monsterDetails.js';
+test('déplacement : bascule combinable, le dernier mode ne se retire pas', () => {
+  expect(toggleLoco(['land'], 'air')).toEqual(['land', 'air']);
+  expect(toggleLoco(['land', 'air'], 'land')).toEqual(['air']);
+  expect(toggleLoco(['water'], 'water')).toEqual(['water']);
+  expect(toggleLoco('', 'water')).toEqual(['land', 'water']);
+  expect(locoLabel(['land', 'water'])).toBe('Terrestre + Aquatique'); expect(locoLabel(null)).toBe('Terrestre');
+});

@@ -13,7 +13,7 @@ test('slice admin : navigation de section / entité et message', () => {
 test("descripteurs de champs : chaque type d'entité couvre les règles transverses demandées", () => {
   for (const k of ['monster', 'item', 'mount', 'building']) expect(FIELDS[k]).toBeTruthy();
   expect(FIELDS.item.some(f => f[0] === 'durability')).toBe(true);
-  expect(FIELDS.mount.some(f => ['speed', 'carry'].includes(f[0]))).toBe(true);
+  expect(FIELDS.monster.some(f => ['speed', 'carry', 'mountable', 'locomotion', 'rarity'].includes(f[0]))).toBe(true);   // montures fusionnées dans les monstres
   expect(FIELDS.building.some(f => f[0] === 'structure')).toBe(true);
   expect(FIELDS.rank.some(f => f[0] === 'prereq_xp')).toBe(true);
   expect(FIELDS.rank.some(f => f[0] === 'multipliers')).toBe(true);
@@ -24,4 +24,5 @@ test('jsonOr : JSON tolérant (défaut si vide ou invalide)', () => {
   expect(jsonOr('')).toBeNull();
   expect(jsonOr('{', 42)).toBe(42);
   expect(jsonOr('pas du json', 7)).toBe(7);
+  expect(jsonOr({ behavior: 'passif' }, 7)).toEqual({ behavior: 'passif' });   // valeur de l'API non retouchée : enregistrable telle quelle
 });

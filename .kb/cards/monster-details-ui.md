@@ -27,6 +27,8 @@ Spécificités (quantités max, parties du corps équipables), Liste (instances 
 
 ## Business rules
 - Mise en page : liste des types à gauche (recherche, résumé PV / réapparition) + fiche à droite ; onglets Caractéristiques (groupes Identité, Vie et énergie, Combat, Récompenses ; JSON de comportement replié), Capacités, Équipement et quantité, Réapparition, Sur les cartes ; quitter une fiche modifiée demande confirmation.
+- Montures fusionnées (lot B) : groupe « Rareté et déplacement » (rareté, déplacement combinable Terrestre / Aérien / Aquatique, jamais vide — `toggleLoco`) et groupe « Monture » (case « Peut servir de monture », puis vitesse, portage, bonus de vue et de portée) ; la liste affiche rareté et « monture (modes) ». Plus de section « Montures » dans la navigation.
+- Un champ JSON non retouché (objet reçu de l'API) s'enregistre tel quel (`jsonOr`).
 - Le champ « Garde (relique/arcane/artefact) » n'est plus dans la fiche : l'objet divin gardé se règle par monstre (butin / objets divins).
 - Capacités : actives (lancées à la demande) et passives (en continu, sans énergie, cible alliés/ennemis + rayon) ; catalogue global de sorts avec recherche.
 - Parties équipables : silhouette dont chaque partie se coche ET se décoche (bouton à bascule, `aria-pressed`) + liste des parties cochées retirables (×) ; sans partie cochée, aucun équipement ne peut être ajouté aux monstres du type (règle aussi appliquée par le serveur) ; une pièce portée reste supprimable.
@@ -45,4 +47,4 @@ Spécificités (quantités max, parties du corps équipables), Liste (instances 
 - Classes admin : jamais une classe globale du jeu (`.inl` = ligne d'insertion du glisser-déposer → `.inlabel`).
 
 ## Tests
-`test/monsterRespawn.test.js` (`respawnBody`, `respawnSummary`, plus de champ « Garde ») ; `test/monsterDetails.test.js` (silhouette à bascule + liste retirable, 7 `SLOTS`, filtres, libellés, `placeBody`, effets en corps de bloc, `<thead>/<tbody>`, `Pick` paginé, `MiniMap`) ; `test/adminDom.test.js`.
+`test/monsterRespawn.test.js` (`respawnBody`, `respawnSummary`, plus de champ « Garde », `toggleLoco`, `locoLabel`) ; `test/admin.test.js` (`jsonOr` objet, champs de monture du monstre) ; `test/monsterDetails.test.js` (silhouette à bascule + liste retirable, 7 `SLOTS`, filtres, libellés, `placeBody`, effets en corps de bloc, `<thead>/<tbody>`, `Pick` paginé, `MiniMap`) ; `test/adminDom.test.js`.
