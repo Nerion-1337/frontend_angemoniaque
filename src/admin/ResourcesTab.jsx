@@ -17,13 +17,13 @@ import { WORLD_LABEL } from './tiles.js';
 const Dot = ({ id }) => <i className="resdot" style={{ background: RES_COLOR[id] ?? '#ccc' }} />;
 export default function ResourcesTab() {
   const d = useDispatch();
-  const [cat, setCat] = useState({}), [rules, setRules] = useState([]), [rule, setRule] = useState(null);
+  const [upPrice, setUpPrice] = useState(''), [cat, setCat] = useState({}), [rules, setRules] = useState([]), [rule, setRule] = useState(null);
   const [maps, setMaps] = useState([]), [res, setRes] = useState([]), [world, setWorld] = useState(1), [rows, setRows] = useState(null);
   const [edit, setEdit] = useState(null), [f, setF] = useState(sectorDraft()), [tool, setTool] = useState('select'), [showRes, setShowRes] = useState(true), [focus, setFocus] = useState(null), [hover, setHover] = useState(null);
   const load = () => api(`/admin/content/deposits?mapId=${world}`).then(setRows).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { load(); setEdit(null); setFocus(null); }, [world]);   // corps de bloc
   const loadRules = () => api('/admin/content/resource-rules').then(setRules).catch(e => d(Ad.msg(e.message)));
-  useEffect(() => { api('/admin/catalog').then(c => { setCat(c); setMaps(c.maps ?? []); setRes(c.resources ?? []); }).catch(() => {}); loadRules(); }, []);
+  useEffect(() => { api('/admin/catalog').then(c => { setCat(c); setMaps(c.maps ?? []); setRes(c.resources ?? []); }).catch(() => {}); loadRules(); api('/admin/content/map-upgrade').then(x => setUpPrice(x.price)).catch(() => {}); }, []);
   const m = maps.find(x => x.id === world) ?? { width: 200, height: 200 };
   const nameOf = Object.fromEntries(res.map(r => [r.id, r.name]));
   const ruleOf = Object.fromEntries(rules.map(r => [r.resource, r.harvest]));
@@ -129,6 +129,10 @@ export default function ResourcesTab() {
             {r.resources.map(s => <span key={s.id} className="shareline sm"><Dot id={s.resource} />{s.resource_name}<Locked id={s.resource} /> <small>{s.percent} %{s.kind ? ` · ${KIND_NAME[s.kind]}` : ''}</small><span className="grow" />
               <span className={`stockbar${s.stock ? '' : ' empty0'}`}><i style={{ '--p': (100 * s.stock) / s.stock_max }} /></span><small>{s.stock}/{s.stock_max}</small></span>)}
           </button>)}</div>
+          <h4>Carte des ressources <small>amélioration vendue à l'Hôtel de ville</small></h4>
+          <div className="upprice"><small>Prix</small><input type="number" min="0" value={upPrice} onChange={e => setUpPrice(e.target.value)} aria-label="Prix de l'amélioration de carte" /><small>or</small>
+            <button className="sm" onClick={() => api('/admin/content/map-upgrade', { price: Math.max(0, Math.trunc(Number(upPrice) || 0)) }, 'PUT').then(() => d(Ad.ok('Prix enregistré'))).catch(e => d(Ad.msg(e.message)))}>Enregistrer</button></div>
+          <small className="note">Le joueur qui l'achète peut, sur sa carte du monde, choisir une ressource pour la mettre en valeur (comme cette carte). Accordable aussi depuis la fiche du joueur.</small>
           <h4>Conditions de récolte <small>objets ou sorts exigés</small></h4>
           {rules.length > 0 && <div className="sectorlist">{rules.map(r => <button key={r.resource} className="sector" onClick={() => openRule(r.resource)}>
             <span className="shareline sm"><Dot id={r.resource} /><b>{r.resource_name}</b></span><small>{r.needs ?? activationSummary(r.harvest)}</small></button>)}</div>}

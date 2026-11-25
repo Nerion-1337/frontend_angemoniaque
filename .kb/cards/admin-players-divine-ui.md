@@ -2,7 +2,7 @@
 title: Admin « Joueurs » (liste paginée, fiche) et objets divins dans l'onglet Objets ; préfixe CSS admin
 slug: admin-players-divine-ui
 status: done
-updated: 2026-11-24
+updated: 2026-11-25
 files:
   - src/admin/PlayersTab.jsx
   - src/admin/players.js
@@ -31,6 +31,7 @@ objets, avec familles divines et exemplaires uniques.
 - Familles : plafond modifiable (vide = illimité), création (clé en minuscules), suppression des seules familles libres vides.
 - Exemplaires d'un objet divin : création dans la limite du plafond, suppression d'un exemplaire libre seulement.
 - Le corps d'un objet (`itemBody`) ne contient que les champs du formulaire, jamais de `null` (le back refuse null sur les nombres).
+- Fiche joueur : case « Carte des ressources » (amélioration de l'Hôtel de ville) accordée / retirée directement.
 
 ## Gotchas
 - `Divine.jsx` (composants) et `divine.js` (fonctions) ne diffèrent que par l'extension : importer avec l'extension.

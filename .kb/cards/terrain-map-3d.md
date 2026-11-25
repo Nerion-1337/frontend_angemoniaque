@@ -17,6 +17,7 @@ files:
   - src/components/MapLegend.jsx
   - src/components/Compass.jsx
   - src/lib/levels.js
+  - src/lib/resources3.js
 symbols:
   - src/lib/terrain.js:terrain
   - src/lib/terrain.js:noiseAt
@@ -53,6 +54,8 @@ et de montures pour les estimations, scène 3D, carte de case, légende et bouss
 - Scène : dessus de colonne + faces latérales découpées par niveau là où le voisin est plus bas (teinte alternée) ; végétation, curseurs, quadrillage (contour de chaque case à sa hauteur), points cardinaux et entités posés sur le dessus (à la surface sur l'eau, `standY`) ; volants (`flying` de `/map/area`) à `FLY_Y` (+6) avec fil + anneau vers la case survolée ; la caméra suit au niveau +6 un héros sur monture volante ou une créature volante contrôlée.
 - Clic sur une face latérale = case de la colonne (point reculé selon la normale). La carte de case affiche « niveau +n ».
 - Estimation d'énergie : la créature contrôlée utilise sa locomotion (`me.actor.loco`) — volante = 1 par case, comme le serveur.
+- Personnages : jambes, torse, bras, tête (cheveux, yeux), tenue par race (cape humaine ; robe, ailes en plumes et auréole d'ange ; cornes, épaulières, queue et yeux luisants de démon), respiration / bras animés. Créatures : modèle généré (museau, yeux luisants, cornes ou oreilles, pattes, queue ; teinte et proportions tirées du nom ; ailes qui battent si volante) ; une invocation non « golem » utilise ce modèle.
+- Royaume des Morts : miroir `lib/resources3.js` (3 ressources uniques, rendues comme plante / arbre / minerai) ; légende dédiée.
 
 ## Gotchas
 - Toute modification du terrain ou de l'énergie se fait des DEUX côtés (back et front) ; les fichiers générés se régénèrent par `tools/gen_*`.

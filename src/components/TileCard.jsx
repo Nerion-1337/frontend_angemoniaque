@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Dices, Ban, Info } from 'lucide-react'; import Modal from './Modal'; import { api } from '../lib/api'; import { pathEnergy } from '../lib/energy'; import { setTileCosts, spellLine } from '../lib/tiles'; import { inSafeZone } from '../lib/terrain'; import { A } from '../store'; import { useRefreshMe } from './GameCanvas'; import { levelAt, levelLabel } from '../lib/levels';
+import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Dices, Ban, Info, X, Footprints, Swords, Hammer, Pickaxe, DoorOpen, Crosshair, PawPrint, Eye, Zap, MapPin } from 'lucide-react'; import Modal from './Modal'; import { api } from '../lib/api'; import { pathEnergy } from '../lib/energy'; import { setTileCosts, spellLine } from '../lib/tiles'; import { inSafeZone } from '../lib/terrain'; import { A } from '../store'; import { useRefreshMe } from './GameCanvas'; import { levelAt, levelLabel } from '../lib/levels';
 const cache = new Map(), HEALTH = { 'En pleine forme': '#5fd08a', 'Bon état': '#b6dd6a', 'Blessé': '#f2b84b', 'Souffrant': '#e5545a' }, KIND = { plain: 'Plaine', forest: 'Forêt', mountain: 'Massif rocheux', shallow: 'Eau peu profonde', deep: 'Eau profonde', arid: 'Terre aride', snow: 'Pics glacés', ether: 'Pics d’éther', volcano: 'Volcan (brûlure : 10/h)' };
 function useCell(t, mapId, extra = '') { const [c, set] = useState(null); useEffect(() => { if (!t) return set(null); const k = `${mapId}:${t.x},${t.y}${extra}`; if (cache.has(k) && Date.now() - cache.get(k).at < 3000) return set(cache.get(k).v);
   api(`/map/${mapId}/cell?x=${t.x}&y=${t.y}${extra}`).then(v => { cache.set(k, { v, at: Date.now() }); set(v); }).catch(() => {}); }, [t?.x, t?.y]); return c; }
@@ -23,8 +23,8 @@ function InfoModal({ cell, close }) {
 }
 export default function TileCard() {
   const { hover, selected, me } = useSelector(s => s.game), d = useDispatch(), refresh = useRefreshMe(), mapId = me?.actor.pos.map_id;
-  const hc = useCell(!selected && hover, mapId), sc = useCell(selected, mapId); const [act, setAct] = useState(''), [kind, setKind] = useState('wall'), [prev, setPrev] = useState(null), [info, setInfo] = useState(null);
-  useEffect(() => { setAct(''); }, [selected?.x, selected?.y]);
+  const hc = useCell(!selected && hover, mapId), sc = useCell(selected, mapId); const buildKind = useRef(null), [building, setBuilding] = useState(false), [kind, setKind] = useState('wall'), [prev, setPrev] = useState(null), [info, setInfo] = useState(null);
+  useEffect(() => { setBuilding(false); }, [selected?.x, selected?.y]);
   useEffect(() => { if (mapId) api(`/map/${mapId}/tile-types`).then(setTileCosts).catch(() => setTileCosts([])); }, [mapId]);   // coûts admin « Cases » du monde
   useEffect(() => { const e = sc?.entity; setPrev(null); if (selected && e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id) api(`/combat/preview/${me.id}/${selected.x}/${selected.y}`).then(setPrev).catch(() => {}); }, [sc]);
   if (!me) return null; const P = me.actor.pos, hero = me.actor.kind === 'hero', mount = hero ? me.mount : null, loco = mount ?? (hero ? null : me.actor.loco), fly = !!loco?.flying, aq = !!loco?.aquatic, land = loco ? loco.terrestrial ?? !aq : true,   /* créature contrôlée : sa locomotion (volante = 1/case) */ pe = (t, o = {}) => pathEnergy(P, t, { flying: fly, aquatic: aq, terrestrial: land, ...o }), kinds = Object.keys(me.scrolls ?? {}).filter(k => k !== 'ship' && me.scrolls[k] > 0),
@@ -40,24 +40,37 @@ export default function TileCard() {
     const dep = sc?.deposit; if (!e && (res?.resource || dep) && !(res?.kind === 'deep' && !fly && !aq)) acts.push(['harvest', dep ? `Récolter ${dep.resource} (gisement ${dep.stock}/${dep.stockMax})` : `Récolter ${res.resource}`, pe(t), 4]); if (!e && kinds.length) acts.push(['build', 'Poser un élément', pe(t, { stopAt: 1 }), 10]);
     acts.push(['info', 'Plus d\'informations (état de forme & équipement)', 0, 0]);
     const ids = { characterId: me.id, targetCharacterId: e?.char_id, targetMonsterId: e?.monster_id, targetSummonId: e?.summon_id };
-    const run = async () => { try {
+    const run = async act => { try {
       if (act === 'info') { setInfo(await api(`/map/${mapId}/cell?x=${t.x}&y=${t.y}&details=1`)); return; }
       let msg = null;
       if (act === 'ride') { if (dist > 1) await api('/actions/approach', { characterId: me.id, ...t }); await api('/mounts/summon', { characterId: me.id, cmId: ownMount.char_mount_id }); }
       if (act === 'go') await api('/actions/move', { characterId: me.id, ...t }); if (act === 'approach') await api('/actions/approach', { characterId: me.id, ...t });
-      if (act === 'build') await api('/buildings/place', { characterId: me.id, kind: kinds.includes(kind) ? kind : kinds[0], ...t }); if (act === 'harvest') await api('/actions/gather', { characterId: me.id, ...t });
+      if (act === 'build') await api('/buildings/place', { characterId: me.id, kind: buildKind.current ?? kinds[0], ...t }); if (act === 'harvest') await api('/actions/gather', { characterId: me.id, ...t });
       if (act === 'attack' || act === 'breath') { const r = await api('/combat/attack', { ...ids, useMountBreath: act === 'breath' }); msg = r.missed ? `Raté ! (${r.hitChance}% de chances de toucher)` : `Touché : -${r.dmg} PV${r.killed ? ' — cible vaincue !' : ''}`; }
       if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital'));
         else if (r.activation) { const x = await api(`/buildings/${r.id}/activate`, { characterId: me.id }); msg = `${r.name} activé${x.results?.length ? ` : ${x.results.map(y => `${y.spell} → ${y.effect}`).join(' ; ')}` : ''}`; }   // conditions d'activation (lot E)
         else msg = r.name; }
       if (msg) d(A.toast(msg)); await refresh(); d(A.setSelected(null)); } catch (er) { d(A.toast(er.message)); } };
-    return <><div className="card" style={{ left: selected.sx + 14, top: selected.sy + 14 }}><button className="x" aria-label="Fermer" onClick={() => d(A.setSelected(null))}>×</button>
-      <div><b>{res?.zone ?? sc?.tile?.name ?? KIND[res?.kind] ?? '…'}</b>{res?.zone && sc?.tile?.name && <small> · {sc.tile.name}</small>} <small>({t.x}, {t.y}) · niveau {levelLabel(levelAt(t.x, t.y, mapId))}</small> · <small>⚡ {res ? (cellCost(sc) >= 99 ? '∞' : cellCost(sc)) : '…'}/case · {sc?.deposit?.resource ?? res?.resource ?? 'aucune ressource'}</small></div><TileInfo tile={sc?.tile} />{sc?.deposit && <div className="note">Gisement{sc.deposit.sector ? ` « ${sc.deposit.sector} »` : ''} : {sc.deposit.resource} — {sc.deposit.stock}/{sc.deposit.stockMax} (+{sc.deposit.regenPerH}/h, {sc.deposit.yieldPerHarvest} par récolte)</div>}{sc?.harvestNeeds && <div className="note">Récolte : nécessite {sc.harvestNeeds}</div>}<Entity e={e} />
+    const ICON = { go: Footprints, approach: Footprints, attack: Swords, breath: Crosshair, interact: DoorOpen, ride: PawPrint, harvest: Pickaxe, build: Hammer, info: Eye };
+    const resName = sc?.deposit?.resource ?? res?.resource, lvl = levelAt(t.x, t.y, mapId), cost = res ? (cellCost(sc) >= 99 ? '∞' : cellCost(sc)) : '…';
+    const costOf = ([k, , mv, ac, mc]) => k === 'info' ? null : mv === Infinity ? 'impossible' : mc ? `⚡${mc} monture${mv ? ` + ${E(mv)}` : ''}` : E(mv, ac);
+    const pos = { left: Math.max(8, Math.min(selected.sx + 14, innerWidth - 348)), top: Math.max(8, Math.min(selected.sy + 14, innerHeight - 440)) };   // reste dans l'écran
+    return <><div className="card tcard" style={pos} role="dialog" aria-label={`Case ${t.x}, ${t.y}`}>
+      <header className="tc-head"><div className="grow"><b>{res?.zone ?? sc?.tile?.name ?? KIND[res?.kind] ?? '…'}</b>{res?.zone && sc?.tile?.name && <small> · {sc.tile.name}</small>}
+        <div className="tc-tags"><span><MapPin size={11} /> {t.x}, {t.y}</span><span>niveau {levelLabel(lvl)}</span><span><Zap size={11} /> {cost}/case</span>{resName && <span className="res">{resName}</span>}</div></div>
+        <button className="x" aria-label="Fermer" onClick={() => d(A.setSelected(null))}><X size={14} /></button></header>
+      <TileInfo tile={sc?.tile} />
+      {sc?.deposit && <div className="note">Gisement{sc.deposit.sector ? ` « ${sc.deposit.sector} »` : ''} : {sc.deposit.resource} — {sc.deposit.stock}/{sc.deposit.stockMax} (+{sc.deposit.regenPerH}/h, {sc.deposit.yieldPerHarvest} par récolte)</div>}
+      {sc?.harvestNeeds && <div className="note">Récolte : nécessite {sc.harvestNeeds}</div>}
+      <div className="tc-ent"><Entity e={e} /></div>
       {e && dist === 1 && !attackable && e.kind !== 'building' && <div className="note"><Ban size={14} /> Case occupée (vous êtes juste à côté).</div>}
-      {prev?.hitChance != null && <div className="hit"><Dices size={14} /> Chance de toucher (agilité) : <b>{prev.hitChance}%</b> <small>esquive {prev.dodge}%</small></div>}
-      <select value={act} onChange={x => setAct(x.target.value)}><option value="">— Actions possibles —</option>{acts.map(([k, l, mv, ac, mc]) => <option key={k} value={k} disabled={mv === Infinity}>{l}{k !== 'info' ? ` — ${mc ? `⚡${mc} monture` + (mv ? ` + ${E(mv)}` : '') : E(mv, ac)}` : ''}</option>)}</select>
-      {act === 'build' && <select value={kinds.includes(kind) ? kind : kinds[0]} onChange={x => setKind(x.target.value)}>{[['wall', 'Muraille de pierre'], ['tower', 'Tour de garde'], ['factory', 'Usine de production'], ['totem', 'Totem de zone']].filter(([k]) => kinds.includes(k)).map(([k, l]) => <option key={k} value={k}>{l} (×{me.scrolls[k]})</option>)}</select>}
-      <button className="primary" disabled={!act} onClick={run}>{act === 'info' ? <><Info size={14} /> Voir</> : 'Valider'}</button></div>{info && <InfoModal cell={info} close={() => setInfo(null)} />}</>;
+      {prev?.hitChance != null && <div className="tc-hit"><Dices size={14} /> Toucher <b>{prev.hitChance}%</b><span className="tc-bar"><i style={{ width: `${prev.hitChance}%` }} /></span><small>esquive {prev.dodge}%</small></div>}
+      <div className="tc-acts">{acts.map(a => { const [k, l, mv] = a, I = ICON[k] ?? Zap, c = costOf(a);
+        return <button key={k} className={`tc-act${k === 'attack' || k === 'breath' ? ' danger' : ''}${k === 'build' && building ? ' on' : ''}`} disabled={mv === Infinity} onClick={() => (k === 'build' ? setBuilding(!building) : run(k))}>
+          <I size={15} /><span className="grow">{l}</span>{c && <em>{c}</em>}</button>; })}</div>
+      {building && <div className="tc-build">{[['wall', 'Muraille de pierre'], ['tower', 'Tour de garde'], ['factory', 'Usine de production'], ['totem', 'Totem de zone']].filter(([k]) => kinds.includes(k)).map(([k, l]) =>
+        <button key={k} className="sm" onClick={() => { buildKind.current = k; setKind(k); run('build'); }}>{l} <small>×{me.scrolls[k]}</small></button>)}</div>}
+    </div>{info && <InfoModal cell={info} close={() => setInfo(null)} />}</>;
   }
   return hover ? <div className="card hover" style={{ left: hover.sx + 14, top: hover.sy + 14 }}>{hc ? <><div><b>{hc.terrain.zone ?? hc.tile?.name ?? KIND[hc.terrain.kind]}</b> <small>({hc.x}, {hc.y}) · ⚡ {cellCost(hc) >= 99 ? '∞' : cellCost(hc)}/case · {hc.terrain.resource ?? 'aucune ressource'}</small></div><Entity e={hc.entity} /><small>Trajet : {E(pe(hover))}</small></> : '…'}</div> : null;
 }

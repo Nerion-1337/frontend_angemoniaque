@@ -1,5 +1,5 @@
 import { RESOURCES, GROUPS } from '../lib/resources';
-import { ZONES2, RES2_BY_ID, SIDES } from '../lib/resources2';
+import { ZONES2, RES2_BY_ID, SIDES } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
 import './legend.css';
 const hex = n => '#' + n.toString(16).padStart(6, '0');
 /** Monde Anges & Démons : une ligne par ZONE de sol (même couleur que sur la carte) et ce qu'on y récolte — le sol affiché et la récolte viennent du même catalogue. */
@@ -15,6 +15,9 @@ function LegendAngDem() {
 /** Légende des ressources : où trouver quoi. Les emplacements précis ne valent que pour le Monde des Hommes (carte 1) ; le monde 2 a sa légende par zones. */
 export default function MapLegend({ mapId }) {
   if (mapId === 2) return <LegendAngDem />;
+  if (mapId === 3) return <details className="reslegend" open><summary>Ressources du Royaume des Morts</summary>
+    {RESOURCES3.map(r => <div key={r.id} className="resrow"><i style={{ background: r.color }} /><div><b>{r.name}</b><span className="pill">unique</span><small>{r.where}</small></div></div>)}
+    <small className="resnote">Trois ressources introuvables ailleurs, sur très peu de cases. Aucune ressource des autres mondes ici.</small></details>;
   const human = mapId === 1;
   return <details className="reslegend" open>
     <summary>Ressources{human ? ' du Monde des Hommes' : ' (par type de terrain)'}</summary>

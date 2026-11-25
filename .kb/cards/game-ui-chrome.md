@@ -39,6 +39,9 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Changement de personnage : `useRefreshMe` lit `charId` au moment de l'appel et ignore une réponse arrivée après un changement ; l'intervalle de rafraîchissement est relancé au changement (sinon l'ancien personnage revenait).
 - Hôtel de ville (`Capital`) : en-tête (nom, or), onglets Boutique, Sorts, Marché (offres + vente : objet du sac, prix), Coffre (jauge, extension, colonnes Coffre ⇄ Sac) ; cartes d'objets en grille ; bouton grisé si or insuffisant / épuisé / coffre plein.
 - Invocations : statut par créature (Au repos / Invoquée / contrôlée / Montée) ; au repos : « Invoquer », « Invoquer et monter » si montable ; invoquée : « Monter dessus » (case voisine), « Contrôler », « Renvoyer » ; montée : « Descendre », « Descendre et la laisser invoquée ».
+- Pactes, Actions, Invocations, Compte : fenêtres CENTRÉES (`Panel` = `Modal`), fermées par Échap / clic extérieur / ×.
+- Hôtel de ville, onglet Boutique : offre « Carte des ressources » (prix serveur, « Acquise » si possédée). Carte du monde : si `map_upgrade`, liste des ressources présentes (nombre de cases) ; une ressource choisie est mise en valeur (le reste assombri), aucune = carte habituelle (terrain naturel ; les secteurs admin ne sont pas montrés).
+- Carte de case sélectionnée : en-tête (nom, case, niveau, coût, ressource), infos, entité, jauge de toucher, une action = un bouton avec son coût (plus de liste + « Valider ») ; construction : choix du bâtiment en boutons ; reste dans l'écran.
 
 ## Gotchas
 - Classe globale `.inl` déjà prise par le jeu (ligne d'insertion) : ne pas réutiliser de classes génériques sans préfixe.

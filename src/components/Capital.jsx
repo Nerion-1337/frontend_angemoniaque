@@ -1,6 +1,6 @@
 // Hôtel de ville / capitale de faction : un onglet à la fois — Boutique (objets), Sorts, Marché (acheter / vendre), Coffre.
 import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux';
-import { Store, ShoppingBag, Package, PlusCircle, Sparkles, X, Coins, ArrowRight, ArrowLeft, Check, Tag } from 'lucide-react';
+import { Store, ShoppingBag, Package, PlusCircle, Sparkles, X, Coins, ArrowRight, ArrowLeft, Check, Tag, Map as MapIco } from 'lucide-react';
 import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import Modal from './Modal'; import { api } from '../lib/api'; import { useRefreshMe } from './GameCanvas';
 import { Tabs, useTab } from './Tabs';
 const CAP = { human: 'Hôtel de Ville', demon: 'Bastion Infernal', angel: 'Sanctuaire de la Providence' };
@@ -25,6 +25,10 @@ export default function Capital() {
     <Tabs tabs={tabs} value={tab} onChange={setTab} label="Services de la capitale" />
 
     {tab === 'shop' && <section className="cap-pane">
+      {shop?.mapUpgrade && <article className={`cap-feature${me.map_upgrade ? ' owned' : ''}`}><MapIco size={26} />
+        <div><b>Carte des ressources</b><small>Votre carte du monde met en valeur la ressource de votre choix, case par case. Sans ressource choisie, elle reste la carte habituelle.</small></div>
+        {me.map_upgrade ? <span className="pill ok"><Check size={13} /> Acquise</span>
+          : <button className="primary" disabled={me.gold < shop.mapUpgrade.price} title={me.gold < shop.mapUpgrade.price ? 'Or insuffisant' : ''} onClick={() => act(() => api('/shop/map-upgrade', { characterId: me.id }), 'Carte améliorée : ouvrez la carte du monde')}><Coins size={14} /> {shop.mapUpgrade.price}</button>}</article>}
       <p className="cap-hint">Réserve de la faction : outils de récolte, armes, armures et parchemins de base.</p>
       {shop && !shop.items.length && <Empty>La réserve est vide.</Empty>}
       <div className="cap-grid">{shop?.items.map(i => { const poor = me.gold < i.price, out = i.stock <= 0;

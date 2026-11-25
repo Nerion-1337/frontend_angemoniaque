@@ -1,5 +1,5 @@
 import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Backpack, ScrollText, Lock, TrendingUp, Package } from 'lucide-react'; import Info from './Info';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas';
+import Modal from './Modal'; import { GROUP } from '../lib/equipment'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas';
 const DEFAULT = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="#2b2842"/><circle cx="48" cy="38" r="18" fill="#8a85a8"/><rect x="20" y="62" width="56" height="30" rx="14" fill="#8a85a8"/></svg>');
 const LABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération (Vie, Énergie & Énergie divine /h)', see: 'Vision (cases)', agility: 'Agilité (toucher / esquive)', strength: 'Force' };
 const RACES = { human: 'Humain', demon: 'Démon', angel: 'Ange' };
@@ -13,12 +13,11 @@ function History({ id, close }) {
 // Silhouette en étoile (bras tendus, jambes écartées) : coordonnées dans un repère 120 × 100. Chaque emplacement est posé sur le segment du corps concerné.
 // Mains : deux blocs superposés (arme/bouclier au-dessus, bague en dessous) avec la main au centre, entre les deux.
 const SLOTS = [['head', 'Tête', 60, 7.7], ['amulet', 'Collier', 60, 41], ['chest', 'Plastron', 60, 56], ['foot', 'Chaussures', 60, 90], ['weapon_main', 'Arme (main G.)', 11, 20.5], ['ring_l', 'Bague G.', 11, 45.5], ['weapon_off', 'Bouclier / 2ᵉ arme', 109, 20.5], ['ring_r', 'Bague D.', 109, 45.5],
-  ['bracelet_l', 'Bracelet G.', 33, 17], ['bracelet_r', 'Bracelet D.', 87, 17], ['bow', 'Arc / flèches', 96, 70]];
-const LEADERS = [[60, 15.3, 60, 17], [33, 24, 24, 33], [87, 24, 96, 33], [60, 83, 36, 95], [60, 83, 84, 95], [86, 64, 66, 54]];
-const GROUP = { weapon: ['weapon_main', 'weapon_off'], shield: ['weapon_off'], bow: ['bow'], head: ['head'], chest: ['chest'], foot: ['foot'], amulet: ['amulet'], ring: ['ring_l', 'ring_r'], bracelet: ['bracelet_l', 'bracelet_r'], special: [1, 2, 3, 4, 5].map(n => 'special_' + n) };
-const TYPE = { weapon: 'Arme', shield: 'Bouclier', bow: 'Arc', head: 'Casque', chest: 'Plastron', foot: 'Chaussures', amulet: 'Collier', ring: 'Bague', bracelet: 'Bracelet', special: 'Objet spécial', scroll: 'Parchemin', tool: 'Outil' };
+  ['bracelet_l', 'Bracelet G.', 33, 17], ['bracelet_r', 'Bracelet D.', 87, 17]];
+const LEADERS = [[60, 15.3, 60, 17], [33, 24, 24, 33], [87, 24, 96, 33], [60, 83, 36, 95], [60, 83, 84, 95]];
+const TYPE = { weapon: 'Arme', shield: 'Bouclier', head: 'Casque', chest: 'Plastron', foot: 'Chaussures', amulet: 'Collier', ring: 'Bague', bracelet: 'Bracelet', special: 'Objet spécial', scroll: 'Parchemin', tool: 'Outil' };
 const BONUS_LABEL = { hp_max: 'PV max', recovery: 'Régén./h', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', see: 'Vue', range: 'Portée' };
-const statLine = i => [i.weapon_damage ? `Arme ×${i.weapon_damage}` : null, i.armor || i.magic_armor ? `Armure ${i.armor ?? 0}/${i.magic_armor ?? 0}` : null, i.strength_bonus ? `${i.strength_bonus > 0 ? '+' : ''}${i.strength_bonus} Force` : null, i.agility_bonus ? `${i.agility_bonus > 0 ? '+' : ''}${i.agility_bonus} Agilité` : null,
+const statLine = i => [i.weapon_damage ? `Arme ×${i.weapon_damage}${i.two_handed ? ' (deux mains)' : ''}` : i.two_handed ? 'Deux mains' : null, i.armor || i.magic_armor ? `Armure ${i.armor ?? 0}/${i.magic_armor ?? 0}` : null, i.strength_bonus ? `${i.strength_bonus > 0 ? '+' : ''}${i.strength_bonus} Force` : null, i.agility_bonus ? `${i.agility_bonus > 0 ? '+' : ''}${i.agility_bonus} Agilité` : null,
   ...Object.entries(i.bonuses ?? {}).filter(([, v]) => v).map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${BONUS_LABEL[k] ?? k}`), i.req_strength ? `Force req. ${i.req_strength}` : null].filter(Boolean).join(' · ');
 const fmtLock = sec => { const h = Math.floor(sec / 3600), m = Math.ceil((sec % 3600) / 60); return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`; };
 /** Passage au rang suivant par conditions : une ligne et un bouton par voie proposée (définitive, temporaire) ; rang temporaire affiché avec son échéance. */
@@ -35,24 +34,40 @@ function RankUp({ me, after }) {
           {miss.length > 0 && <><br /><small className="err">Manque : {miss.join(', ')}</small></>}
           <br /><button className="primary sm" disabled={!!r.temp || miss.length > 0} onClick={() => run(() => api(`/characters/${me.id}/rank-up`, { mode: m }), () => { load(); after(); })}>Passer {r.next.name} ({l})</button></div>; })}</div></div>;
 }
+const DLABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération', see: 'Vision', range: 'Portée', strength: 'Force', agility: 'Agilité', armor: 'Armure physique', magic_armor: 'Armure magique' };
+const sg = v => (v > 0 ? `+${v}` : `${v}`);
+const KIND_FR = { item: 'objet', buff: 'effet', mount: 'monture', building: 'bâtiment' };
+/** Détail d'une caractéristique au survol : base, puis chaque objet / sort / pacte / monture qui l'ajoute ou la retire. */
+export function StatDetail({ keys, B, note }) {
+  const rows = keys.map(k => [k, B[k]]).filter(([, b]) => b);
+  if (!rows.length) return null;
+  return <div className="bd" role="tooltip">{rows.map(([k, b]) => <div key={k} className="bdsec">{keys.length > 1 && <b>{DLABEL[k]}</b>}
+    <div className="bdl"><span>Base</span><span>{b.base}</span></div>
+    {b.parts.map((p, i) => <div key={i} className={`bdl ${p.value < 0 ? 'neg' : 'pos'}`}><span>{p.label}<small>{KIND_FR[p.kind] ?? p.kind}</small></span><span>{sg(p.value)}</span></div>)}
+    <div className="bdl tot"><span>Total</span><span>{b.final}</span></div></div>)}{note && <small className="bdnote">{note}</small>}</div>;
+}
 function Inventory({ close }) {
   const { me } = useSelector(s => s.game), refresh = useRefreshMe(), run = useDo(), [inv, load] = useData(`/inventory/${me.id}`), [up, loadUp] = useData(`/characters/${me.id}/upgrades`, [me.xp]), [sel, setSel] = useState(null), [tab, setTab] = useState('equip'), st = me.stats;
-  const act = f => run(f, () => { load(); loadUp(); refresh(); }), eq = s => inv?.items.find(i => i.equipped_slot === s), bag = inv?.items.filter(i => !i.equipped_slot) ?? [], selItem = bag.find(i => i.id === sel), okSlots = selItem ? GROUP[selItem.slot] ?? [] : [];
+  const act = f => run(f, () => { load(); loadUp(); refresh(); }), eq = s => inv?.items.find(i => i.equipped_slot === s), bag = inv?.items.filter(i => !i.equipped_slot) ?? [], selItem = bag.find(i => i.id === sel), okSlots = selItem ? (selItem.two_handed ? ['weapon_main'] : GROUP[selItem.slot] ?? []) : [], twoHanded = !!eq('weapon_main')?.two_handed;
   const click = s => act(async () => { const e = eq(s); if (e) await api('/inventory/equip', { characterId: me.id, itemId: e.id, slot: null }); else if (sel) { await api('/inventory/equip', { characterId: me.id, itemId: sel, slot: s }); setSel(null); } });
-  const Slot = ({ k, label, x, y, flow }) => { const it = eq(k), lock = it?.lock_seconds > 0;
+  const Slot = ({ k, label, x, y, flow }) => { const it = eq(k), lock = it?.lock_seconds > 0, held = k === 'weapon_off' && !it && twoHanded;   // main prise par l'arme à deux mains
     return <button type="button" className={'slot2' + (it ? ' full' : '') + (lock ? ' locked' : '') + (!it && okSlots.includes(k) ? ' ok' : '') + (flow ? ' flow' : '')} style={flow ? undefined : { left: `${x / 1.2}%`, top: `${y}%` }} onClick={() => click(k)}
       title={it ? `${it.name} — ${statLine(it) || TYPE[it.slot]}${lock ? ` — verrouillé encore ${fmtLock(it.lock_seconds)}` : ''}` : `${label} : vide`} aria-label={`${label} : ${it?.name ?? 'vide'}`}>
-      <span className="sl-label">{label}{lock && <em className="lk"><Lock size={11} />{fmtLock(it.lock_seconds)}</em>}</span><b className={'sl-item' + (it ? '' : ' none')}>{it?.name ?? 'Vide'}</b></button>; };
-  const T = [['Vie', `${me.hp_current}/${me.hp_max}`, 'var(--hp)'], ['Énergie', `${me.energy_current}/${me.energy_max}`, 'var(--en)'], ...(me.hasDivine ? [['Én. divine', `${me.divine_energy_current}/${me.divine_energy_max}`, 'var(--div)']] : []),
-    ['Régénération', `+${me.recovery}/h`, '#b6dd6a', null, <Info title="Régénération unique">Une seule statistique restaure chaque heure votre <b>Vie</b>, votre <b>Énergie</b> et votre <b>Énergie divine</b>. Elle vaut pour tous : joueurs, montures, invocations et monstres.</Info>],
-    ['Vision', me.see_eff, '#7fe0ff'],
-    ['Agilité', st.agility, 'var(--ok)', null, <Info title="Agilité : toucher et esquiver">Elle détermine vos chances de toucher et d'esquiver.<br />Chance de toucher = (votre agilité + 5) ÷ (votre agilité + celle de la cible + 10), bornée entre 10 % et 95 %. À agilité égale : 50 %. L'esquive est le complément.<br /><em>Actuellement : {st.agility} (base {me.agility}, équipement {st.agility - me.agility >= 0 ? '+' : ''}{st.agility - me.agility}).</em></Info>],
-    ['Force', st.strength, '#ff9a5a', `req. ${st.reqStrength}`],
-    ['Dégâts', st.damage, 'var(--hp)', null, <Info title="Dégâts infligés">Dégâts = dégâts de l'arme × (votre Force − la Force requise par <b>tous</b> vos équipements). À mains nues : 1.<br />Exemple : Force 10, épée 5 dégâts et 2 Force requise → 5 × (10 − 2) = <b>40</b>. Avec une armure demandant 5 Force en plus : 5 × (10 − 7) = <b>15</b>.<br />Ces dégâts sont ensuite réduits de l'armure de la cible.<br /><em>Actuellement : {st.weaponDamage ? `${st.weaponDamage} × (${st.strength} − ${st.reqStrength}) = ${st.damage}` : 'mains nues = 1'}.</em></Info>],
-    ['Armure', `${st.armor}/${st.magicArmor}`, '#8fc2ff', null, <Info title="Armure physique / magique">L'armure <b>réduit directement les dégâts reçus</b> : dégâts subis = dégâts − armure (minimum 1).<br />Elle est affichée <b>physique/magique</b> : « 5/0 » = 5 contre les attaques physiques, 0 contre la magie (sorts).<br /><em>Actuellement : {st.armor} physique, {st.magicArmor} magique.</em></Info>]];
+      <span className="sl-label">{label}{lock && <em className="lk"><Lock size={11} />{fmtLock(it.lock_seconds)}</em>}</span><b className={'sl-item' + (it ? '' : ' none')}>{it?.name ?? (held ? `(${eq('weapon_main').name})` : 'Vide')}</b></button>; };
+  const B = me.breakdown ?? {};
+  // Valeur finale ; au survol, le détail : base, objets, sorts / pactes, monture (statBreakdown du serveur).
+  const T = [['Vie', `${me.hp_current}/${me.hp_max}`, 'var(--hp)', ['hp_max']], ['Énergie', `${me.energy_current}/${me.energy_max}`, 'var(--en)', ['energy_max']],
+    ...(me.hasDivine ? [['Én. divine', `${me.divine_energy_current}/${me.divine_energy_max}`, 'var(--div)', ['divine_energy_max']]] : []),
+    ['Régénération', `+${me.recovery}/h`, '#b6dd6a', ['recovery'], null, <Info title="Régénération unique">Une seule statistique restaure chaque heure votre <b>Vie</b>, votre <b>Énergie</b> et votre <b>Énergie divine</b>. Elle vaut pour tous : joueurs, montures, invocations et monstres.</Info>],
+    ['Vision', me.see_eff, '#7fe0ff', ['see']], ['Portée', me.range_eff, '#c8a2ff', ['range']],
+    ['Agilité', st.agility, 'var(--ok)', ['agility'], null, <Info title="Agilité : toucher et esquiver">Elle détermine vos chances de toucher et d'esquiver.<br />Chance de toucher = (votre agilité + 5) ÷ (votre agilité + celle de la cible + 10), bornée entre 10 % et 95 %. À agilité égale : 50 %. L'esquive est le complément.</Info>],
+    ['Force', st.strength, '#ff9a5a', ['strength'], st.reqStrength ? `Force requise par l'équipement : ${st.reqStrength}` : null],
+    ['Dégâts', st.damage, 'var(--hp)', null, null, <Info title="Dégâts infligés">Dégâts = dégâts de l'arme × (votre Force − la Force requise par <b>tous</b> vos équipements). À mains nues : 1.<br />Exemple : Force 10, épée 5 dégâts et 2 Force requise → 5 × (10 − 2) = <b>40</b>. Avec une armure demandant 5 Force en plus : 5 × (10 − 7) = <b>15</b>.<br />Ces dégâts sont ensuite réduits de l'armure de la cible.<br /><em>Actuellement : {st.weaponDamage ? `${st.weaponDamage} × (${st.strength} − ${st.reqStrength}) = ${st.damage}` : 'mains nues = 1'}.</em></Info>],
+    ['Armure', `${st.armor}/${st.magicArmor}`, '#8fc2ff', ['armor', 'magic_armor'], null, <Info title="Armure physique / magique">L'armure <b>réduit directement les dégâts reçus</b> : dégâts subis = dégâts − armure (minimum 1).<br />Affichée <b>physique/magique</b> : « 5/0 » = 5 contre les attaques physiques, 0 contre la magie (sorts).</Info>]];
   return <Modal onClose={close} className="inv big" label="Inventaire">
     <div className="seg tabs4"><button className={tab === 'equip' ? 'on' : ''} onClick={() => setTab('equip')}><Package size={15} /> 1. Équipement & sac</button><button className={tab === 'up' ? 'on' : ''} onClick={() => setTab('up')}><TrendingUp size={15} /> 2. Amélioration ({me.xp} XP)</button></div>
-    <div className="sumgrid" style={{ '--n': T.length }}>{T.map(([l, v, c, sub, info]) => <div key={l} className="sumc" style={{ '--c': c }}><small>{l}</small><b>{v}</b>{sub && <em>{sub}</em>}{info && <span className="corner">{info}</span>}</div>)}</div>
+    <div className="sumgrid" style={{ '--n': T.length }}>{T.map(([l, v, c, keys, note, info]) => <div key={l} className="sumc" style={{ '--c': c }} tabIndex={keys ? 0 : undefined}>
+      <small>{l}</small><b>{v}</b>{info && <span className="corner">{info}</span>}{keys && <StatDetail keys={keys} B={B} note={note} />}</div>)}</div>
     {tab === 'equip' && <><p className="formula">{st.weaponName ? <>Dégâts = <b>{st.weaponDamage}</b> (arme « {st.weaponName} ») × (Force <b>{st.strength}</b> − Force requise <b>{st.reqStrength}</b>) = <b>{st.damage}</b></> : <>Dégâts = mains nues : <b>1</b></>} · réduits de l'armure de la cible · Limite d'invocations : <b>{me.maxSummons}</b></p>
       <div className="invbody2"><div><div className="eqtitle"><h4>Équipement</h4><Info title="Un équipement posé est verrouillé 12 h">Une fois un équipement mis en place, vous ne pouvez <b>ni le retirer ni le remplacer pendant 12 heures</b> : un cadenas indique le temps restant sur l'emplacement.<br />Poser un objet sur un emplacement vide reste immédiat. Choisissez bien votre équipement !</Info></div>
         <div className="star2"><svg className="body" viewBox="0 0 120 100" aria-hidden="true"><g className="limbs"><circle cx="60" cy="22" r="6.5" /><path d="M50 29 L70 29 L66 66 L54 66 Z" /><line x1="52" y1="31" x2="11" y2="33" /><line x1="68" y1="31" x2="109" y2="33" /><line x1="56" y1="66" x2="36" y2="96" /><line x1="64" y1="66" x2="84" y2="96" /></g>

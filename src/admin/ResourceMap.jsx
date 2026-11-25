@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { terrain } from '../lib/terrain';
-import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2';
+import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
 import { cellResource, sortSectors } from './deposits.js';
 /**
  * Carte des ressources (admin « Ressources ») : terrain du jeu (`lib/terrain`), ressource de chaque case (naturelle ou attribuée
  * par un secteur, `cellResource`), contours des secteurs. Molette / +− : zoom ; outil « Déplacer » : glisser = pan ;
  * outil « Tracer » : glisser = nouvelle zone (`onZone`) ; un clic sans glisser = `onCell` (ouvre le secteur de la case).
  */
-export const RES_COLOR = Object.fromEntries([...RESOURCES, ...RESOURCES2].map(r => [r.id, r.color ?? '#cccccc']));
+export const RES_COLOR = Object.fromEntries([...RESOURCES, ...RESOURCES2, ...RESOURCES3].map(r => [r.id, r.color ?? '#cccccc']));
 const KIND_COLOR = { plain: '#2c3a2c', forest: '#1d3020', mountain: '#454550', arid: '#443927', snow: '#5c6875', ether: '#372c4e', volcano: '#4b2419', shallow: '#1c3241', deep: '#12202c' };
 const CSS_W = 640, S = 2;
 export default function ResourceMap({ width, height, mapId, sectors, selected, draft, focus, showRes, tool, onZone, onCell, onHover }) {

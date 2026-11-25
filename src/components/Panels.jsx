@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react';
 import { Tabs, useTab } from './Tabs';
 import { fxSummary } from '../admin/spellFx.js';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend';
-export const Panel = ({ title, wide, children }) => { const d = useDispatch(); return <div className={'panel' + (wide ? ' wide' : '')} role="dialog" aria-label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={() => d(A.setPanel(null))}><X size={14} /></button></header><div className="pbody">{children}</div></div>; };
+import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
+/** Fenêtre de jeu centrée (comme l'Hôtel de ville ou l'inventaire) : Échap ou clic hors de la fenêtre pour fermer. */
+export const Panel = ({ title, wide, children }) => { const d = useDispatch(), close = () => d(A.setPanel(null));
+  return <Modal onClose={close} className={'panel' + (wide ? ' wide' : '')} label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={close}><X size={14} /></button></header><div className="pbody">{children}</div></Modal>; };
 const KV = ({ items }) => <div className="kv">{items.map(([k, v]) => <span key={k}>{k} <b>{v}</b></span>)}</div>;
 
 export function FaithPanel() {
@@ -136,11 +138,22 @@ export function ActionsPanel() {
     {targets.map(e => <div key={e.x + ',' + e.y} className="item row2"><span>{e.name} <small className="hit"><Dices size={12} /> {hits[`${e.x},${e.y}`] ?? '…'}%</small></span><span className="row"><button className="danger" onClick={() => attack(e, false)}>Attaquer ⚡5</button>{me.mount?.special_attack_name && me.actor.kind === 'hero' && <button onClick={() => attack(e, true)}><Crosshair size={13} /> {me.mount.special_attack_name}</button>}</span></div>)}</>}</Panel>;
 }
 
+/** Ressources présentes sur la carte : { id: nombre de cases } (carte des ressources, amélioration de l'Hôtel de ville). */
+export const mapResources = (mapId, w, h) => { const n = {}; for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) { const id = terrain(i, j, mapId).resourceId; if (id) n[id] = (n[id] ?? 0) + 1; } return n; };
+const RES_INFO = Object.fromEntries([...RESOURCES, ...RESOURCES2, ...RESOURCES3].map(r => [r.id, r]));
 export function WorldPanel() {
-  const { me } = useSelector(s => s.game), d = useDispatch(), P = me.actor.pos, [lm] = useData(`/map/${P.map_id}/landmarks`), cv = useRef(), base = useRef(), [view, setView] = useState({ z: 1, x: 0, y: 0 }), drag = useRef(null), S = 720;
+  const { me } = useSelector(s => s.game), d = useDispatch(), P = me.actor.pos, [lm] = useData(`/map/${P.map_id}/landmarks`), cv = useRef(), base = useRef(), hl = useRef(), [view, setView] = useState({ z: 1, x: 0, y: 0 }), drag = useRef(null), S = 720;
+  const [focus, setFocus] = useState(null), up = !!me.map_upgrade;
+  const found = useMemo(() => (up ? Object.entries(mapResources(P.map_id, P.width, P.height)).sort((a, b) => b[1] - a[1]) : []), [up, P.map_id]);
+  useEffect(() => { setFocus(null); }, [P.map_id]);
+  useEffect(() => {   // calque de mise en valeur : tout est assombri sauf les cases de la ressource choisie
+    if (!focus) { hl.current = null; setView(v => ({ ...v })); return; }
+    const c = document.createElement('canvas'); c.width = P.width; c.height = P.height; const g = c.getContext('2d'), im = g.createImageData(P.width, P.height), col = parseInt((RES_INFO[focus]?.color ?? '#ffffff').slice(1), 16);
+    for (let i = 0; i < P.width; i++) for (let j = 0; j < P.height; j++) { const o = (j * P.width + i) * 4; im.data.set(terrain(i, j, P.map_id).resourceId === focus ? [col >> 16, (col >> 8) & 255, col & 255, 255] : [8, 8, 16, 170], o); }
+    g.putImageData(im, 0, 0); hl.current = c; setView(v => ({ ...v })); }, [focus, P.map_id]);
   useEffect(() => { const c = document.createElement('canvas'); c.width = P.width; c.height = P.height; const g = c.getContext('2d'), im = g.createImageData(P.width, P.height);
     for (let i = 0; i < P.width; i++) for (let j = 0; j < P.height; j++) { const tt = terrain(i, j, P.map_id), h = tt.ground ?? COLORS[tt.kind], o = (j * P.width + i) * 4; im.data.set([h >> 16, (h >> 8) & 255, h & 255, 255], o); } g.putImageData(im, 0, 0); base.current = c; setView(v => ({ ...v })); }, [P.map_id]);
-  useEffect(() => { const c = cv.current, g = c?.getContext('2d'); if (!g || !base.current) return; const k = (S / P.width) * view.z; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0b0e18'; g.fillRect(0, 0, S, S); g.imageSmoothingEnabled = false; g.drawImage(base.current, view.x, view.y, P.width * k, P.height * k);
+  useEffect(() => { const c = cv.current, g = c?.getContext('2d'); if (!g || !base.current) return; const k = (S / P.width) * view.z; g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = '#0b0e18'; g.fillRect(0, 0, S, S); g.imageSmoothingEnabled = false; g.drawImage(base.current, view.x, view.y, P.width * k, P.height * k); if (hl.current) g.drawImage(hl.current, view.x, view.y, P.width * k, P.height * k);
     const X = x => view.x + x * k, Y = y => view.y + y * k; g.strokeStyle = 'rgba(255,255,255,.14)'; g.strokeRect(X(0), Y(0), P.width * k, P.height * k);
     const s = me.actor.see; g.strokeStyle = 'rgba(111,208,255,.95)'; g.lineWidth = 2; g.strokeRect(X(P.x - s - 0.5), Y(P.y - s - 0.5), (2 * s + 1) * k, (2 * s + 1) * k);
     for (const b of lm ?? []) { g.fillStyle = b.kind === 'door' ? '#b070ff' : '#ffd166'; g.fillRect(X(b.x) - 4, Y(b.y) - 4, 9, 9); g.strokeStyle = '#000'; g.lineWidth = 1; g.strokeRect(X(b.x) - 4, Y(b.y) - 4, 9, 9); }
@@ -157,5 +170,7 @@ export function WorldPanel() {
     <span className="row"><button onClick={() => zoomAt(0.8)} title="Dézoomer" aria-label="Dézoomer"><ZoomOut size={16} /></button><button onClick={() => zoomAt(1.25)} title="Zoomer" aria-label="Zoomer"><ZoomIn size={16} /></button><button onClick={() => setView({ z: 1, x: 0, y: 0 })}><Maximize size={14} /> Tout voir</button><button onClick={center}><Crosshair size={14} /> Me centrer</button><button className="x2" onClick={() => d(A.setPanel(null))} aria-label="Fermer"><X size={14} /></button></span></div>
     <canvas ref={cv} width={S} height={S} className="wmcanvas" onPointerDown={e => { drag.current = { p: pt(e), v: view }; e.currentTarget.setPointerCapture(e.pointerId); }} onPointerMove={e => { if (drag.current) { const [px, py] = pt(e); setView({ ...drag.current.v, x: drag.current.v.x + px - drag.current.p[0], y: drag.current.v.y + py - drag.current.p[1] }); } }} onPointerUp={() => { drag.current = null; }} />
     <div className="legend">{(P.map_id === 2 ? [] : [['#4a7a46', 'Plaines'], ['#c9a86a', 'Terres arides'], ['#e6eef7', 'Glaces'], ['#3a3548', 'Pics d’éther'], ['#d9481f', 'Volcan'], ['#77777f', 'Massifs'], ['#2d5a30', 'Forêts'], ['#4aa0b0', 'Eau peu profonde'], ['#1b3f7a', 'Eau profonde']]).map(([c, t]) => <Dot key={t} c={c} t={t} />)}<Dot c="#ffd166" t="Capitale" /><Dot c="#b070ff" t="Portes" /><Dot c="#ff4d4d" t="Vous" />{P.map_id === 1 && <Dot c="#ffffff" t="Zone sacrée (JcJ interdit)" />}</div><MapLegend mapId={P.map_id} />
-    <small>Molette : zoom · glisser : déplacer · cadre bleu : votre vision ({me.actor.see} cases) autour de ({P.x}, {P.y}).</small></Modal>;
+    {up && <div className="wmres"><h4>Carte des ressources <small>{focus ? 'cliquez à nouveau pour revenir à la carte habituelle' : 'choisissez une ressource à mettre en valeur'}</small></h4>
+      <div className="chips">{found.map(([id, n]) => <button key={id} className={`chip${focus === id ? ' on' : ''}`} onClick={() => setFocus(focus === id ? null : id)}><i className="resdot" style={{ background: RES_INFO[id]?.color ?? '#ccc' }} />{RES_INFO[id]?.name ?? id}<small>{n}</small></button>)}</div></div>}
+    <small>Molette : zoom · glisser : déplacer · cadre bleu : votre vision ({me.actor.see} cases) autour de ({P.x}, {P.y}).{!up && ' La carte des ressources s\'achète à l\'Hôtel de ville.'}</small></Modal>;
 }

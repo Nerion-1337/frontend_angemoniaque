@@ -4,7 +4,9 @@ import { itemBody, familyLabel, validFamilyKey } from '../src/admin/divine.js';
 import { statDiff, posLabel, pageWindow, STAT_KEYS } from '../src/admin/players.js';
 test('itemBody : champs du formulaire seulement, sans vides ni null ; famille seulement en Divin', () => {
   const b = itemBody({ name: ' Lame ', rarity: 'rare', slot: '', price: '', armor: 0, req_strength: '3', usable_by: ['ange'], divine_family: 'relique', holders: 4, copies: 2, data: null });
-  expect(b).toEqual({ name: 'Lame', rarity: 'rare', usable_by: ['ange'], armor: 0, req_strength: 3, bonuses: {}, divine_family: null, shop: false, shop_races: [] });
+  expect(b).toEqual({ name: 'Lame', rarity: 'rare', usable_by: ['ange'], two_handed: false, armor: 0, req_strength: 3, bonuses: {}, divine_family: null, shop: false, shop_races: [] });
+  expect(itemBody({ name: 'Arc long', slot: 'weapon', two_handed: true }).two_handed).toBe(true);
+  expect(itemBody({ name: 'Bouclier', slot: 'shield', two_handed: true }).two_handed).toBe(false);   // deux mains : armes seulement
   expect(itemBody({ name: 'Sceau', rarity: 'divin', divine_family: 'sceau' }).divine_family).toBe('sceau');
 });
 test('familles divines : libellé et clé valide (même règle que le back)', () => {

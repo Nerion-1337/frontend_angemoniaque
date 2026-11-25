@@ -7,13 +7,13 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
 import { api } from '../lib/api.js';
-import { SLOTS, SLOT_LABEL } from './monsterDetails.js';
+import { ITEM_SLOTS as SLOT_OPTS, ITEM_SLOT_LABEL as SLOT_LABEL } from './divine.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
 import { itemBody, familyLabel, ITEM_STATS, statsLine } from './divine.js';
 import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {} };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -69,7 +69,7 @@ export default function ItemsTab() {
       <small>Type d'équipement</small>
       <select value={slot} onChange={e => setSlot(e.target.value)}>
         <option value="">Tous</option>
-        {SLOTS.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}
+        {SLOT_OPTS.map(([s, l]) => <option key={s} value={s}>{l}</option>)}
         <option value="none">Sans type (ressource, consommable…)</option>
       </select>
       <Search value={q} onChange={setQ} />
@@ -82,7 +82,7 @@ export default function ItemsTab() {
         <div className="cell"><small>Nom</small><input value={f.name} onChange={e => setF(x => ({ ...x, name: e.target.value }))} /></div>
         <div className="cell"><small>Type (slot)</small>
           <select value={f.slot} onChange={e => setF(x => ({ ...x, slot: e.target.value }))}>
-            <option value="">Sans type</option>{SLOTS.map(s => <option key={s} value={s}>{SLOT_LABEL[s]}</option>)}</select></div>
+            <option value="">Sans type</option>{SLOT_OPTS.map(([s, l]) => <option key={s} value={s}>{l}</option>)}</select></div>
         <div className="cell"><small>Rareté</small>
           <select value={f.rarity} onChange={e => setF(x => ({ ...x, rarity: e.target.value, divine_family: e.target.value === 'divin' ? (x.divine_family || fams[0]?.key || '') : '' }))}>
             {RARITIES.map(r => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}</select></div>
@@ -91,6 +91,7 @@ export default function ItemsTab() {
             {fams.map(fm => <option key={fm.key} value={fm.key}>{familyLabel(fm)}</option>)}</select></div>}
         <div className="cell"><small>Prix</small><input type="number" value={f.price} onChange={e => num('price', e.target.value)} /></div>
         <div className="cell"><small>Dégâts d'arme</small><input type="number" value={f.weapon_damage} onChange={e => num('weapon_damage', e.target.value)} /></div>
+        {f.slot === 'weapon' && <div className="cell"><small>Mains</small><label className="check"><input type="checkbox" checked={!!f.two_handed} onChange={e => setF(x => ({ ...x, two_handed: e.target.checked }))} /> Deux mains (arc, grande arme : l'autre main reste vide)</label></div>}
         <div className="cell"><small>Durabilité</small><input type="number" value={f.durability} onChange={e => num('durability', e.target.value)} /></div>
         <div className="cell"><small>Plafond (quantité)</small><input type="number" value={f.quantity_max} onChange={e => num('quantity_max', e.target.value)} /></div>
         <div className="cell"><small>Force requise</small><input type="number" value={f.req_strength} onChange={e => num('req_strength', e.target.value)} /></div>

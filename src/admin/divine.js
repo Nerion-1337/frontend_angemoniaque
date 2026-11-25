@@ -13,6 +13,7 @@ export const statsLine = it => ITEM_STATS.map(([k, l, col]) => [l, Number(col ? 
 export const itemBody = f => {
   const b = { name: String(f.name ?? '').trim(), rarity: f.rarity || 'commun', usable_by: f.usable_by ?? [] };
   if (f.slot) b.slot = f.slot;
+  b.two_handed = f.slot === 'weapon' && !!f.two_handed;   // deux mains : armes seulement (un arc l'est toujours)
   for (const k of NUM) if (f[k] !== '' && f[k] != null && !Number.isNaN(Number(f[k]))) b[k] = Number(f[k]);
   b.bonuses = bonusesBody(f.bonuses);
   b.divine_family = b.rarity === 'divin' && f.divine_family ? f.divine_family : null;
@@ -20,6 +21,9 @@ export const itemBody = f => {
   if (f.shop_stock !== '' && f.shop_stock != null && !Number.isNaN(Number(f.shop_stock))) b.shop_stock = Math.max(0, Math.trunc(Number(f.shop_stock)));
   return b;
 };
+/** Types d'objets du jeu (emplacements de l'inventaire, routes/inventory.ts:GROUP) — pas les parties du corps des monstres. */
+export const ITEM_SLOTS = [['weapon', 'Arme (main)'], ['shield', 'Bouclier'], ['head', 'Casque'], ['chest', 'Plastron'], ['foot', 'Chaussures'], ['amulet', 'Collier'], ['ring', 'Bague'], ['bracelet', 'Bracelet'], ['special', 'Objet spécial'], ['tool', 'Outil'], ['scroll', 'Parchemin']];
+export const ITEM_SLOT_LABEL = Object.fromEntries(ITEM_SLOTS);
 /** « Reliques (relique) · 3 / 4 » */
 export const familyLabel = fm => `${fm.name} (${fm.key}) · ${fm.copies ?? 0} / ${fm.cap ?? '∞'}`;
 /** Clé de famille valide (même règle que le back et la contrainte SQL). */

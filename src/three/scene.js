@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Sky } from 'three/examples/jsm/objects/Sky.js'; import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'; import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'; import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
-import { noiseAt, terrain, setWorld, FEATURES } from '../lib/terrain'; import { groundColor, hash } from '../lib/relief'; import { levelAt, LEVEL_H, WATER_Y, FLY_Y, standY } from '../lib/levels'; import { makeEntity } from './entities'; import { RESOURCES2 } from '../lib/resources2'; import { waterTint } from '../lib/world2';
+import { noiseAt, terrain, setWorld, FEATURES } from '../lib/terrain'; import { groundColor, hash } from '../lib/relief'; import { levelAt, LEVEL_H, WATER_Y, FLY_Y, standY } from '../lib/levels'; import { makeEntity } from './entities'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3'; import { waterTint } from '../lib/world2';
 const noiseTex = () => { const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d'); g.fillStyle = '#d8d8d8'; g.fillRect(0, 0, 256, 256);
   for (const [n, a] of [[8, .3], [32, .25], [128, .15], [256, .1]]) { const s = document.createElement('canvas'); s.width = s.height = n; const sg = s.getContext('2d'), id = sg.createImageData(n, n);
     for (let i = 0; i < n * n; i++) { const v = Math.random() * 255; id.data.set([v, v, v, 255], i * 4); } sg.putImageData(id, 0, 0); g.globalAlpha = a; g.drawImage(s, 0, 0, 256, 256); }
@@ -46,11 +46,11 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   // minerais (un maillage émissif par type), flore des ressources (plantes) et teintes d'arbres par essence
   let world = 1;
   const ORE_FX = { adamantine: [0x8fa4b8, 0x2b4a73], mithril: [0xcfe8ff, 0x5aa0ff], uru: [0xd9a04a, 0xb86a10], ebonite: [0x2b2733, 0x7a3aba], verre_dragon: [0x140606, 0xff3a10], cristal_givre: [0xd8f4ff, 0x6fd8ff], prisme_ether: [0xe8c4ff, 0xa060ff] };
-  for (const r of RESOURCES2) if (r.look?.k === 'ore') ORE_FX[r.id] = [r.look.c, r.look.e];
+  for (const r of [...RESOURCES2, ...RESOURCES3]) if (r.look?.k === 'ore') ORE_FX[r.id] = [r.look.c, r.look.e];
   const oreGeo = new THREE.OctahedronGeometry(0.12).scale(1, 1.9, 1).translate(0, 0.12, 0), ores = {};
   for (const k in ORE_FX) ores[k] = IM(oreGeo, std(ORE_FX[k][0], { emissive: ORE_FX[k][1], emissiveIntensity: 1.7, roughness: 0.25 }), 1500);
   const FLORA_FX = { pissenlit_tempete: [0xf2e04a, 0], tresle_six_feuilles: [0x5fd06a, 1], lavande_crepusculaire: [0x8a63d8, 2], chardon_sang: [0xc02a3a, 2], rose_sables: [0xe8c9a0, 1], nenuphar_spectres: [0x7fe0c0, 1], gingembre_marees: [0xe0a050, 2] };
-  for (const r of RESOURCES2) if (r.look?.k === 'plant') FLORA_FX[r.id] = [r.look.c, r.look.shape];
+  for (const r of [...RESOURCES2, ...RESOURCES3]) if (r.look?.k === 'plant') FLORA_FX[r.id] = [r.look.c, r.look.shape];
   const FGEO = [new THREE.SphereGeometry(0.07, 8, 6).translate(0, 0.22, 0), new THREE.CylinderGeometry(0.16, 0.16, 0.02, 8).translate(0, 0.02, 0), new THREE.ConeGeometry(0.05, 0.3, 5).translate(0, 0.15, 0)], flora = {};
   for (const k in FLORA_FX) flora[k] = IM(FGEO[FLORA_FX[k][1]], std(FLORA_FX[k][0], { emissive: FLORA_FX[k][0], emissiveIntensity: 0.25 }), 6000);
   [trunk, pine1, pine2, oak, spires, boulders, grass].forEach(m => m.material.color.set(0xffffff));      // teintes appliquées par instance
@@ -91,7 +91,7 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
     geo.computeBoundingSphere(); geo.computeBoundingBox(); water.position.set(cur.x, WATER_Y, cur.y); tintWater();
   }
   const WOOD = { lorien: [0xe0b93d, 0x7a5a30], shinju: [0xf2a0c0, 0x4a2f28], adam: [0xa84a2a, 0x3a2418], weirwood: [0xb3262e, 0xf0ece4] }, GREEN = [0x2f6d2a, 0x4a3322], ROCK = { mountain: 0x77736d, snow: 0xeef4fb, ether: 0x3a3448, volcano: 0x241512 };
-  for (const r of RESOURCES2) if (r.look?.k === 'tree') WOOD[r.id] = [r.look.leaf, r.look.bark, !!r.look.bare];
+  for (const r of [...RESOURCES2, ...RESOURCES3]) if (r.look?.k === 'tree') WOOD[r.id] = [r.look.leaf, r.look.bark, !!r.look.bare];
   function buildVegetation(occ) {
     const cnt = new Map(), put = (m, x, y, z, sx, ry, sy = sx, c) => { const i = cnt.get(m) ?? 0; if (i >= m.instanceMatrix.count) return; cnt.set(m, i + 1); dum.position.set(x, y, z); dum.rotation.set(0, ry, 0); dum.scale.set(sx, sy, sx); dum.updateMatrix(); m.setMatrixAt(i, dum.matrix); if (c !== undefined) m.setColorAt(i, tmpC.set(c)); };
     for (let dx = -see - 1; dx <= see + 1; dx++) for (let dy = -see - 1; dy <= see + 1; dy++) {

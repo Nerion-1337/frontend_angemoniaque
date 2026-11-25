@@ -3,24 +3,73 @@ const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 
 const stone = () => M(0x8a867f, { roughness: 0.95 }), mesh = (g, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; return o; };
 function label(text, color = '#fff') { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const g = c.getContext('2d'); g.font = '600 30px "Alegreya Sans", system-ui, sans-serif'; g.textAlign = 'center'; g.lineWidth = 6; g.strokeStyle = 'rgba(8,8,16,.85)'; g.strokeText(text, 128, 40); g.fillStyle = color; g.fillText(text, 128, 40);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true })); s.scale.set(1.9, 0.48, 1); s.renderOrder = 20; return s; }
+// Personnage : jambes, torse, bras, tête (cheveux, yeux), tenue et attributs selon la race ; légère respiration et balancement des bras.
+const RACE_LOOK = {
+  human: { cloth: 0x7a5a3a, cloth2: 0x24406b, skin: 0xd9a77e, hair: 0x4a3020, boots: 0x3a2a1c },
+  angel: { cloth: 0xeef1fb, cloth2: 0xd9b45a, skin: 0xf1d2b8, hair: 0xf4e3a1, boots: 0xcfc6ad },
+  demon: { cloth: 0x3b0f12, cloth2: 0x6a1a14, skin: 0xa8544a, hair: 0x1a0c0c, boots: 0x1d0d0d },
+};
 function person(race, me) {
-  const g = new THREE.Group(), robe = { human: 0x7a5a3a, demon: 0x3b0f12, angel: 0xeef1fb }[race] ?? 0x888, skin = 0xd9a77e;
-  g.add(mesh(new THREE.CapsuleGeometry(0.2, 0.5, 6, 14), M(robe, { roughness: 0.6 }), 0, 0.55, 0), mesh(new THREE.SphereGeometry(0.13, 20, 16), M(skin, { roughness: 0.55 }), 0, 1.13, 0), mesh(new THREE.TorusGeometry(0.2, 0.025, 8, 20), M(0x2a2018), 0, 0.62, 0));
-  g.children[2].rotation.x = Math.PI / 2;
-  if (race === 'angel') { for (const s of [-1, 1]) { const w = mesh(new THREE.SphereGeometry(0.4, 18, 12), M(0xffffff, { roughness: 0.4, emissive: 0x9fb8ff, emissiveIntensity: 0.25 }), s * 0.3, 0.85, -0.18); w.scale.set(0.09, 1.05, 0.55); w.rotation.z = s * 0.35; g.add(w); }
-    g.add(mesh(new THREE.TorusGeometry(0.13, 0.015, 8, 28), M(0xffe6a0, { emissive: 0xffd36a, emissiveIntensity: 2.2 }), 0, 1.42, 0)); g.children.at(-1).rotation.x = Math.PI / 2; }
-  if (race === 'demon') { for (const s of [-1, 1]) { const h = mesh(new THREE.ConeGeometry(0.035, 0.24, 8), M(0x1a0c0c, { roughness: 0.4 }), s * 0.09, 1.3, 0); h.rotation.z = -s * 0.5; g.add(h); const e = mesh(new THREE.SphereGeometry(0.018, 8, 8), M(0xff3b1a, { emissive: 0xff3b1a, emissiveIntensity: 4 }), s * 0.05, 1.15, 0.12); g.add(e); } }
-  if (race === 'human') g.add(mesh(new THREE.BoxGeometry(0.34, 0.5, 0.04), M(0x24406b, { roughness: 0.9 }), 0, 0.62, -0.2));
+  const L = RACE_LOOK[race] ?? RACE_LOOK.human, g = new THREE.Group(), body = new THREE.Group(); g.add(body);
+  const cloth = M(L.cloth, { roughness: 0.7 }), cloth2 = M(L.cloth2, { roughness: 0.6, metalness: race === 'angel' ? 0.4 : 0 }), skin = M(L.skin, { roughness: 0.55 });
+  const legs = [-1, 1].map(s => { const leg = new THREE.Group(); leg.position.set(s * 0.085, 0.42, 0);
+    leg.add(mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.34, 10), cloth, 0, -0.17, 0), mesh(new THREE.BoxGeometry(0.11, 0.09, 0.17), M(L.boots, { roughness: 0.8 }), 0, -0.37, 0.02)); body.add(leg); return leg; });
+  const torso = mesh(new THREE.CylinderGeometry(0.15, 0.19, 0.42, 14), cloth, 0, 0.63, 0); body.add(torso);
+  if (race === 'angel') body.add(mesh(new THREE.ConeGeometry(0.27, 0.5, 18, 1, true), cloth, 0, 0.36, 0));      // robe longue
+  const belt = mesh(new THREE.TorusGeometry(0.185, 0.022, 8, 24), cloth2, 0, 0.47, 0); belt.rotation.x = Math.PI / 2; body.add(belt);
+  const arms = [-1, 1].map(s => { const arm = new THREE.Group(); arm.position.set(s * 0.21, 0.8, 0);
+    arm.add(mesh(new THREE.CapsuleGeometry(0.045, 0.28, 4, 10), cloth, 0, -0.17, 0), mesh(new THREE.SphereGeometry(0.045, 10, 8), skin, 0, -0.36, 0)); arm.rotation.z = s * 0.12; body.add(arm); return arm; });
+  const head = new THREE.Group(); head.position.y = 1.0; body.add(head);
+  head.add(mesh(new THREE.SphereGeometry(0.13, 22, 18), skin));
+  const hair = mesh(new THREE.SphereGeometry(0.137, 22, 12, 0, Math.PI * 2, 0, Math.PI * 0.55), M(L.hair, { roughness: 0.8 }), 0, 0.012, -0.012); head.add(hair);
+  for (const s of [-1, 1]) head.add(mesh(new THREE.SphereGeometry(0.018, 8, 8), race === 'demon' ? M(0xff3b1a, { emissive: 0xff3b1a, emissiveIntensity: 4 }) : M(0x1a1410), s * 0.045, 0.01, 0.115));
+  if (race === 'human') { const cape = mesh(new THREE.BoxGeometry(0.34, 0.6, 0.025), cloth2, 0, 0.6, -0.19); cape.rotation.x = 0.12; body.add(cape); }
+  let wings = [];
+  if (race === 'angel') {
+    wings = [-1, 1].map(s => { const w = new THREE.Group(); w.position.set(s * 0.1, 0.78, -0.16);
+      for (let k = 0; k < 3; k++) { const f = mesh(new THREE.SphereGeometry(0.36 - k * 0.06, 16, 10), M(0xffffff, { roughness: 0.45, emissive: 0x9fb8ff, emissiveIntensity: 0.2 }), s * (0.22 + k * 0.05), 0.08 - k * 0.12, -k * 0.02); f.scale.set(0.95, 0.42 - k * 0.06, 0.08); f.rotation.z = s * (0.5 - k * 0.25); w.add(f); }
+      body.add(w); return w; });
+    const halo = mesh(new THREE.TorusGeometry(0.12, 0.014, 8, 32), M(0xffe6a0, { emissive: 0xffd36a, emissiveIntensity: 2.4 }), 0, 1.24, 0); halo.rotation.x = Math.PI / 2; body.add(halo);
+  }
+  if (race === 'demon') {
+    for (const s of [-1, 1]) { const h = mesh(new THREE.ConeGeometry(0.035, 0.24, 10), M(0x1a0c0c, { roughness: 0.4 }), s * 0.085, 0.14, 0); h.rotation.z = -s * 0.55; head.add(h);
+      const pad = mesh(new THREE.SphereGeometry(0.08, 12, 8), cloth2, s * 0.2, 0.83, 0); pad.scale.set(1, 0.6, 1); body.add(pad); }
+    const tail = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.45, -0.17), new THREE.Vector3(0, 0.3, -0.4), new THREE.Vector3(0, 0.18, -0.5), new THREE.Vector3(0, 0.28, -0.62)]), 16, 0.022, 6), M(0x2a0c0c), 0, 0, 0); body.add(tail);
+    body.add(mesh(new THREE.ConeGeometry(0.04, 0.08, 4), M(0x2a0c0c), 0, 0.3, -0.64));
+  }
   if (me) { const r = mesh(new THREE.RingGeometry(0.34, 0.4, 36).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xf0d28a, transparent: true, opacity: 0.9 }), 0, 0.03, 0); r.castShadow = false; g.add(r); }
+  const ph = hash(L.cloth % 97, 3) * 6;
+  g.userData.tick = t => { const b = Math.sin(t * 1.6 + ph); torso.scale.set(1 + b * 0.012, 1 + b * 0.02, 1 + b * 0.012); head.position.y = 1.0 + b * 0.006;
+    arms.forEach((a, i) => { a.rotation.x = Math.sin(t * 1.6 + ph + i * Math.PI) * 0.06; }); wings.forEach((w, i) => { w.rotation.y = (i ? -1 : 1) * (0.25 + Math.sin(t * 1.3 + ph) * 0.12); }); };
   return g;
 }
 const BEAST = { 'Léviathan': [0x1d5878, 0x2bd0ff], Balrog: [0x3a0f08, 0xff5a1f], Minotaure: [0x5b3b24, 0xffc060] };
-function beast(name) {
-  const [col, glow] = BEAST[name] ?? [0x444444, 0xff0000], g = new THREE.Group(), body = mesh(new THREE.SphereGeometry(0.5, 20, 16), M(col, { roughness: 0.55 }), 0, 0.85, 0); body.scale.set(1, 0.85, 1.5); g.add(body);
-  for (const [x, z] of [[-.3, .45], [.3, .45], [-.3, -.45], [.3, -.45]]) g.add(mesh(new THREE.CylinderGeometry(0.12, 0.09, 0.7, 8), M(col), x, 0.35, z));
-  g.add(mesh(new THREE.SphereGeometry(0.28, 18, 14), M(col, { roughness: 0.5 }), 0, 1.25, 0.8));
-  for (const s of [-1, 1]) { const h = mesh(new THREE.ConeGeometry(0.07, 0.55, 8), M(0xe9e2cf, { roughness: 0.4 }), s * 0.22, 1.6, 0.8); h.rotation.z = -s * 0.7; g.add(h); g.add(mesh(new THREE.SphereGeometry(0.04, 8, 8), M(glow, { emissive: glow, emissiveIntensity: 5 }), s * 0.1, 1.3, 1.04)); }
-  g.add(new THREE.PointLight(glow, 3, 4)); g.scale.setScalar(1.7); return g;
+const PALETTE = [[0x5b4a3a, 0xffc060], [0x3a4a2e, 0x9cff6a], [0x463a5a, 0xc89bff], [0x2e4a58, 0x6fe0ff], [0x5a2e2e, 0xff6a5a], [0x4a4a52, 0xf0f0ff], [0x6a5a32, 0xfff08a]];
+const nameHash = n => [...(n ?? '')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+/** Créature générée : corps, tête à museau, pattes effilées, queue, cornes ou oreilles, yeux luisants ; teinte et proportions tirées du nom ;
+ *  volante : ailes membraneuses qui battent (pattes repliées). Les trois grands monstres gardent leurs couleurs. */
+function beast(name, flying) {
+  const hsh = nameHash(name), [col, glow] = BEAST[name] ?? PALETTE[hsh % PALETTE.length], boss = !!BEAST[name];
+  const g = new THREE.Group(), skin = M(col, { roughness: 0.6 }), dark = M(new THREE.Color(col).multiplyScalar(0.6).getHex(), { roughness: 0.7 }), eyeM = M(glow, { emissive: glow, emissiveIntensity: 5 });
+  const long = 1.2 + (hsh % 5) * 0.12, bulk = 0.9 + ((hsh >> 3) % 4) * 0.08;
+  const body = mesh(new THREE.SphereGeometry(0.42, 22, 16), skin, 0, 0.72, 0); body.scale.set(bulk, 0.82, long); g.add(body);
+  const belly = mesh(new THREE.SphereGeometry(0.34, 18, 12), dark, 0, 0.6, 0.02); belly.scale.set(bulk * 0.95, 0.7, long * 0.9); g.add(belly);
+  const head = new THREE.Group(); head.position.set(0, 1.02, 0.42 * long + 0.12); g.add(head);
+  head.add(mesh(new THREE.SphereGeometry(0.22, 18, 14), skin), mesh(new THREE.ConeGeometry(0.13, 0.26, 12).rotateX(Math.PI / 2), dark, 0, -0.04, 0.22));
+  for (const s of [-1, 1]) { head.add(mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeM, s * 0.1, 0.06, 0.16));
+    if (hsh % 2 || boss) { const h = mesh(new THREE.ConeGeometry(0.05, 0.36, 10), M(0xe9e2cf, { roughness: 0.4 }), s * 0.14, 0.2, -0.02); h.rotation.z = -s * 0.6; h.rotation.x = -0.3; head.add(h); }
+    else { const e = mesh(new THREE.ConeGeometry(0.06, 0.16, 6), skin, s * 0.13, 0.17, -0.05); e.rotation.z = -s * 0.35; head.add(e); } }
+  const legs = [];
+  for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { const leg = new THREE.Group(); leg.position.set(x * 0.24 * bulk, 0.58, z * 0.3 * long); leg.add(mesh(new THREE.CylinderGeometry(0.1, 0.07, 0.6, 10), skin, 0, -0.3, 0), mesh(new THREE.SphereGeometry(0.08, 10, 8), dark, 0, -0.58, 0.03)); g.add(leg); legs.push(leg); }
+  const tail = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.78, -0.4 * long), new THREE.Vector3(0, 0.7, -0.62 * long), new THREE.Vector3(0, 0.5, -0.8 * long), new THREE.Vector3(0, 0.58, -0.98 * long)]), 18, 0.05, 8), skin); g.add(tail);
+  let wings = [];
+  if (flying) { legs.forEach(l => { l.rotation.x = 0.9; l.position.y = 0.66; });
+    wings = [-1, 1].map(s => { const w = new THREE.Group(); w.position.set(s * 0.3 * bulk, 0.92, 0); const m = mesh(new THREE.SphereGeometry(0.7, 18, 10), M(new THREE.Color(col).lerp(new THREE.Color(glow), 0.25).getHex(), { roughness: 0.6, side: THREE.DoubleSide }), s * 0.62, 0, 0); m.scale.set(1, 0.05, 0.55); w.add(m); g.add(w); return w; }); }
+  g.add(new THREE.PointLight(glow, boss ? 3 : 1.2, boss ? 4 : 2.5).translateY(1.1).translateZ(0.5));
+  const ph = (hsh % 100) / 16;
+  g.userData.tick = t => { const b = Math.sin(t * 1.4 + ph); body.scale.y = 0.82 + b * 0.015; head.rotation.y = Math.sin(t * 0.5 + ph) * 0.18; tail.rotation.y = Math.sin(t * 1.1 + ph) * 0.25;
+    wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * (0.2 + Math.sin(t * 4 + ph) * 0.45); }); };
+  g.scale.setScalar(boss ? 1.7 : 0.95 + ((hsh >> 5) % 4) * 0.1); return g;
 }
 function building(e) {
   const g = new THREE.Group(), k = e.building_kind;
@@ -49,7 +98,7 @@ function golem() {
 }
 const RACE_COL = { human: '#e8c89a', demon: '#ff8a70', angel: '#cfeaff' };
 export function makeEntity(e, me) {
-  let g = e.kind === 'monster' ? beast(e.name) : e.kind === 'building' ? building(e) : e.kind === 'summon' ? golem() : person(e.race, me);
+  let g = e.kind === 'monster' ? beast(e.name, e.flying) : e.kind === 'building' ? building(e) : e.kind === 'summon' ? (/golem/i.test(e.name ?? '') ? golem() : beast(e.name, e.flying)) : person(e.race, me);
   if (e.kind === 'character' && e.mount_name) { const m = mountModel(e.mount_flying), rider = g; rider.position.y = 0.42; m.add(rider); m.userData.tick = m.userData.tick; g = m; }
   const h = e.mount_name ? 2.2 : e.kind === 'summon' ? 1.9 : e.kind === 'monster' ? 3.3 : e.kind === 'building' ? (e.building_kind === 'capital' ? 3.3 : 2.9) : 1.75;
   const wrap = new THREE.Group(); wrap.add(g); wrap.userData.tick = g.userData.tick; const l = label(e.name ?? '', e.kind === 'character' ? RACE_COL[e.race] ?? '#fff' : e.kind === 'monster' ? '#ff9a8a' : e.kind === 'summon' ? '#8fe9ff' : '#f0d28a'); l.position.y = h; wrap.add(l); return wrap;
