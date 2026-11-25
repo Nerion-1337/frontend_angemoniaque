@@ -20,6 +20,7 @@ symbols:
 tests:
   - test/chat.test.js
   - test/gameTabs.test.js
+  - test/noSwallowedCode.test.js
 ---
 ## Purpose
 Habillage de l'interface de jeu (hors guilde) : barre d'accès Messagerie / Paramètres, fenêtre de messagerie, paramètres du
@@ -42,6 +43,8 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Pactes, Actions, Invocations, Compte : fenêtres CENTRÉES (`Panel` = `Modal`), fermées par Échap / clic extérieur / ×.
 - Hôtel de ville, onglet Boutique : offre « Carte des ressources » (prix serveur, « Acquise » si possédée). Carte du monde : si `map_upgrade`, liste des ressources présentes (nombre de cases) ; une ressource choisie est mise en valeur (le reste assombri), aucune = carte habituelle (terrain naturel ; les secteurs admin ne sont pas montrés).
 - Carte de case sélectionnée : en-tête (nom, case, niveau, coût, ressource), infos, entité, jauge de toucher, une action = un bouton avec son coût (plus de liste + « Valider ») ; construction : choix du bâtiment en boutons ; reste dans l'écran.
+- Carte de case : si une condition de récolte manque à CE personnage (`harvestMissing`), pas d'action « Récolter » mais « Vous n'êtes pas équipé pour récolter X » ; survol / focus : ce qui manque, par option.
+- Hôtel de ville, Coffre : emplacements utilisés (objets + piles) ; ressources regroupées par type dans les colonnes Coffre et Sac, déplacées en un clic.
 
 ## Gotchas
 - Classe globale `.inl` déjà prise par le jeu (ligne d'insertion) : ne pas réutiliser de classes génériques sans préfixe.

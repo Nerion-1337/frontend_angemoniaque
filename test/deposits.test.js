@@ -46,6 +46,8 @@ test('zoneLabel', () => {
 test('conditions de récolte : éditeur branché (objets équipés ou sac, sort), texte public sur la carte de case', async () => {
   const fs = await import('node:fs');
   const tab = fs.readFileSync(new URL('../src/admin/ResourcesTab.jsx', import.meta.url), 'utf8'), card = fs.readFileSync(new URL('../src/components/TileCard.jsx', import.meta.url), 'utf8');
-  expect(tab).toMatch(/resource-rules\/\$\{encodeURIComponent\(rule\.resource\)\}/); expect(tab).toMatch(/<ActivationEditor/);
+  expect(tab).toMatch(/resource-rules\/\$\{id\}/); expect(tab).toMatch(/resource-stack\/\$\{id\}/); expect(tab).toMatch(/<ActivationEditor/);
+  expect(card).toMatch(/noTool = canTry && miss\?\.length > 0/);   // pas équipé : pas d'action « Récolter »
+  expect(card).toMatch(/if \(canTry && !noTool\) acts\.push\(\['harvest'/); expect(card).toMatch(/Vous n'êtes pas équipé pour récolter/);
   expect(card).toMatch(/Récolte : nécessite \{sc\.harvestNeeds\}/);
 });

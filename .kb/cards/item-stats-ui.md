@@ -25,6 +25,8 @@ bâtiment, sort et joueur connaissent l'armure magique.
 - Armure magique éditable : fiche monstre (groupe Combat), bâtiment (bonus de l'occupant), effets de sort, fiche joueur.
 - Admin Objets : types = types de l'inventaire (`ITEM_SLOTS`, plus les parties du corps des monstres) ; option « Deux mains » pour une arme (`two_handed`).
 - Inventaire : plus d'emplacement arc ; une arme à deux mains n'éclaire que la main principale et l'autre main affiche « (nom de l'arme) » ; caractéristiques = valeur finale, détail au survol / focus (`StatDetail` : base, objets, effets, monture ; Force requise en note) ; la ligne passe à la ligne (pas de défilement qui rognerait le détail).
+- Sac : `bagUsed / bagMax` emplacements ; les ressources s'affichent en piles (nom ×quantité / taille de pile) après les objets ; emplacement au-delà de la taille en rouge ; un parchemin de sac sélectionné propose « Utiliser » (+N, jusqu'à M ; grisé au maximum).
+- Admin Objets : parchemin (`scroll`) → champs « Agrandit le sac de » / « jusqu'à » (`data = { kind: 'bag', add, max }`) ; les autres parchemins gardent leur data.
 
 ## Gotchas
 - Les champs Armure / Force + / Agilité + / Armure magique isolés ont été remplacés par le groupe : ne pas les remettre (doublons).

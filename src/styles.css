@@ -649,3 +649,12 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 /* la ligne des caractéristiques passe à la ligne au lieu de défiler : le détail au survol n'est plus rogné */
 .sumgrid{grid-template-columns:repeat(auto-fill,minmax(86px,1fr));overflow:visible}
 .sumc:nth-last-child(-n+2) .bd{left:auto;right:0;transform:none}.sumc:nth-child(-n+2) .bd{left:0;transform:none}
+/* Sac : piles de ressources, parchemin d'agrandissement */
+.bagcell.res{cursor:default;border-color:rgba(127,224,192,.35);background:rgba(127,224,192,.07)}.bagcell.res small{color:#9fe8cf}.bagcell.res em{font-style:normal;color:var(--mute)}
+.bagcell.over{border-color:rgba(229,84,90,.5)}
+.baguse{display:flex;align-items:center;gap:10px;margin:0 0 8px;padding:8px 10px;border-radius:10px;border:1px solid rgba(240,210,138,.4);background:rgba(240,210,138,.08);font-size:13px}.baguse span{flex:1}
+.cap-row.res{background:rgba(127,224,192,.07)}.cap-row.res small{color:#9fe8cf}
+.tc-need{position:relative;cursor:help;color:#f2b84b}.tc-need .bd{display:none;position:absolute;left:0;top:calc(100% + 6px);z-index:30;min-width:220px;padding:10px 12px;border-radius:12px;background:rgba(14,12,26,.97);border:1px solid var(--line);box-shadow:0 12px 32px rgba(0,0,0,.55);color:var(--ink);font-size:12.5px}
+.tc-need:hover .bd,.tc-need:focus-visible .bd{display:block}.tc-need .bd>b{display:block;margin-bottom:4px;color:var(--halo)}.tc-need .bdl{padding:2px 0}.tc-need .bdl.neg span{color:var(--hp)}.tc-need .bdnote{display:block;margin-top:6px;color:var(--mute)}
+.card.tcard{overflow:visible}
+.tc-head{border-radius:16px 16px 0 0}

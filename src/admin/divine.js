@@ -14,6 +14,10 @@ export const itemBody = f => {
   const b = { name: String(f.name ?? '').trim(), rarity: f.rarity || 'commun', usable_by: f.usable_by ?? [] };
   if (f.slot) b.slot = f.slot;
   b.two_handed = f.slot === 'weapon' && !!f.two_handed;   // deux mains : armes seulement (un arc l'est toujours)
+  // Parchemin d'agrandissement du sac : data = { kind: 'bag', add, max } (les autres parchemins gardent leur data).
+  const add = Math.trunc(Number(f.bag_add) || 0), max = Math.trunc(Number(f.bag_max) || 0);
+  if (f.slot === 'scroll' && add > 0) b.data = { kind: 'bag', add, max: Math.max(max, add) };
+  else if (f.was_bag) b.data = {};
   for (const k of NUM) if (f[k] !== '' && f[k] != null && !Number.isNaN(Number(f[k]))) b[k] = Number(f[k]);
   b.bonuses = bonusesBody(f.bonuses);
   b.divine_family = b.rarity === 'divin' && f.divine_family ? f.divine_family : null;

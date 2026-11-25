@@ -57,4 +57,4 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - `src/admin/MiniMap.jsx` — Mini-carte admin (détail de monstre — onglet Liste) : grille colorée par le terrain du jeu — (header), COLORS, CSS_W, MiniMap
 - `src/admin/MonsterDetails.jsx` — Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets : — TABS, EMPTY, MonsterDetails
 - `src/admin/MonsterParts.jsx` — Fiche monstre : parties du corps équipables (silhouette cliquable) et réapparition après la mort (par type). — BodyParts, RespawnPanel
-- … 102 autres fichiers (utiliser `kb search`)
+- … 103 autres fichiers (utiliser `kb search`)

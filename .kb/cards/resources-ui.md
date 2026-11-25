@@ -34,6 +34,7 @@ secteurs tracés sur la carte avec plusieurs ressources (part %, type de case, s
 - Conditions de récolte : liste des ressources à conditions (texte serveur `needs`), ajout par sélecteur, bouton « Conditions » sur chaque ressource d'un secteur, cadenas sur les ressources concernées ; éditeur = `ActivationEditor` (objets équipés ou sac, sort, ressources, or, rang, consommation à chaque récolte) ; aucune option = libre.
 - Carte de case en jeu : ligne « Récolte : nécessite … » (`harvestNeeds`).
 - Prix de l'amélioration « Carte des ressources » réglable dans l'onglet (vendue à l'Hôtel de ville).
+- « Réglages des ressources » : quantité par emplacement (sac et coffre) + conditions de récolte dans le même éditeur ; liste des ressources réglées (taille de pile ≠ 20 ou conditions).
 
 ## Gotchas
 - `deposits.js` duplique le tirage du back (`game/deposits.ts`) : valeurs figées identiques dans les deux tests.

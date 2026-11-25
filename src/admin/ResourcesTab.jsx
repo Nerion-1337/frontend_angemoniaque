@@ -26,10 +26,14 @@ export default function ResourcesTab() {
   useEffect(() => { api('/admin/catalog').then(c => { setCat(c); setMaps(c.maps ?? []); setRes(c.resources ?? []); }).catch(() => {}); loadRules(); api('/admin/content/map-upgrade').then(x => setUpPrice(x.price)).catch(() => {}); }, []);
   const m = maps.find(x => x.id === world) ?? { width: 200, height: 200 };
   const nameOf = Object.fromEntries(res.map(r => [r.id, r.name]));
-  const ruleOf = Object.fromEntries(rules.map(r => [r.resource, r.harvest]));
-  const openRule = id => { setEdit(null); setRule({ resource: id, groups: (ruleOf[id]?.groups ?? []).map(groupDraft) }); };
+  const ruleOf = Object.fromEntries(rules.filter(r => r.harvest?.groups?.length).map(r => [r.resource, r.harvest]));   // ressources à conditions de récolte
+  const stackOf = Object.fromEntries(rules.map(r => [r.resource, r.stack_max ?? 20]));
+  const tuned = rules.filter(r => r.harvest?.groups?.length || (r.stack_max ?? 20) !== 20);
+  const openRule = id => { setEdit(null); setRule({ resource: id, stack: stackOf[id] ?? 20, groups: (ruleOf[id]?.groups ?? []).map(groupDraft) }); };
   const saveRule = async () => {
-    try { await api(`/admin/content/resource-rules/${encodeURIComponent(rule.resource)}`, activationBody(rule.groups), 'PUT'); d(Ad.ok(rule.groups.length ? 'Conditions de récolte enregistrées' : 'Récolte libre')); setRule(null); loadRules(); }
+    try { const id = encodeURIComponent(rule.resource);
+      await api(`/admin/content/resource-stack/${id}`, { stackMax: Math.max(1, Math.trunc(Number(rule.stack) || 20)) }, 'PUT');
+      await api(`/admin/content/resource-rules/${id}`, activationBody(rule.groups), 'PUT'); d(Ad.ok('Réglages de la ressource enregistrés')); setRule(null); loadRules(); }
     catch (e) { d(Ad.msg(e.message)); }
   };
   const Locked = ({ id }) => (ruleOf[id] ? <Lock size={11} className="reslock" aria-label="conditions de récolte" /> : null);
@@ -81,7 +85,10 @@ export default function ResourcesTab() {
 
       <aside className="resside">
         {rule ? <div className="editor apanel">
-          <h3><Dot id={rule.resource} /> Conditions de récolte — {nameOf[rule.resource] ?? rule.resource}</h3>
+          <h3><Dot id={rule.resource} /> Réglages — {nameOf[rule.resource] ?? rule.resource}</h3>
+          <div className="form"><div className="cell"><small>Quantité par emplacement (sac et coffre)</small><input type="number" min="1" value={rule.stack} onChange={e => setRule({ ...rule, stack: e.target.value })} /></div>
+            <div className="cell"><small>&nbsp;</small><small className="note">Ex. 20 : 45 unités occupent 3 emplacements du sac.</small></div></div>
+          <h4>Conditions de récolte</h4>
           <ActivationEditor groups={rule.groups} set={g => setRule({ ...rule, groups: g })} cat={cat} title={null} itemHint="— Objet (équipé ou sac) —"
             consumeLabel="Consommés à chaque récolte (objets, ressources, or)"
             note="Valent partout : terrain naturel et secteurs. Il suffit de remplir UNE option ; dans une option, tout ce qui est renseigné est exigé (ex. une hache OU le sort « Sève »). Un objet compte s'il est équipé ou dans le sac. Aucune option : récolte libre." />
@@ -133,10 +140,11 @@ export default function ResourcesTab() {
           <div className="upprice"><small>Prix</small><input type="number" min="0" value={upPrice} onChange={e => setUpPrice(e.target.value)} aria-label="Prix de l'amélioration de carte" /><small>or</small>
             <button className="sm" onClick={() => api('/admin/content/map-upgrade', { price: Math.max(0, Math.trunc(Number(upPrice) || 0)) }, 'PUT').then(() => d(Ad.ok('Prix enregistré'))).catch(e => d(Ad.msg(e.message)))}>Enregistrer</button></div>
           <small className="note">Le joueur qui l'achète peut, sur sa carte du monde, choisir une ressource pour la mettre en valeur (comme cette carte). Accordable aussi depuis la fiche du joueur.</small>
-          <h4>Conditions de récolte <small>objets ou sorts exigés</small></h4>
-          {rules.length > 0 && <div className="sectorlist">{rules.map(r => <button key={r.resource} className="sector" onClick={() => openRule(r.resource)}>
-            <span className="shareline sm"><Dot id={r.resource} /><b>{r.resource_name}</b></span><small>{r.needs ?? activationSummary(r.harvest)}</small></button>)}</div>}
-          <Pick options={res.filter(r => !ruleOf[r.id])} value="" placeholder="+ Exiger un objet ou un sort pour une ressource" labelOf={o => o.name} onPick={id => id && openRule(id)} />
+          <h4>Réglages des ressources <small>quantité par emplacement · conditions de récolte</small></h4>
+          {tuned.length > 0 && <div className="sectorlist">{tuned.map(r => <button key={r.resource} className="sector" onClick={() => openRule(r.resource)}>
+            <span className="shareline sm"><Dot id={r.resource} /><b>{r.resource_name}</b><span className="grow" /><small>{r.stack_max ?? 20} / emplacement</small></span>
+            <small>{r.harvest?.groups?.length ? `Récolte : ${r.needs || activationSummary(r.harvest)}` : 'Récolte libre'}</small></button>)}</div>}
+          <Pick options={res} value="" placeholder="+ Régler une ressource (par emplacement, conditions)" labelOf={o => `${o.name} · ${stackOf[o.id] ?? 20} / emplacement`} onPick={id => id && openRule(id)} />
           <h4>Ressources naturelles <small>{natList.length} · cliquez pour les repérer</small></h4>
           <div className="natlist">{natList.map(([id, e]) => <button key={id} className={`chip${focus === id ? ' on' : ''}`} onClick={() => setFocus(focus === id ? null : id)}>
             <Dot id={id} />{nameOf[id] ?? id}<Locked id={id} /><small>{e.n} · {KIND_NAME[e.kind]}</small></button>)}</div>
