@@ -2,7 +2,7 @@
 export const STAT_LABEL = {
   hp: 'PV (rendre / retirer)', energy: 'Énergie (rendre / retirer)', divine_energy: 'Énergie divine (rendre / retirer)',
   hp_max: 'PV max', energy_max: 'Énergie max (capacité)', divine_energy_max: 'Énergie divine max',
-  strength: 'Force', agility: 'Agilité', armor: 'Armure', see: 'Vue', range: 'Portée', recovery: 'Régénération',
+  strength: 'Force', agility: 'Agilité', armor: 'Armure', magic_armor: 'Armure magique', see: 'Vue', range: 'Portée', recovery: 'Régénération',
 };
 export const POOL_STATS = ['hp', 'energy', 'divine_energy'];
 export const TARGET_LABEL = { self: 'Soi-même', single: 'Cible unique', area: "Zone d'impact" };

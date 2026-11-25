@@ -3,7 +3,7 @@ export const FIELDS = {
   monster: [
     ['name', 'Nom'], ['hp_max', 'PV max', 'number'], ['hp_current', 'PV', 'number'], ['recovery', 'Régén/h', 'number'],
     ['energy_max', 'Énergie max', 'number'], ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
-    ['armor', 'Armure', 'number'], ['range', 'Portée', 'number'], ['see', 'Portée de vue', 'number'],
+    ['armor', 'Armure', 'number'], ['magic_armor', 'Armure magique', 'number'], ['range', 'Portée', 'number'], ['see', 'Portée de vue', 'number'],
     ['gain_xp_hour', 'XP/h', 'number'], ['gold_current', 'Or', 'number'],
     ['rarity', 'Rareté', 'rarity'], ['locomotion', 'Déplacement', 'loco'],
     ['mountable', 'Peut servir de monture', 'check'], ['speed', 'Vitesse (monture)', 'number'], ['carry', 'Portage (monture)', 'number'],
@@ -31,7 +31,7 @@ export const FIELDS = {
     ['name', 'Nom'], ['kind', 'Type (wall/tower/factory/totem/...)'], ['invulnerable', 'Invulnérable', 'check'],
     ['structure', 'Points de vie (structure)', 'number'], ['armor', 'Armure de la structure', 'number'], ['size', 'Taille (cases)', 'number'],
     ['occupiable', 'Case occupable (un personnage peut s\'y tenir)', 'check'],
-    ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée (occupant)', 'number'],
+    ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_magic_armor', 'Bonus armure magique (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée (occupant)', 'number'],
     ['prerequisites', 'Prérequis (JSON : {"rank":3,"building":2})', 'json'],
     ['data', 'Passifs/collecte/production (JSON : {"passive":{"defense":5},"production":{"lorien":2},"storage":{"lorien":50}})', 'json']
   ],

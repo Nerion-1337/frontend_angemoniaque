@@ -9,10 +9,10 @@ import { api } from '../lib/api.js';
 import { SLOTS, SLOT_LABEL } from './monsterDetails.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
-import { itemBody, familyLabel } from './divine.js';
+import { itemBody, familyLabel, ITEM_STATS, statsLine } from './divine.js';
 import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [] };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {} };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -41,6 +41,7 @@ export default function ItemsTab() {
     for (const k of Object.keys(blank)) if (row?.[k] != null) v[k] = row[k];
     v.rarity = row?.rarity_n ?? row?.rarity ?? 'commun';
     v.usable_by = typeof row?.usable_by === 'string' ? JSON.parse(row.usable_by || '[]') : (row?.usable_by ?? []);
+    v.bonuses = { ...(row?.bonuses ?? {}) };
     v.shop = !!row?.shop; v.shop_races = typeof row?.shop_races === 'string' ? JSON.parse(row.shop_races || '[]') : (row?.shop_races ?? []);
     setF(v);
   };
@@ -88,14 +89,14 @@ export default function ItemsTab() {
           <select value={f.divine_family} onChange={e => setF(x => ({ ...x, divine_family: e.target.value }))}>
             {fams.map(fm => <option key={fm.key} value={fm.key}>{familyLabel(fm)}</option>)}</select></div>}
         <div className="cell"><small>Prix</small><input type="number" value={f.price} onChange={e => num('price', e.target.value)} /></div>
-        <div className="cell"><small>Armure</small><input type="number" value={f.armor} onChange={e => num('armor', e.target.value)} /></div>
         <div className="cell"><small>Dégâts d'arme</small><input type="number" value={f.weapon_damage} onChange={e => num('weapon_damage', e.target.value)} /></div>
-        <div className="cell"><small>Force +</small><input type="number" value={f.strength_bonus} onChange={e => num('strength_bonus', e.target.value)} /></div>
-        <div className="cell"><small>Agilité +</small><input type="number" value={f.agility_bonus} onChange={e => num('agility_bonus', e.target.value)} /></div>
         <div className="cell"><small>Durabilité</small><input type="number" value={f.durability} onChange={e => num('durability', e.target.value)} /></div>
-        <div className="cell"><small>Armure magique</small><input type="number" value={f.magic_armor} onChange={e => num('magic_armor', e.target.value)} /></div>
         <div className="cell"><small>Plafond (quantité)</small><input type="number" value={f.quantity_max} onChange={e => num('quantity_max', e.target.value)} /></div>
         <div className="cell"><small>Force requise</small><input type="number" value={f.req_strength} onChange={e => num('req_strength', e.target.value)} /></div>
+        <div className="cell span-all fgroup"><h5>Caractéristiques offertes à qui le porte (négatif = malus)</h5><div className="form">
+          {ITEM_STATS.map(([k, l, col]) => <div key={k} className="cell"><small>{l}</small><input type="number" value={col ? f[col] : (f.bonuses[k] ?? '')}
+            onChange={e => col ? num(col, e.target.value) : setF(x => ({ ...x, bonuses: { ...x.bonuses, [k]: e.target.value } }))} /></div>)}</div>
+          <p className="note">Force, agilité et armures comptent tant que l'objet est porté ; PV, régénération, énergie, vue et portée s'ajoutent à la fiche du personnage à l'équipement et sont retirés au déséquipement. Armure magique : réduit les dégâts des sorts (directs et sur la durée).</p></div>
         <div className="cell span-all"><small>Qui peut s'en équiper</small>
           <div className="ux">{USABLE_KINDS.map(k =>
             <button key={k} className={`chip${f.usable_by.includes(k) ? ' on' : ''}`} onClick={() => setU(k)}>{USABLE_LABEL[k]}</button>)}
@@ -114,7 +115,7 @@ export default function ItemsTab() {
       <th>Nom</th><th>Type</th><th>Rareté</th>{divine && <th>Famille · exemplaires</th>}<th>Équipable par</th><th>Détenu par</th><th>Prix</th><th>Boutique</th><th />
     </tr></thead><tbody>
       {view.map(r => <tr key={r.id} className={edit === r.id ? 'sel' : ''}>
-        <td><b>{r.name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
+        <td><b>{r.name}</b>{statsLine(r) && <><br /><small>{statsLine(r)}</small></>} <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
         <td>{r.slot ? SLOT_LABEL[r.slot] ?? r.slot : '—'}</td>
         <td><span className={`rar ${r.rarity_n ?? r.rarity ?? 'commun'}`}>{RARITY_LABEL[r.rarity_n ?? r.rarity ?? 'commun'] ?? r.rarity}</span></td>
         {divine && <td>{r.divine_family ? `${r.family_name ?? r.divine_family} · ${r.copies ?? 0} / ${r.family_cap ?? '∞'}` : <small>sans famille</small>}</td>}

@@ -4,7 +4,7 @@ export const PLACE_LABEL = { equipped: 'Équipé', bag: 'Sac', chest: 'Coffre-fo
 /** Caractéristiques éditables (même liste que le back EDITABLE), groupées pour le formulaire. */
 export const STAT_GROUPS = [
   ['Vie & énergie', [['hp_current', 'PV'], ['hp_max', 'PV max'], ['energy_current', 'Énergie'], ['energy_max', 'Énergie max'], ['divine_energy_current', 'Énergie divine'], ['divine_energy_max', 'Énergie divine max'], ['recovery', 'Régén/h']]],
-  ['Combat', [['strength', 'Force'], ['agility', 'Agilité'], ['armor', 'Armure'], ['range', 'Portée'], ['see', 'Vue']]],
+  ['Combat', [['strength', 'Force'], ['agility', 'Agilité'], ['armor', 'Armure'], ['magic_armor', 'Armure magique'], ['range', 'Portée'], ['see', 'Vue']]],
   ['Progression', [['xp', 'XP'], ['gold', 'Or'], ['chest_size', 'Taille du coffre'], ['summon_cap', 'Invocations max']]],
 ];
 export const STAT_KEYS = STAT_GROUPS.flatMap(([, f]) => f.map(([k]) => k));

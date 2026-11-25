@@ -43,7 +43,7 @@ export const respawnIn = i => {
 export const MONSTER_GROUPS = [
   ['Identité', ['name']],
   ['Vie et énergie', ['hp_max', 'hp_current', 'recovery', 'energy_max']],
-  ['Combat', ['strength', 'agility', 'armor', 'range', 'see']],
+  ['Combat', ['strength', 'agility', 'armor', 'magic_armor', 'range', 'see']],
   ['Récompenses', ['gain_xp_hour', 'gold_current']],
   ['Rareté et déplacement', ['rarity', 'locomotion']],
   ['Monture', ['mountable', 'speed', 'carry', 'bonus_see', 'bonus_range']],
