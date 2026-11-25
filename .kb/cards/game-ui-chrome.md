@@ -1,5 +1,5 @@
 ---
-title: Interface de jeu : barre d accès, messagerie, paramètres, navigation du haut, panneaux
+title: Interface de jeu : barre d accès, messagerie, paramètres, navigation du haut, panneaux, montures
 slug: game-ui-chrome
 status: done
 updated: 2026-11-25
@@ -27,6 +27,7 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Guilde sans guilde : message d'état au lieu de la saisie ; liste vide : message d'état.
 - Paramètres : personnage actif (race en clair, rang, case), personnages du compte (« Jouer » / « En jeu »), création (limite 3 sauf admin), administration, déconnexion.
 - Navigation du haut : disques libellés (Pactes, Montures, Guilde, Carte) ; un second clic referme le panneau ouvert.
+- Panneau Montures : par monture, état (Au repos / Montée / Invoquée à pied), modes de déplacement, caractéristiques équipement compris, capacités ; boutons « Monter dessus » (si le type sert de monture) et « Invoquer (sans monter) », puis « Descendre » ou « Contrôler / Revenir » et « Renvoyer » ; équipement par partie du corps autorisée, verrouillé pendant l'invocation à pied (règles serveur : card back `mount-call`).
 - Les styles ajoutés ne visent que `.panel`, `.inv:not(.guild)`, `.scroll`, `.dock`, `.portrait`, `.mainico` : la guilde garde son apparence.
 
 ## Gotchas

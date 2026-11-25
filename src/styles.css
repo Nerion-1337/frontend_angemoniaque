@@ -544,3 +544,10 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .acc-new{display:flex;gap:8px;margin-top:10px}.acc-new input{flex:1;min-width:0}
 @media (max-width:900px){.mainico .disc{width:46px;height:46px}.mainico .disc svg{width:24px;height:24px}.mainico .lbl{font-size:10px}}
 @media (max-width:600px){.dockbtn span{display:none}.dock .dockbtn{padding:0 12px}.dock .chatbox{height:min(520px,calc(100vh - 140px))}.mainico .lbl{display:none}}
+/* Panneau Montures : état, capacités, équipement */
+.panel .item.mount{display:flex;flex-direction:column;gap:6px}.panel .item.mount.riding{border-color:rgba(240,210,138,.5)}.panel .item.mount.called{border-color:rgba(122,180,255,.45)}
+.panel .item.mount h5{margin:4px 0 0;color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.panel .chips{display:flex;flex-wrap:wrap;gap:6px}.panel .chips .chip{padding:3px 10px;border-radius:99px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--ink)}
+.panel .chip.on{border-color:rgba(240,210,138,.45);background:rgba(240,210,138,.12)}.panel .chip .x-in{min-height:0;padding:0 0 0 6px;border:0;background:none;color:inherit}
+.mgear{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}.mslot{display:flex;flex-direction:column;gap:4px}.mslot .row{display:flex;gap:6px}.mslot select{flex:1;min-width:0}
+.panel .item.mount .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}

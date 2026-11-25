@@ -26,13 +26,39 @@ export function FaithPanel() {
       {x.request_choice && <button onClick={() => run(() => api(`/faiths/${x.id}/answer`, { characterId: me.id }), reload)}>Exaucer « {x.request_choice} » (−5 ÉD)</button>}</div>)}</>}</Panel>;
 }
 
+const SLOT_FR = { mains: 'Mains', tete: 'Tête', torse: 'Torse', pieds: 'Pieds', collier: 'Collier', bracelet: 'Bracelet', bague: 'Bague' };
+const LOCO_FR = { land: 'terrestre', air: 'aérienne', water: 'aquatique' };
+/** Équipement d'une monture : une pièce par partie autorisée par son type ; objets pris dans le sac. */
+function MountGear({ x, bag, act, me, locked }) {
+  const [pick, setPick] = useState({});
+  return <div className="mgear">{x.slots.map(sl => { const e = x.equips.find(q => q.slot === sl);
+    return <div key={sl} className="mslot"><small>{SLOT_FR[sl] ?? sl}</small>
+      {e ? <span className="chip on">{e.name}<button className="x-in" disabled={locked} aria-label={`Retirer ${e.name}`} onClick={() => act(() => api('/mounts/unequip', { characterId: me.id, cmId: x.cm_id, slot: sl }))}>×</button></span>
+        : <span className="row"><select disabled={locked || !bag.length} value={pick[sl] ?? ''} onChange={ev => setPick({ ...pick, [sl]: ev.target.value })}><option value="">{bag.length ? '— Objet du sac —' : 'Sac vide'}</option>{bag.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select>
+          <button className="sm" disabled={locked || !pick[sl]} onClick={() => act(() => api('/mounts/equip', { characterId: me.id, cmId: x.cm_id, itemId: Number(pick[sl]), slot: sl }))}>Équiper</button></span>}</div>; })}
+    {locked && <small className="note">Renvoyez la créature pour changer son équipement.</small>}</div>;
+}
 export function MountsPanel() {
-  const { me } = useSelector(s => s.game), run = useDo(), refresh = useRefreshMe(), [m, load] = useData(`/mounts/${me.id}`), act = f => run(f, () => { load(); refresh(); });
+  const { me } = useSelector(s => s.game), run = useDo(), refresh = useRefreshMe(), [m, load] = useData(`/mounts/${me.id}`), [inv, loadInv] = useData(`/inventory/${me.id}`), act = f => run(f, () => { load(); loadInv(); refresh(); });
+  const bag = (inv?.items ?? []).filter(i => !i.equipped_slot && !i.in_chest);
   return <Panel title="Invocations & Montures" wide>
-    <h4>Montures <small>(invoquée = chevauchée d'office ; seuls vos déplacements consomment son énergie)</small></h4>
-    {m?.length ? m.map(x => <div key={x.id} className="item"><div className="head"><b>🐉 {x.name}</b><small>{x.flying ? 'vole · ' : ''}{x.aquatic ? 'aquatique · ' : ''}{x.active ? 'Invoquée (sur la monture)' : 'Au repos'}</small></div>
-      <KV items={[['Vie', `${x.hp_current}/${x.hp_max}`], ['Énergie', `${x.energy_current}/${x.energy_max}`], ['Régénération (Vie & Énergie)', `+${x.recovery} /h`], ['Vision', `+${x.bonus_see}`], ['Portée', `+${x.bonus_range}`], ['Agilité', x.agility], ['Force', x.strength], ['Armure', `${x.armor}/0`], ...(x.special_attack_name ? [[x.special_attack_name, `${x.special_attack_damage} dég. · ⚡${x.special_attack_energy}`]] : [])]} />
-      <button className={x.active ? 'danger' : 'primary'} onClick={() => act(() => x.active ? api('/mounts/dismount', { characterId: me.id }) : api('/mounts/summon', { characterId: me.id, mountId: x.id }))}>{x.active ? 'Renvoyer la monture' : 'Invoquer & monter dessus'}</button></div>) : <p>Aucune monture.</p>}
+    <h4>Montures</h4>
+    <p className="note">Montée : vos déplacements et ses capacités consomment son énergie, pas la vôtre. Invoquée à pied : une créature à côté de vous, que vous pouvez contrôler (elle se déplace et lance ses capacités avec sa propre énergie) ; vous restez libre de vos mouvements.</p>
+    {m?.length ? m.map(x => { const st = x.stats ?? {}, ctl = me.actor.kind === 'summon' && me.actor.id === x.summon_id;
+      return <div key={x.cm_id} className={`item mount${x.active ? ' riding' : x.summon_id ? ' called' : ''}`}>
+      <div className="head"><b>{x.name}</b><span className="pill">{x.active ? 'Montée' : x.summon_id ? 'Invoquée à pied' : 'Au repos'}</span></div>
+      <small>{(x.locomotion ?? []).map(l => LOCO_FR[l] ?? l).join(' · ') || [x.flying && 'aérienne', x.aquatic && 'aquatique'].filter(Boolean).join(' · ') || 'terrestre'}{!x.can_ride ? ' · ne se monte pas' : ''}</small>
+      <KV items={[['Vie', `${x.hp_current}/${st.hp_max ?? x.hp_max}`], ['Énergie', `${x.energy_current}/${st.energy_max ?? x.energy_max}`], ['Régén.', `+${st.recovery ?? x.recovery}/h`], ['Vision', `+${x.bonus_see}`], ['Portée', `+${x.bonus_range}`], ['Force', st.strength ?? x.strength], ['Agilité', st.agility ?? x.agility], ['Armure', `${st.armor ?? x.armor}/${st.magic_armor ?? 0}`]]} />
+      {x.capacities.length > 0 && <><h5>Capacités</h5><div className="chips">{x.capacities.map(c => <span key={c.id} className="chip" title={fxSummary(c.effects)}>{c.name} · ⚡{c.energy_cost}</span>)}</div>
+        <small className="note">{x.active ? 'Lançables depuis « Actions » (énergie de la monture).' : x.summon_id ? 'Lançables en contrôlant la créature.' : 'Lançables quand vous la montez ou la contrôlez.'}</small></>}
+      {x.slots.length > 0 && <><h5>Équipement</h5><MountGear x={x} bag={bag} act={act} me={me} locked={!!x.summon_id} /></>}
+      <div className="row">
+        {x.active ? <button className="danger" onClick={() => act(() => api('/mounts/dismount', { characterId: me.id }))}>Descendre</button>
+          : x.summon_id ? <><button className="primary" onClick={() => act(() => api('/summons/control', { characterId: me.id, summonId: ctl ? null : x.summon_id }))}>{ctl ? `Revenir sur ${me.pseudo}` : 'Contrôler'}</button>
+            <button className="danger" onClick={() => act(() => api(`/summons/${x.summon_id}/dismiss`, { characterId: me.id }, 'POST'))}>Renvoyer</button></>
+          : <>{x.can_ride && <button className="primary" disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/summon', { characterId: me.id, cmId: x.cm_id }))}>Monter dessus</button>}
+            <button disabled={x.hp_current <= 0} onClick={() => act(() => api('/mounts/call', { characterId: me.id, cmId: x.cm_id }))}>Invoquer (sans monter)</button></>}
+      </div>{x.hp_current <= 0 && <small className="err">À terre : attendez sa régénération.</small>}</div>; }) : <p className="note">Aucune monture.</p>}
     <h4>Invocations contrôlables <span className="pill">Actives : {me.summons.length} / {me.maxSummons}</span></h4>
     <small>Limite de base : 1 invocation (augmentable par le sort « Lien d'Invocateur » ou des objets spéciaux). Prendre le contrôle déplace la caméra et affiche ses caractéristiques.</small>
     {me.summons.map(s => { const ctl = me.actor.kind === 'summon' && me.actor.id === s.id; return <div key={s.id} className="item"><div className="head"><b>🔮 {s.name}</b><small>({s.x}, {s.y})</small></div>
