@@ -34,7 +34,7 @@ export default function TileCard() {
     const acts = []; if (!e && (t.x !== P.x || t.y !== P.y)) acts.push(['go', 'S\'y rendre', pe(t), 0]);
     if (e && dist > 1 && e.char_id !== me.id) acts.push(['approach', `S'approcher à côté de ${e.name}`, pe(t, { stopAt: 1 }), 0]);
     if (attackable) { acts.push(['attack', `Attaquer ${e.name}`, pe(t, { stopAt: range }), 5]); if (mount?.special_attack_name) acts.push(['breath', `${mount.special_attack_name} (${mount.special_attack_damage} dég.)`, pe(t, { stopAt: range }), 0, mount.special_attack_energy]); }
-    if (e?.kind === 'building') acts.push(['interact', e.building_kind === 'door' ? `Franchir ${e.name}` : `Interagir avec ${e.name}`, 0, 0]);
+    if (e?.kind === 'building') acts.push(['interact', e.building_kind === 'door' ? `Franchir ${e.name}` : `Interagir avec ${e.name} (ou l'activer)`, 0, 0]);
     const dep = sc?.deposit; if (!e && (res?.resource || dep) && !(res?.kind === 'deep' && !fly && !aq)) acts.push(['harvest', dep ? `Récolter ${dep.resource} (gisement ${dep.stock}/${dep.stockMax})` : `Récolter ${res.resource}`, pe(t), 4]); if (!e && kinds.length) acts.push(['build', 'Poser un élément', pe(t, { stopAt: 1 }), 10]);
     acts.push(['info', 'Plus d\'informations (état de forme & équipement)', 0, 0]);
     const ids = { characterId: me.id, targetCharacterId: e?.char_id, targetMonsterId: e?.monster_id, targetSummonId: e?.summon_id };
@@ -44,7 +44,9 @@ export default function TileCard() {
       if (act === 'go') await api('/actions/move', { characterId: me.id, ...t }); if (act === 'approach') await api('/actions/approach', { characterId: me.id, ...t });
       if (act === 'build') await api('/buildings/place', { characterId: me.id, kind: kinds.includes(kind) ? kind : kinds[0], ...t }); if (act === 'harvest') await api('/actions/gather', { characterId: me.id, ...t });
       if (act === 'attack' || act === 'breath') { const r = await api('/combat/attack', { ...ids, useMountBreath: act === 'breath' }); msg = r.missed ? `Raté ! (${r.hitChance}% de chances de toucher)` : `Touché : -${r.dmg} PV${r.killed ? ' — cible vaincue !' : ''}`; }
-      if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital')); else msg = r.name; }
+      if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital'));
+        else if (r.activation) { const x = await api(`/buildings/${r.id}/activate`, { characterId: me.id }); msg = `${r.name} activé${x.results?.length ? ` : ${x.results.map(y => `${y.spell} → ${y.effect}`).join(' ; ')}` : ''}`; }   // conditions d'activation (lot E)
+        else msg = r.name; }
       if (msg) d(A.toast(msg)); await refresh(); d(A.setSelected(null)); } catch (er) { d(A.toast(er.message)); } };
     return <><div className="card" style={{ left: selected.sx + 14, top: selected.sy + 14 }}><button className="x" aria-label="Fermer" onClick={() => d(A.setSelected(null))}>×</button>
       <div><b>{res?.zone ?? sc?.tile?.name ?? KIND[res?.kind] ?? '…'}</b>{res?.zone && sc?.tile?.name && <small> · {sc.tile.name}</small>} <small>({t.x}, {t.y})</small> · <small>⚡ {res ? (cellCost(sc) >= 99 ? '∞' : cellCost(sc)) : '…'}/case · {res?.resource ?? 'aucune ressource'}</small></div><TileInfo tile={sc?.tile} />{sc?.deposit && <div className="note">Gisement : {sc.deposit.resource} — {sc.deposit.stock}/{sc.deposit.stockMax} (+{sc.deposit.regenPerH}/h, {sc.deposit.yieldPerHarvest} par récolte)</div>}<Entity e={e} />

@@ -3,13 +3,13 @@ import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { FIELDS, jsonOr, jsonText, URL_KIND } from './entityFields.js';
 import { RuleForms, RulesList } from './EntityRules.jsx';
-import { BuildingExtras, BuildingSpells } from './BuildingExtras.jsx'; import { buildingBody, buildingDraft } from './building.js';
+import { BuildingExtras, BuildingSpells, ActivationEditor } from './BuildingExtras.jsx'; import { buildingBody, buildingDraft } from './building.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
 /** Éditeur générique d'entités (montures, bâtiments) : liste filtrable à gauche + fiche à droite (caractéristiques, règles transverses). */
 export default function Entities({ kind }) {
   const d = useDispatch(), [rows, setRows] = useState(null), [sel, setSel] = useState(null), [draft, setDraft] = useState(null), [tab, setTab] = useState('data'), [q, setQ] = useState(''), [dirty, setDirty] = useState(false);
-  const url = URL_KIND[kind], [res, setRes] = useState([]);
-  useEffect(() => { if (kind === 'building') api('/admin/catalog').then(c => setRes(c.resources ?? [])).catch(() => {}); }, [kind]);
+  const url = URL_KIND[kind], [cat, setCat] = useState({});
+  useEffect(() => { if (kind === 'building') api('/admin/catalog').then(setCat).catch(() => {}); }, [kind]);
   const list = () => api(`/admin/content/${url}`).then(setRows).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { list(); }, [kind]);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
   const leave = () => !dirty || window.confirm('Modifications non enregistrées : les abandonner ?');
@@ -49,7 +49,8 @@ export default function Entities({ kind }) {
           t === 'check' ? <label key={k} className="sm check"><input type="checkbox" checked={!!draft[k]} onChange={e => set(k, e.target.checked)} /> {label}</label>
             : t === 'json' ? <div key={k} className="cell span-all"><small>{label}</small><textarea className="mono" rows="4" value={typeof draft[k] === 'string' ? draft[k] : jsonText(draft[k] ?? null)} onChange={e => set(k, e.target.value)} /></div>
               : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>)}</div>}
-        {tab === 'data' && kind === 'building' && <BuildingExtras draft={draft} set={set} resources={res} />}
+        {tab === 'data' && kind === 'building' && <BuildingExtras draft={draft} set={set} resources={cat.resources ?? []} />}
+        {tab === 'data' && kind === 'building' && <ActivationEditor groups={draft.activationGroups} set={v => set('activationGroups', v)} cat={cat} />}
         {tab === 'data' && kind === 'building' && sel?.id && <BuildingSpells id={sel.id} />}
         {tab === 'rules' && sel?.id && <div><RuleForms kind={kind} id={sel.id} onSaved={() => open(sel.id, true)} /><RulesList kind={kind} id={sel.id} extra={sel} onSaved={() => open(sel.id, true)} /></div>}
         {sel?.position && <p className="note">Position sur carte : {sel.position.map_id}:{sel.position.coord_x},{sel.position.coord_y}</p>}

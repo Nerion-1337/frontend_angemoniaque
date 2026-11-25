@@ -482,3 +482,5 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .respawn h5{margin:6px 0 0;color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .admin .inlabel{display:inline-flex;align-items:center;gap:6px}
 @media (max-width:640px){.admin .bodyparts{grid-template-columns:1fr}.admin .bodymap{max-width:260px}}
+/* Bâtiments (lot E) : options d'activation */
+.admin .activation .actgroup{display:flex;flex-direction:column;gap:8px;padding:10px 12px;margin:0 0 8px}

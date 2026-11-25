@@ -7,7 +7,7 @@ import { api } from '../lib/api.js';
 import { Plus } from 'lucide-react';
 import Pick from './Pick.jsx';
 import { Empty, confirmDel } from './ui.jsx';
-import { fxSummary } from './spellFx.js';
+import { fxSummary } from './spellFx.js'; import { groupDraft } from './building.js';
 
 /** Bloc contrôlé : `draft.occupant_attack` et `draft.production` (fusionnés au corps par `buildingBody`). */
 export function BuildingExtras({ draft, set, resources }) {
@@ -44,5 +44,44 @@ export function BuildingSpells({ id }) {
     {rows && !rows.length ? <Empty>Aucun sort.</Empty> : <div className="chips">{(rows ?? []).map(r => <span key={r.id} className="chip on">{r.name} · {r.mode === 'passive' ? 'continu' : 'à la demande'}{fxSummary(r.effects) && <small> · {fxSummary(r.effects)}</small>}
       <button className="x-in" onClick={() => del(r)}>×</button></span>)}</div>}
     <p className="note">En continu : les effets partent de la case du bâtiment (zone = entités dans le rayon, camp relatif au propriétaire ; sinon l'occupant). Les effets se règlent dans l'onglet Sorts.</p>
+  </div>;
+}
+
+/** Conditions d'activation (lot E) : options alternatives ; dans une option, tout ce qui est renseigné est exigé. */
+export function ActivationEditor({ groups, set, cat }) {
+  const [pick, setPick] = useState({});   // sélections en cours par option : { [i]: { item, qty, res, rq } }
+  const g = groups ?? [], up = (i, v) => set(g.map((x, j) => (j === i ? { ...x, ...v } : x)));
+  const P = i => pick[i] ?? { item: '', qty: 1, res: '', rq: 1 }, setP = (i, v) => setPick({ ...pick, [i]: { ...P(i), ...v } });
+  const name = (list, id) => (list ?? []).find(o => String(o.id) === String(id))?.name ?? id;
+  const rankLabel = r => `${r.name} (${r.race}, palier ${r.current_rank})`;
+  return <div className="bldextras activation">
+    <h5>Activation de la capacité</h5>
+    <p className="note">Portail : conditions pour le franchir (remplacent l'objet divin historique). Autre bâtiment : conditions pour déclencher ses sorts « à activer »
+      au profit de l'activateur. Il suffit de remplir UNE option ; dans une option, tout ce qui est renseigné est exigé. Aucune option : comportement historique.</p>
+    {g.map((x, i) => <div key={i} className="actgroup apanel">
+      <div className="headrow"><b>Option {i + 1}</b><span className="grow" /><button className="sm danger" onClick={() => set(g.filter((_, j) => j !== i))}>Retirer l'option</button></div>
+      <div className="row add"><Pick options={cat.items ?? []} value={P(i).item} onPick={v => setP(i, { item: v })} labelOf={o => o.name} placeholder="— Objet (sac) —" />
+        <input type="number" min="1" className="nb" value={P(i).qty} onChange={e => setP(i, { qty: e.target.value })} />
+        <button className="sm" disabled={!P(i).item} onClick={() => up(i, { items: [...x.items.filter(y => String(y.itemId) !== String(P(i).item)), { itemId: Number(P(i).item), qty: Math.max(1, Number(P(i).qty) || 1) }] })}><Plus size={14} /> Objet</button></div>
+      {x.items.length > 0 && <div className="chips">{x.items.map(y => <span key={y.itemId} className="chip on">{name(cat.items, y.itemId)} ×{y.qty}<button className="x-in" onClick={() => up(i, { items: x.items.filter(z => z !== y) })}>×</button></span>)}</div>}
+      <div className="row add"><Pick options={cat.resources ?? []} value={P(i).res} onPick={v => setP(i, { res: v })} labelOf={o => o.name} placeholder="— Ressource —" />
+        <input type="number" min="1" className="nb" value={P(i).rq} onChange={e => setP(i, { rq: e.target.value })} />
+        <button className="sm" disabled={!P(i).res} onClick={() => up(i, { resources: { ...x.resources, [P(i).res]: Math.max(1, Number(P(i).rq) || 1) } })}><Plus size={14} /> Ressource</button></div>
+      {Object.keys(x.resources).length > 0 && <div className="chips">{Object.entries(x.resources).map(([k, q]) => <span key={k} className="chip on">{name(cat.resources, k)} ×{q}<button className="x-in" onClick={() => { const n = { ...x.resources }; delete n[k]; up(i, { resources: n }); }}>×</button></span>)}</div>}
+      <div className="form">
+        <div className="cell span2"><label className="check"><input type="checkbox" checked={x.divineOn} onChange={e => up(i, { divineOn: e.target.checked })} /> Objets divins détenus</label>
+          {x.divineOn && <div className="row"><select value={x.divineFamily} onChange={e => up(i, { divineFamily: e.target.value })}><option value="">Toutes familles</option>
+            {(cat.divineFamilies ?? []).map(f => <option key={f.key} value={f.key}>{f.name}</option>)}</select>
+            <input type="number" min="1" className="nb" value={x.divineCount} onChange={e => up(i, { divineCount: e.target.value })} /></div>}</div>
+        <div className="cell span2"><small>Sort connu</small><Pick options={cat.spells ?? []} value={x.spellId} onPick={v => up(i, { spellId: v })} labelOf={o => o.name} placeholder="— Aucun —" />
+          {x.spellId !== '' && x.spellId != null && <button className="sm ghost" onClick={() => up(i, { spellId: '' })}>Retirer le sort</button>}</div>
+        <div className="cell"><small>Or</small><input type="number" min="0" value={x.gold} onChange={e => up(i, { gold: e.target.value })} /></div>
+        <div className="cell"><small>Rang minimum (palier, 0 = aucun)</small><input type="number" min="0" value={x.minRank} onChange={e => up(i, { minRank: e.target.value })} /></div>
+        <div className="cell span2"><small>Ou l'un de ces rangs</small><Pick options={(cat.ranks ?? []).filter(r => !x.ranks.includes(r.id))} value="" onPick={v => up(i, { ranks: [...x.ranks, Number(v)] })} labelOf={rankLabel} placeholder="— Ajouter un rang —" />
+          {x.ranks.length > 0 && <div className="chips">{x.ranks.map(r => <span key={r} className="chip on">{(cat.ranks ?? []).find(o => o.id === r)?.name ?? r}<button className="x-in" onClick={() => up(i, { ranks: x.ranks.filter(z => z !== r) })}>×</button></span>)}</div>}</div>
+        <div className="cell span-all"><label className="check"><input type="checkbox" checked={x.consume} onChange={e => up(i, { consume: e.target.checked })} /> Consommés à l'activation (objets, ressources, or ; objets divins rendus)</label></div>
+      </div>
+    </div>)}
+    <button className="sm" onClick={() => set([...g, groupDraft()])}><Plus size={14} /> Ajouter une option</button>
   </div>;
 }
