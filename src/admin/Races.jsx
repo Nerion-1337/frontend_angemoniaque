@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from 'react'; import { api } from '../lib/api';
+import XpRank from './XpRank.jsx';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 import { confirmDel } from './ui.jsx'; import { RaceRules, rulesDraft, rulesBody, rulesLabel } from './raceRules.jsx'; import StartKit from './StartKit.jsx'; import RankReq from './RankReq.jsx'; import { reqSummary } from './rankReq.js'; import { kitSummary, kitDraft } from './startKit.js';
@@ -31,6 +32,7 @@ export default function Races() {
   };
   const delRank = async s => { if (!confirmDel(`le palier « ${s.name} »`)) return; try { await api(`/admin/content/ranks/${s.id}`, undefined, 'DELETE'); d(Ad.ok('Palier supprimé')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   return <section>
+    <XpRank />
     <div className="headrow"><span className="grow" /><button className="sm" onClick={newRace}>+ Race</button></div>
     {races?.map(r => <div key={r.id} className="race apanel">
       <div className="headrow"><b>{r.name}</b><small>({r.key}){r.active ? '' : ' · inactive'} · {rulesLabel(r)}</small>

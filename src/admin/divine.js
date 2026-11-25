@@ -1,5 +1,5 @@
 // Helpers purs : objets (dont divins) et familles divines (testés dans test/adminDivine.test.js).
-const NUM = ['price', 'armor', 'strength_bonus', 'agility_bonus', 'durability', 'weapon_damage', 'magic_armor', 'quantity_max', 'req_strength'];
+const NUM = ['price', 'armor', 'strength_bonus', 'agility_bonus', 'durability', 'weapon_damage', 'magic_armor', 'quantity_max', 'req_strength', 'xp_use'];
 /** Caractéristiques qu'un objet peut offrir (valeur négative = malus) : [clé, libellé, colonne historique de l'objet].
  *  Sans colonne : rangée dans `bonuses` et reportée sur la fiche à l'équipement (migration 26). */
 export const ITEM_STATS = [['strength', 'Force', 'strength_bonus'], ['agility', 'Agilité', 'agility_bonus'], ['armor', 'Armure', 'armor'], ['magic_armor', 'Armure magique', 'magic_armor'],

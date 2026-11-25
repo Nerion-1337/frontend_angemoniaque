@@ -1,45 +1,47 @@
 # Graph Report - front  (2026-11-25)
 
 ## Corpus Check
-- 117 files · ~68,513 words
+- 120 files · ~69,635 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: (none) 4, .css 3, .conf 1)
 
 ## Summary
-- 620 nodes · 1982 edges · 16 communities (15 shown, 1 thin omitted)
+- 629 nodes · 2019 edges · 18 communities (17 shown, 1 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9994a998`
+- Built from commit: `5b45229a`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - api
-- terrain.js
 - Empty
-- relief.js
-- Guild.jsx
-- MonsterDetails.jsx
+- vitest
 - ResourcesTab.jsx
+- Guild.jsx
 - Races.jsx
+- MonsterDetails.jsx
+- TileCard.jsx
 - with
-- react-redux
+- terrain.js
+- relief.js
+- ResourceMap.jsx
+- terrain
 - world2.js
-- TilesTab.jsx
-- StatCostsTab.jsx
-- ChatDock.jsx
+- entities.js
+- createScene
 - AGENTS.md — ia_agent / front
 
 ## God Nodes (most connected - your core abstractions)
-1. `api()` - 81 edges
-2. `react` - 43 edges
-3. `Empty()` - 36 edges
-4. `react-redux` - 35 edges
+1. `api()` - 83 edges
+2. `react` - 44 edges
+3. `react-redux` - 36 edges
+4. `Empty()` - 36 edges
 5. `terrain()` - 34 edges
-6. `vitest` - 32 edges
-7. `lucide-react` - 29 edges
+6. `vitest` - 33 edges
+7. `lucide-react` - 30 edges
 8. `confirmDel()` - 26 edges
 9. `MonsterDetails()` - 25 edges
 10. `Pick()` - 24 edges
@@ -59,65 +61,73 @@
 ## Import Cycles
 - None detected.
 
-## Communities (16 total, 1 thin omitted)
+## Communities (18 total, 1 thin omitted)
 
 ### Community 0 - "api"
 Cohesion: 0.07
-Nodes (74): react, react-dom, App(), Account(), RACE, raceName(), Backdrop(), Capital() (+66 more)
+Nodes (76): react-dom@^18, react, react-dom, react-redux, App(), Account(), RACE, raceName() (+68 more)
 
-### Community 1 - "terrain.js"
+### Community 1 - "Empty"
+Cohesion: 0.07
+Nodes (63): ago(), Dashboard(), KPI, bonusesBody(), CORE_FAMILIES, Divine(), Families(), familyLabel() (+55 more)
+
+### Community 2 - "vitest"
 Cohesion: 0.05
-Nodes (70): KIND_COLOR, RES_COLOR, hex(), LegendAngDem(), cache, cellCost(), Entity(), HEALTH (+62 more)
+Nodes (40): dependencies, lucide-react@^0.460.0, react@^18, react-redux@^9, @reduxjs/toolkit@^2, three@^0.170.0, devDependencies, vite@^5 (+32 more)
 
-### Community 2 - "Empty"
-Cohesion: 0.07
-Nodes (66): lucide-react, ago(), Dashboard(), KPI, bonusesBody(), CORE_FAMILIES, Divine(), Families() (+58 more)
-
-### Community 3 - "relief.js"
-Cohesion: 0.07
-Nodes (49): base(), cellTint(), DEEP, FOREST, g2, GRASS, GRASS2, groundColor() (+41 more)
+### Community 3 - "ResourcesTab.jsx"
+Cohesion: 0.12
+Nodes (36): activationBody(), activationSummary(), buildingBody(), buildingDraft(), groupDraft(), groupSummary(), ActivationEditor(), BuildingExtras() (+28 more)
 
 ### Community 4 - "Guild.jsx"
 Cohesion: 0.11
-Nodes (41): Confirm(), FmtBar(), FmtField(), PrevToggle(), rgbOf(), useFmt(), AddCard(), Arrows() (+33 more)
+Nodes (40): Confirm(), FmtBar(), FmtField(), PrevToggle(), rgbOf(), useFmt(), AddCard(), Arrows() (+32 more)
 
-### Community 5 - "MonsterDetails.jsx"
-Cohesion: 0.11
-Nodes (32): vitest, FIELDS, jsonOr(), jsonText(), COLORS, MiniMap(), capLabel(), capsToMaxCaps() (+24 more)
+### Community 5 - "Races.jsx"
+Cohesion: 0.13
+Nodes (25): RaceRules(), RULE_KEYS, rulesBody(), rulesDraft(), rulesLabel(), Races(), condBody(), condDraft() (+17 more)
 
-### Community 6 - "ResourcesTab.jsx"
+### Community 6 - "MonsterDetails.jsx"
+Cohesion: 0.15
+Nodes (29): COLORS, MiniMap(), capLabel(), capsToMaxCaps(), EMPTY(), equipLabel(), LIMIT_KIND, linkedLabel() (+21 more)
+
+### Community 7 - "TileCard.jsx"
 Cohesion: 0.14
-Nodes (31): activationBody(), activationSummary(), buildingBody(), buildingDraft(), groupDraft(), groupSummary(), ActivationEditor(), BuildingExtras() (+23 more)
-
-### Community 7 - "Races.jsx"
-Cohesion: 0.17
-Nodes (20): RaceRules(), RULE_KEYS, rulesBody(), rulesDraft(), rulesLabel(), Races(), condBody(), condDraft() (+12 more)
+Nodes (24): hpPerHour(), spellSummary(), tileBody(), WORLD_LABEL, hex(), TilesTab(), cache, cellCost() (+16 more)
 
 ### Community 8 - "with"
 Cohesion: 0.08
 Nodes (27): jobs, publish, test, name, on, pull_request, push, contents (+19 more)
 
-### Community 9 - "react-redux"
+### Community 9 - "terrain.js"
 Cohesion: 0.09
-Nodes (24): dependencies, lucide-react@^0.460.0, react@^18, react-dom@^18, react-redux@^9, @reduxjs/toolkit@^2, three@^0.170.0, devDependencies (+16 more)
+Nodes (23): CODES, FEATURES, H, ROWS, W, RARE3, BURN_DAMAGE, BY_CODE (+15 more)
 
-### Community 10 - "world2.js"
+### Community 10 - "relief.js"
+Cohesion: 0.12
+Nodes (23): base(), cellTint(), DEEP, FOREST, g2, GRASS, GRASS2, groundColor() (+15 more)
+
+### Community 11 - "ResourceMap.jsx"
+Cohesion: 0.21
+Nodes (13): KIND_COLOR, hex(), LegendAngDem(), RES2_BY_ID, RESOURCES2, SIDES, ZONES2, RES3_BY_ID (+5 more)
+
+### Community 12 - "terrain"
+Cohesion: 0.19
+Nodes (18): KIND, Location(), WORLDS, FLY, FLY_Y, LEVEL_H, levelAt(), levelLabel() (+10 more)
+
+### Community 13 - "world2.js"
 Cohesion: 0.13
 Nodes (19): FEATURES2, H2, ROWS2, W2, CELLS, COST, FRONTIER_X, ihash() (+11 more)
 
-### Community 11 - "TilesTab.jsx"
-Cohesion: 0.17
-Nodes (9): ITEM_SLOTS, hpPerHour(), spellSummary(), tileBody(), WORLD_LABEL, hex(), TilesTab(), GROUP (+1 more)
+### Community 14 - "entities.js"
+Cohesion: 0.24
+Nodes (17): hash(), BEAST, beast(), building(), golem(), label(), M(), makeEntity() (+9 more)
 
-### Community 12 - "StatCostsTab.jsx"
-Cohesion: 0.47
-Nodes (7): newRule(), num(), preview(), ruleBody(), STAT_LABEL, upgradeCost(), StatCostsTab()
+### Community 15 - "createScene"
+Cohesion: 0.27
+Nodes (9): ss(), waterTint(), createScene(), applyTime(), buildGrid(), buildTerrain(), buildVegetation(), tintWater() (+1 more)
 
-### Community 13 - "ChatDock.jsx"
-Cohesion: 0.49
-Nodes (7): Chat(), ChatDock(), Mail(), ago(), CHANNELS, groupChat(), reSubject()
-
-### Community 14 - "AGENTS.md — ia_agent / front"
+### Community 16 - "AGENTS.md — ia_agent / front"
 Cohesion: 0.33
 Nodes (5): AGENTS.md — ia_agent / front, Conventions de code et architecture des composants, Rôle de ce dépôt, Stack et commandes, Travail dans ce dépôt
 
@@ -127,17 +137,17 @@ Nodes (5): AGENTS.md — ia_agent / front, Conventions de code et architecture d
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `api()` connect `api` to `terrain.js`, `Empty`, `Guild.jsx`, `MonsterDetails.jsx`, `ResourcesTab.jsx`, `Races.jsx`, `TilesTab.jsx`, `StatCostsTab.jsx`, `ChatDock.jsx`?**
-  _High betweenness centrality (0.144) - this node is a cross-community bridge._
+- **Why does `api()` connect `api` to `Empty`, `vitest`, `ResourcesTab.jsx`, `Guild.jsx`, `Races.jsx`, `MonsterDetails.jsx`, `TileCard.jsx`?**
+  _High betweenness centrality (0.148) - this node is a cross-community bridge._
 - **Should `api` be split into smaller, more focused modules?**
-  _Cohesion score 0.06680393502630977 - nodes in this community are weakly interconnected._
-- **Why does `vitest` connect `MonsterDetails.jsx` to `api`, `terrain.js`, `Empty`, `Guild.jsx`, `ResourcesTab.jsx`, `Races.jsx`, `react-redux`, `TilesTab.jsx`, `StatCostsTab.jsx`, `ChatDock.jsx`?**
-  _High betweenness centrality (0.113) - this node is a cross-community bridge._
-- **Should `terrain.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.05143570536828964 - nodes in this community are weakly interconnected._
-- **Why does `react` connect `api` to `terrain.js`, `Empty`, `Guild.jsx`, `MonsterDetails.jsx`, `ResourcesTab.jsx`, `Races.jsx`, `react-redux`, `TilesTab.jsx`, `StatCostsTab.jsx`, `ChatDock.jsx`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
+  _Cohesion score 0.06798245614035088 - nodes in this community are weakly interconnected._
+- **Why does `vitest` connect `vitest` to `api`, `Empty`, `ResourcesTab.jsx`, `Guild.jsx`, `Races.jsx`, `MonsterDetails.jsx`, `TileCard.jsx`, `ResourceMap.jsx`, `terrain`?**
+  _High betweenness centrality (0.117) - this node is a cross-community bridge._
 - **Should `Empty` be split into smaller, more focused modules?**
-  _Cohesion score 0.0735444330949949 - nodes in this community are weakly interconnected._
-- **Should `relief.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.06778476589797344 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.07429718875502007 - nodes in this community are weakly interconnected._
+- **Why does `react` connect `api` to `Empty`, `vitest`, `ResourcesTab.jsx`, `Guild.jsx`, `Races.jsx`, `MonsterDetails.jsx`, `TileCard.jsx`, `ResourceMap.jsx`?**
+  _High betweenness centrality (0.079) - this node is a cross-community bridge._
+- **Should `vitest` be split into smaller, more focused modules?**
+  _Cohesion score 0.0546448087431694 - nodes in this community are weakly interconnected._
+- **Should `ResourcesTab.jsx` be split into smaller, more focused modules?**
+  _Cohesion score 0.11918367346938775 - nodes in this community are weakly interconnected._

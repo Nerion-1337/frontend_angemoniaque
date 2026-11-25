@@ -13,7 +13,7 @@ import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from 
 import { itemBody, familyLabel, ITEM_STATS, statsLine } from './divine.js';
 import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, xp_use: '' };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -95,6 +95,7 @@ export default function ItemsTab() {
         {f.slot === 'scroll' && <><div className="cell"><small>Agrandit le sac de (emplacements)</small><input type="number" min="0" value={f.bag_add} placeholder="0 = non" onChange={e => setF(x => ({ ...x, bag_add: e.target.value }))} /></div>
           <div className="cell"><small>… jusqu'à (capacité max du sac)</small><input type="number" min="1" value={f.bag_max} placeholder="ex. 30" onChange={e => setF(x => ({ ...x, bag_max: e.target.value }))} /></div></>}
         {f.slot === 'weapon' && <div className="cell"><small>Mains</small><label className="check"><input type="checkbox" checked={!!f.two_handed} onChange={e => setF(x => ({ ...x, two_handed: e.target.checked }))} /> Deux mains (arc, grande arme : l'autre main reste vide)</label></div>}
+        <div className="cell"><small>XP par utilisation {f.slot === 'weapon' ? '(chaque coup porté)' : f.slot === 'scroll' ? '(parchemin utilisé)' : ''}</small><input type="number" min="0" value={f.xp_use} onChange={e => num('xp_use', e.target.value)} /></div>
         <div className="cell"><small>Durabilité</small><input type="number" value={f.durability} onChange={e => num('durability', e.target.value)} /></div>
         <div className="cell"><small>Plafond (quantité)</small><input type="number" value={f.quantity_max} onChange={e => num('quantity_max', e.target.value)} /></div>
         <div className="cell"><small>Force requise</small><input type="number" value={f.req_strength} onChange={e => num('req_strength', e.target.value)} /></div>

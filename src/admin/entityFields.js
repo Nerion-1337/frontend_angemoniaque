@@ -4,7 +4,7 @@ export const FIELDS = {
     ['name', 'Nom'], ['hp_max', 'PV max', 'number'], ['hp_current', 'PV', 'number'], ['recovery', 'Régén/h', 'number'],
     ['energy_max', 'Énergie max', 'number'], ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
     ['armor', 'Armure', 'number'], ['magic_armor', 'Armure magique', 'number'], ['range', 'Portée', 'number'], ['see', 'Portée de vue', 'number'],
-    ['gain_xp_hour', 'XP/h', 'number'], ['gold_current', 'Or', 'number'],
+    ['rank', 'Rang (écart de rang avec le joueur : bonus / malus d\'XP)', 'number'], ['xp_reward', 'XP donnée au tueur (une fois)', 'number'], ['gold_current', 'Or', 'number'],
     ['rarity', 'Rareté', 'rarity'], ['locomotion', 'Déplacement', 'loco'],
     ['mountable', 'Peut servir de monture', 'check'], ['speed', 'Vitesse (monture)', 'number'], ['carry', 'Portage (monture)', 'number'],
     ['size', 'Taille (1 à 3 : +1 vue / portée par niveau pour son cavalier)', 'number'],

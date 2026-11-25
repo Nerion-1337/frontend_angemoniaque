@@ -1,15 +1,16 @@
 import { test, expect } from 'vitest';
-import { SLOTS, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from '../src/admin/monsterDetails.js';
+import { SLOTS, SLOT_POS, SLOT_LABEL, respawnDraft, respawnBody, slotAllowed, pickFilter, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from '../src/admin/monsterDetails.js';
 const fs = await import('node:fs');
 
-test('SLOTS : les 7 parties du corps (contrat CHECK des migrations 12/13, style personnage)', () => {
-  expect(SLOTS).toEqual(['mains', 'tete', 'torse', 'pieds', 'collier', 'bracelet', 'bague']);
+test('SLOTS : emplacements d\'un personnage (migration 35) : deux armes, deux bracelets, deux bagues ; tous placés sur la silhouette', () => {
+  expect(SLOTS).toEqual(['weapon_main', 'weapon_off', 'head', 'chest', 'foot', 'amulet', 'ring_l', 'ring_r', 'bracelet_l', 'bracelet_r']);
+  for (const s of SLOTS) { expect(SLOT_POS[s]).toHaveLength(2); expect(SLOT_LABEL[s]).toBeTruthy(); }
 });
 test('slotAllowed : liste vide = aucune restriction ; sinon le slot doit y figurer', () => {
-  expect(slotAllowed([], 'mains')).toBe(true);
-  expect(slotAllowed(null, 'mains')).toBe(true);
-  expect(slotAllowed(['mains', 'tete'], 'tete')).toBe(true);
-  expect(slotAllowed(['mains', 'tete'], 'bague')).toBe(false);
+  expect(slotAllowed([], 'weapon_main')).toBe(true);
+  expect(slotAllowed(null, 'weapon_main')).toBe(true);
+  expect(slotAllowed(['weapon_main', 'head'], 'head')).toBe(true);
+  expect(slotAllowed(['weapon_main', 'head'], 'ring_l')).toBe(false);
 });
 test('pickFilter : recherche insensible à la casse (catalogues avec menu déroulant)', () => {
   const spells = [{ id: 1, name: 'Brûler' }, { id: 2, name: 'Foudre' }];
@@ -26,7 +27,7 @@ test('spellLabel + capLabel : actives / passives (cible + périmètre, en contin
     .toContain('alliés');
 });
 test('equipLabel : objet du catalogue + partie du corps', () => {
-  expect(equipLabel({ item_name: 'Épée brisée', slot: 'mains' })).toBe('Épée brisée — Mains');
+  expect(equipLabel({ item_name: 'Épée brisée', slot: 'weapon_off' })).toBe('Épée brisée — Arme (seconde main)');
   expect(equipLabel({ item_id: 9 })).toBe('objet n°9');
 });
 test('capsToMaxCaps : plafonds (entity_caps) → inGame / perPlayer', () => {
@@ -94,4 +95,11 @@ test('guardes : équipement d\'instance borné par la grille du type (grille vid
   const s = fs.readFileSync('src/admin/MonsterDetails.jsx', 'utf8');
   expect(s.includes("iGrid.length > 0 && <div className=\"form\">")).toBe(true);
   expect(s.includes('iGrid.length === 0')).toBe(true);
+});
+
+test('réapparition d\'un monstre posé : objet divin porté envoyé (vide → null)', () => {
+  const r = respawnDraft({ respawn: true, reincarnate_delay_h: 4, respawn_limits: [], divine_family: 'arcane' });
+  expect(r.divine).toBe('arcane');
+  expect(respawnBody(r)).toMatchObject({ respawn: true, reincarnate_delay_h: 4, divine_family: 'arcane' });
+  expect(respawnBody({ ...r, divine: '' }).divine_family).toBeNull();
 });

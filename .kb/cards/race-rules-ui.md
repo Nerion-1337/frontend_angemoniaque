@@ -2,8 +2,10 @@
 title: Races (apparition, limites, équipement de départ) dans l'admin, écran de création piloté par le serveur, horloge au Pilotage
 slug: race-rules-ui
 status: done
-updated: 2026-11-24
+updated: 2026-11-25
 files:
+  - src/admin/xpRank.js
+  - src/admin/XpRank.jsx
   - src/admin/raceRules.jsx
   - src/admin/Races.jsx
   - src/components/Login.jsx
@@ -18,6 +20,7 @@ symbols:
   - src/components/Login.jsx:CharSelect
   - src/admin/startKit.js:kitBody
 tests:
+  - test/xpRank.test.js
   - test/raceRules.test.js
   - test/startKit.test.js
 ---
@@ -32,6 +35,7 @@ Pilotage (dernier et prochain tick).
 - Toutes les valeurs envoyées sont des entiers ≥ 0.
 - L'en-tête de chaque race résume apparition et limites (`rulesLabel`) ; l'infobulle du bouton Départ résume le kit (`kitSummary`).
 - Chaque rang a un bouton « Passage » (conditions pour passer à ce rang, card `rank-req-ui`).
+- Races & rangs commence par « Gain d'XP selon l'écart de rang » (`XpRank.jsx`, helpers `xpRank.js`, miroir de `back/src/game/xp.ts:rankPercent`) : lignes écart → %, libellé « Cible N rangs au-dessus / en dessous », ajout / retrait de lignes, enregistrement par `PUT /admin/content/xp-rank`.
 
 ## Gotchas
 - Les règles de création sont décidées par le SERVEUR ; le front n'affiche que `allowed` / `reason`.

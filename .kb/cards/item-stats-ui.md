@@ -4,6 +4,7 @@ slug: item-stats-ui
 status: done
 updated: 2026-11-25
 files:
+  - src/admin/SpellsTab.jsx
   - src/admin/divine.js
   - src/admin/ItemsTab.jsx
   - src/components/SidePanel.jsx
@@ -31,6 +32,7 @@ bâtiment, sort et joueur connaissent l'armure magique.
 - Sac : `bagUsed / bagMax` emplacements ; les ressources s'affichent en piles (nom ×quantité / taille de pile) après les objets ; emplacement au-delà de la taille en rouge ; un parchemin de sac sélectionné propose « Utiliser » (+N, jusqu'à M ; grisé au maximum).
 - Admin Objets : parchemin (`scroll`) → champs « Agrandit le sac de » / « jusqu'à » (`data = { kind: 'bag', add, max }`) ; les autres parchemins gardent leur data.
 - Admin « Améliorations » (`StatCostsTab`, `statCosts.js`) : une carte par caractéristique améliorable (base, par palier, ×1/×2/×3, aperçu des coûts) ; ajout parmi les caractéristiques restantes ; retrait confirmé.
+- Objets : champ « XP par utilisation » (`xp_use` ; arme : chaque coup porté, parchemin : à l'utilisation). Sorts : « XP par lancer » (`xpUse`).
 
 ## Gotchas
 - Les champs Armure / Force + / Agilité + / Armure magique isolés ont été remplacés par le groupe : ne pas les remettre (doublons).

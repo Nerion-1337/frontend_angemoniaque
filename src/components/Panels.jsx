@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react';
+import { GROUP } from '../lib/equipment';
 import { Tabs, useTab } from './Tabs';
 import { fxSummary } from '../admin/spellFx.js';
 import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
@@ -39,15 +40,15 @@ export function FaithPanel() {
       {x.request_choice && <button onClick={() => run(() => api(`/faiths/${x.id}/answer`, { characterId: me.id }), reload)}>Exaucer « {x.request_choice} » (−5 ÉD)</button>}</div>)}</>}</Panel>;
 }
 
-const SLOT_FR = { mains: 'Mains', tete: 'Tête', torse: 'Torse', pieds: 'Pieds', collier: 'Collier', bracelet: 'Bracelet', bague: 'Bague' };
+const SLOT_FR = { weapon_main: 'Arme 1', weapon_off: 'Arme 2', head: 'Tête', chest: 'Torse', foot: 'Pieds', amulet: 'Collier', ring_l: 'Bague G', ring_r: 'Bague D', bracelet_l: 'Bracelet G', bracelet_r: 'Bracelet D' };
 const LOCO_FR = { land: 'terrestre', air: 'volante', water: 'aquatique' };
 /** Équipement d'une monture : une pièce par partie autorisée par son type ; objets pris dans le sac. */
 function MountGear({ x, bag, act, me, locked }) {
   const [pick, setPick] = useState({});
-  return <div className="mgear">{x.slots.map(sl => { const e = x.equips.find(q => q.slot === sl);
+  return <div className="mgear">{x.slots.map(sl => { const e = x.equips.find(q => q.slot === sl), fit = bag.filter(i => GROUP[i.slot]?.includes(sl));   // objets du bon type seulement
     return <div key={sl} className="mslot"><small>{SLOT_FR[sl] ?? sl}</small>
       {e ? <span className="chip on">{e.name}<button className="x-in" disabled={locked} aria-label={`Retirer ${e.name}`} onClick={() => act(() => api('/mounts/unequip', { characterId: me.id, cmId: x.cm_id, slot: sl }))}>×</button></span>
-        : <span className="row"><select disabled={locked || !bag.length} value={pick[sl] ?? ''} onChange={ev => setPick({ ...pick, [sl]: ev.target.value })}><option value="">{bag.length ? '— Objet du sac —' : 'Sac vide'}</option>{bag.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select>
+        : <span className="row"><select disabled={locked || !fit.length} value={pick[sl] ?? ''} onChange={ev => setPick({ ...pick, [sl]: ev.target.value })}><option value="">{fit.length ? '— Objet du sac —' : 'Aucun objet adapté'}</option>{fit.map(i => <option key={i.id} value={i.id}>{i.name}</option>)}</select>
           <button className="sm" disabled={locked || !pick[sl]} onClick={() => act(() => api('/mounts/equip', { characterId: me.id, cmId: x.cm_id, itemId: Number(pick[sl]), slot: sl }))}>Équiper</button></span>}</div>; })}
     {locked && <small className="note">Renvoyez la créature pour changer son équipement.</small>}</div>;
 }

@@ -15,7 +15,8 @@ import { SLOT_LABEL, MONSTER_GROUPS, LOCO, toggleLoco, locoLabel, respawnSummary
  *     déplacer / éditer or + butin + équipement, ou ajouter un nouveau avec les mêmes options),
  *  5. Règles transverses (coûts / plafonds / modificateurs — phase 1, conservées).
  */
-const TABS = [['data', 'Caractéristiques'], ['caps', 'Capacités'], ['spec', 'Équipement et quantité'], ['respawn', 'Réapparition'], ['list', 'Sur les cartes']];
+// Réapparition et objet divin porté : réglés sur chaque monstre posé (onglet « Sur les cartes »), plus sur le type (migration 35).
+const TABS = [['data', 'Caractéristiques'], ['caps', 'Capacités'], ['spec', 'Équipement et quantité'], ['list', 'Sur les cartes']];
 const EMPTY = () => Object.fromEntries(FIELDS.monster.map(([k, , t]) => [k, t === 'check' ? false : '']));
 export default function MonsterDetails() {
   const d = useDispatch();
@@ -29,7 +30,7 @@ export default function MonsterDetails() {
   const [instMap, setInstMap] = useState(''), [mx, setMx] = useState(''), [my, setMy] = useState('');
   const [lMode, setLMode] = useState('');   // '' = section fermée ; 'edit' = édition ; 'new' = création (même section)
   const [nl, setNl] = useState({ type: 'item', itemId: '', resId: '', dropRate: 100, qty: 1 });
-  const [ne, setNe] = useState({ itemId: '', slot: 'mains' });
+  const [ne, setNe] = useState({ itemId: '', slot: 'weapon_main' }), [instRow, setInstRow] = useState(null);
   const [nw, setNw] = useState({ type: '', mapId: '', x: 1, y: 1 });
   const load = () => {
     api('/admin/content/monsters').then(setMonsters).catch(e => d(Ad.msg(e.message)));
@@ -96,7 +97,8 @@ export default function MonsterDetails() {
   const selectInst = run(async id => {
     const i = ((await api('/admin/bestiary/status').catch(() => null))?.instances ?? []).find(x => x.id === id);
     if (!i) return;
-    setInstSel(i); setInstMap(i.map_id); setMx(i.x); setMy(i.y); setLMode('edit'); setILoot([]); setIEquips([]);
+    setInstSel(i); setInstMap(i.map_id); setMx(i.x); setMy(i.y); setLMode('edit'); setILoot([]); setIEquips([]); setInstRow(null);
+    setInstRow(await api(`/admin/content/monsters/${id}`).catch(() => null));
     setIEquips(await api(`/admin/content/monsters/${id}/equips`).catch(() => []));
     setILoot(await api(`/admin/content/monsters/${id}/loot`).catch(() => []));
     const grid = (await api(`/admin/content/monsters/${i.prototype ?? id}/slots`).catch(() => [])).map(x => x.slot);
@@ -129,7 +131,7 @@ export default function MonsterDetails() {
     await api(`/admin/content/monsters/${instSel.id}/equips`, { itemId: Number(ne.itemId), slot: ne.slot });
     d(Ad.ok('Équipement enregistré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => []));
   });
-  const delEquip = run(async itemId => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}/equips/${itemId}`, undefined, 'DELETE'); d(Ad.ok('Retiré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => [])); });
+  const delEquip = run(async slot => { if (!instSel) return; await api(`/admin/content/monsters/${instSel.id}/equips/${slot}`, undefined, 'DELETE'); d(Ad.ok('Retiré')); setIEquips(await api(`/admin/content/monsters/${instSel.id}/equips`).catch(() => [])); });
   const removeInst = run(async () => { if (!instSel || !confirmDel('ce monstre de la carte')) return; await api(`/admin/bestiary/place/${instSel.pos_id}`, undefined, 'DELETE'); d(Ad.ok('Monstre retiré de la map')); setInstSel(null); refresh(); });
   const addNew = async () => {
     if (!nw.type || !nw.mapId) return d(Ad.msg('Choisir le type et la carte'));
@@ -159,7 +161,7 @@ export default function MonsterDetails() {
       <div className="headrow"><Search value={q} onChange={setQ} /><button className="sm" onClick={newOne}><Plus size={14} /> Nouveau type</button></div>
       <small className="count">{view.length} / {monsters.length}</small>
       <div className="list">{view.map(m => <button key={m.id} className={`item row2${String(sel) === String(m.id) ? ' on' : ''}`} onClick={() => open(m.id)}><b>{m.name}</b>
-        <small>{RARITY_LABEL[m.rarity] ?? 'Commun'}{m.mountable ? ` · monture (${locoLabel(m.locomotion)})` : ''} · PV {m.hp_max} · {respawnSummary(m)}{onMap(m) ? ' · sur carte(s)' : ''} · n°{m.id}</small></button>)}
+        <small>{RARITY_LABEL[m.rarity] ?? 'Commun'}{m.mountable ? ` · monture (${locoLabel(m.locomotion)})` : ''} · PV {m.hp_max}{m.xp_reward ? ` · ${m.xp_reward} XP` : ''}{onMap(m) ? ' · sur carte(s)' : ''} · n°{m.id}</small></button>)}
         {!view.length && <Empty>Aucun type de monstre.</Empty>}</div>
     </div>
     <div className="detailpane">
@@ -213,18 +215,17 @@ export default function MonsterDetails() {
         <BodyParts slots={slots} toggle={toggleSlot} />
       </div>}
 
-      {tab === 'respawn' && draft && <RespawnPanel key={sel} monster={draft} cats={cats} onSaved={() => { load(); open(sel, true); }} />}
 
       {tab === 'list' && <div>
         <div className="actions"><button className="sm" onClick={() => { setNw({ type: sel, mapId: '', x: 1, y: 1 }); setLMode('new'); }}>+ Ajouter</button></div>
         {mine.length === 0 && <p className="note">Aucun monstre de ce type sur les maps.</p>}
         {mine.length > 0 && <div className="tablewrap"><table>
-          <thead><tr><th>Monstre</th><th>Type</th><th>Carte</th><th>Position</th><th>PV</th><th>Liaison</th><th>Réincarnation</th><th></th></tr></thead>
+          <thead><tr><th>Monstre</th><th>Type</th><th>Carte</th><th>Position</th><th>PV</th><th>Liaison</th><th>Réapparition</th><th></th></tr></thead>
           <tbody>{mine.map(i => <tr key={i.id}>
             <td>{i.name}</td><td>{typeOf(i)}</td><td>{i.map_id}</td><td>{i.x},{i.y}</td>
             <td>{i.hp_current}/{i.hp_max}</td>
             <td>{linkedLabel(i)}</td>
-            <td>{i.reincarnate_h > 0 ? `${i.reincarnate_h} h${respawnIn(i) ? ` · ${respawnIn(i)}` : ''}` : '—'}</td>
+            <td>{i.spawned ? 'disparaît (sauvage)' : respawnSummary({ ...i, reincarnate_delay_h: i.reincarnate_h })}{respawnIn(i) ? ` · ${respawnIn(i)}` : ''}{i.divine_family ? ` · porte ${i.divine_carried ? '1' : '0'} ${i.divine_family}` : ''}</td>
             <td><button className={`sm${instSel?.id === i.id && lMode === 'edit' ? ' on' : ''}`} onClick={() => selectInst(i.id)}>Sélectionner</button></td>
           </tr>)}</tbody>
         </table></div>}
@@ -259,6 +260,9 @@ export default function MonsterDetails() {
           </div>}
           {lMode === 'edit' && <>
             <button className="sm danger" onClick={removeInst}>Retirer de la map</button>
+            {instRow && !instSel?.spawned && <><h4>Réapparition et objet divin porté (ce monstre)</h4>
+              <RespawnPanel key={instRow.id} monster={instRow} cats={cats} onSaved={() => { refresh(); selectInst(instRow.id); }} /></>}
+            {instSel?.spawned && <p className="note">Monstre sauvage (règle d'apparition) : il disparaît à sa mort.</p>}
             <h4>Butin (donné au tueur, or compris)</h4>
             {iLoot.map(l => <span key={l.id} className="tag"><b>{lootTag(l)}</b> · {l.drop_rate} %
               <button className="sm danger" onClick={() => delLoot(l.id)}>×</button></span>)}
@@ -278,7 +282,7 @@ export default function MonsterDetails() {
             {iGrid.length === 0 && <p className="note">Aucune partie du corps n'est cochée en <b>Spécificités</b> pour ce type : ce monstre ne peut porter aucun équipement
               (cochez au moins une partie sur ce type pour autoriser l'équipement).</p>}
             {iGrid.length > 0 && <h4>Équipement porté (parties équipables : {iGrid.map(s => SLOT_LABEL[s]).join(', ')})</h4>}
-            {iEquips.map(x => <span key={x.item_id} className="tag"><b>{equipLabel(x)}</b><button className="sm danger" onClick={() => delEquip(x.item_id)}>×</button></span>)}
+            {iEquips.map(x => <span key={x.slot} className="tag"><b>{equipLabel(x)}</b><button className="sm danger" onClick={() => delEquip(x.slot)}>×</button></span>)}
             {iGrid.length > 0 && <div className="form">
               <div className="cell"><small>Objet</small>
                 <Pick options={cats?.items ?? []} value={ne.itemId} onPick={v => setNe({ ...ne, itemId: v })} labelOf={o => `${o.name} (n°${o.id})`} perPage={20} /></div>

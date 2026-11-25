@@ -4,7 +4,7 @@ import { respawnDraft, respawnBody, respawnSummary, MONSTER_GROUPS } from '../sr
 import { FIELDS } from '../src/admin/entityFields.js';
 test('corps : délai entier ≥ 0, conditions sans référence retirées, ids numériques sauf ressources', () => {
   const d = { ...respawnDraft({}), delayH: '-3', limits: [{ kind: 'item', ref: '7', max: '0' }, { kind: 'resource', ref: 'bois', max: 4 }, { kind: 'spell', ref: '', max: 1 }] };
-  expect(respawnBody(d)).toEqual({ respawn: true, reincarnate_delay_h: 0, respawn_limits: [{ kind: 'item', ref: 7, max: 1 }, { kind: 'resource', ref: 'bois', max: 4 }] });
+  expect(respawnBody(d)).toEqual({ respawn: true, reincarnate_delay_h: 0, divine_family: null, respawn_limits: [{ kind: 'item', ref: 7, max: 1 }, { kind: 'resource', ref: 'bois', max: 4 }] });
 });
 test('résumé', () => {
   expect(respawnSummary({ respawn: false })).toBe('Non recréé après sa mort');
