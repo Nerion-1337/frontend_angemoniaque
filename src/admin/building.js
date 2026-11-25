@@ -9,10 +9,13 @@ export const buildingBody = (body, draft) => {
   const prod = Object.fromEntries(Object.entries(draft.production ?? {}).map(([k, q]) => [k, Math.max(1, Math.trunc(Number(q) || 1))]));
   b.data = { ...(b.data ?? {}) };
   if (Object.keys(prod).length) b.data.production = prod; else delete b.data.production;
+  // Capitale : coffre de départ et capacité max des joueurs de sa race (vide = 10 / sans limite).
+  const pos = v => (Number(v) > 0 ? Math.trunc(Number(v)) : null);
+  if (draft.kind === 'capital') for (const [k, v] of [['chestStart', pos(draft.chestStart)], ['chestMax', pos(draft.chestMax)]]) { if (v) b.data[k] = v; else delete b.data[k]; }
   return b;
 };
 /** Brouillon depuis la fiche API : production isolée de `data`. */
-export const buildingDraft = det => ({ ...det, production: { ...(det?.data?.production ?? {}) }, activationGroups: (det?.activation?.groups ?? []).map(groupDraft) });
+export const buildingDraft = det => ({ ...det, production: { ...(det?.data?.production ?? {}) }, chestStart: det?.data?.chestStart ?? '', chestMax: det?.data?.chestMax ?? '', activationGroups: (det?.activation?.groups ?? []).map(groupDraft) });
 // Lot E : conditions d'activation (groupes alternatifs ; dans un groupe, tout ce qui est renseigné est exigé). Miroir de game/activation.ts.
 export const groupDraft = g => ({ items: [...(g?.items ?? [])], divineOn: !!g?.divine, divineFamily: g?.divine?.family ?? '', divineCount: g?.divine?.count ?? 1,
   spellId: g?.spellId ?? '', resources: { ...(g?.resources ?? {}) }, gold: g?.gold ?? 0, minRank: g?.minRank ?? 0, ranks: [...(g?.ranks ?? [])], consume: !!g?.consume });

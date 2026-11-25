@@ -658,3 +658,7 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .tc-need:hover .bd,.tc-need:focus-visible .bd{display:block}.tc-need .bd>b{display:block;margin-bottom:4px;color:var(--halo)}.tc-need .bdl{padding:2px 0}.tc-need .bdl.neg span{color:var(--hp)}.tc-need .bdnote{display:block;margin-top:6px;color:var(--mute)}
 .card.tcard{overflow:visible}
 .tc-head{border-radius:16px 16px 0 0}
+.admin .costgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;margin:10px 0}
+.admin .costcard .headrow{display:flex;align-items:center;gap:8px}.admin .costcard .form{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.admin .costprev{display:block;color:var(--mute);margin-top:4px}.admin .costprev b{color:var(--gold)}
+.admin .bldextras .inlabel input{width:120px}

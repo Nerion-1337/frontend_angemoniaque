@@ -45,6 +45,7 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Carte de case sélectionnée : en-tête (nom, case, niveau, coût, ressource), infos, entité, jauge de toucher, une action = un bouton avec son coût (plus de liste + « Valider ») ; construction : choix du bâtiment en boutons ; reste dans l'écran.
 - Carte de case : si une condition de récolte manque à CE personnage (`harvestMissing`), pas d'action « Récolter » mais « Vous n'êtes pas équipé pour récolter X » ; survol / focus : ce qui manque, par option.
 - Hôtel de ville, Coffre : emplacements utilisés (objets + piles) ; ressources regroupées par type dans les colonnes Coffre et Sac, déplacées en un clic.
+- Invocations : chaque créature affiche sa taille (+taille vision / portée montée, volante +6) au lieu des anciens bonus de vue / portée. Admin Monstres : champ « Taille » (1 à 3) à la place des bonus de vue / portée de monture.
 
 ## Gotchas
 - Classe globale `.inl` déjà prise par le jeu (ligne d'insertion) : ne pas réutiliser de classes génériques sans préfixe.

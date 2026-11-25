@@ -15,6 +15,10 @@ export function BuildingExtras({ draft, set, resources }) {
   const [res, setRes] = useState({ id: '', qty: 1 });
   const nameOf = id => (resources ?? []).find(r => String(r.id) === String(id))?.name ?? id;
   return <div className="bldextras">
+    {draft.kind === 'capital' && <><h5>Coffre des joueurs de cette capitale</h5>
+      <div className="row"><label className="inlabel">Taille de départ <input type="number" min="1" className="nb" placeholder="10" value={draft.chestStart ?? ''} onChange={e => set('chestStart', e.target.value)} /></label>
+        <label className="inlabel">Capacité maximale <input type="number" min="1" className="nb" placeholder="sans limite" value={draft.chestMax ?? ''} onChange={e => set('chestMax', e.target.value)} /></label></div>
+      <p className="note">La taille de départ s'applique aux personnages créés ensuite ; l'agrandissement (Hôtel de ville) s'arrête à la capacité maximale.</p></>}
     {draft.occupiable && <><h5>Occupant de la case — peut être attaqué</h5>
       <div className="row">{[['melee', 'Au corps à corps'], ['ranged', 'À distance'], ['spell', 'Par sort']].map(([k, l]) =>
         <label key={k} className="check"><input type="checkbox" checked={oa[k] !== false} onChange={e => set('occupant_attack', { ...oa, [k]: e.target.checked })} /> {l}</label>)}</div>

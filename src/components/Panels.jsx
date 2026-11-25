@@ -69,7 +69,7 @@ export function MountsPanel() {
       return <div key={x.cm_id} className={`item mount${x.active ? ' riding' : x.summon_id ? ' called' : ''}`}>
       <div className="head"><b>{x.name}</b><span className="pill">{x.active ? 'Montée' : x.summon_id ? (ctl ? 'Invoquée · contrôlée' : 'Invoquée') : 'Au repos'}</span></div>
       <small>{loco} · {x.can_ride ? 'peut être montée' : 'ne se monte pas'}</small>
-      <KV items={[['Vie', `${x.hp_current}/${st.hp_max ?? x.hp_max}`], ['Énergie', `${x.energy_current}/${st.energy_max ?? x.energy_max}`], ['Régén.', `+${st.recovery ?? x.recovery}/h`], ['Vision', `+${x.bonus_see}`], ['Portée', `+${x.bonus_range}`], ['Force', st.strength ?? x.strength], ['Agilité', st.agility ?? x.agility], ['Armure', `${st.armor ?? x.armor}/${st.magic_armor ?? 0}`]]} />
+      <KV items={[['Vie', `${x.hp_current}/${st.hp_max ?? x.hp_max}`], ['Énergie', `${x.energy_current}/${st.energy_max ?? x.energy_max}`], ['Régén.', `+${st.recovery ?? x.recovery}/h`], ['Taille', `${x.size ?? 1} (+${x.flying ? 6 : x.size ?? 1} vue / portée montée)`], ['Force', st.strength ?? x.strength], ['Agilité', st.agility ?? x.agility], ['Armure', `${st.armor ?? x.armor}/${st.magic_armor ?? 0}`]]} />
       {x.capacities.length > 0 && <><h5>Capacités</h5><div className="chips">{x.capacities.map(c => <span key={c.id} className="chip" title={fxSummary(c.effects)}>{c.name} · ⚡{c.energy_cost}</span>)}</div>
         <small className="note">{x.active ? 'Lançables depuis « Actions » (énergie de la créature).' : 'Lançables en la contrôlant ou en la montant.'}</small></>}
       {x.slots.length > 0 && <><h5>Équipement</h5><MountGear x={x} bag={bag} act={act} me={me} locked={!!x.summon_id} /></>}

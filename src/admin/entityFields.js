@@ -7,7 +7,7 @@ export const FIELDS = {
     ['gain_xp_hour', 'XP/h', 'number'], ['gold_current', 'Or', 'number'],
     ['rarity', 'Rareté', 'rarity'], ['locomotion', 'Déplacement', 'loco'],
     ['mountable', 'Peut servir de monture', 'check'], ['speed', 'Vitesse (monture)', 'number'], ['carry', 'Portage (monture)', 'number'],
-    ['bonus_see', 'Bonus de vue (monture)', 'number'], ['bonus_range', 'Bonus de portée (monture)', 'number'],
+    ['size', 'Taille (1 à 3 : +1 vue / portée par niveau pour son cavalier)', 'number'],
     ['data', 'Comportement (JSON : {"behavior":"...","loot":[...]})', 'json']
   ],
   item: [

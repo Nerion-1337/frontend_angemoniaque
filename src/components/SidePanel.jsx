@@ -1,7 +1,7 @@
 import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Backpack, ScrollText, Lock, TrendingUp, Package } from 'lucide-react'; import Info from './Info';
 import Modal from './Modal'; import { GROUP } from '../lib/equipment'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas';
 const DEFAULT = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="96" height="96" fill="#2b2842"/><circle cx="48" cy="38" r="18" fill="#8a85a8"/><rect x="20" y="62" width="56" height="30" rx="14" fill="#8a85a8"/></svg>');
-const LABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération (Vie, Énergie & Énergie divine /h)', see: 'Vision (cases)', agility: 'Agilité (toucher / esquive)', strength: 'Force' };
+const LABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération (Vie, Énergie & Énergie divine /h)', see: 'Vision (cases)', range: 'Portée', agility: 'Agilité (toucher / esquive)', strength: 'Force', armor: 'Armure physique', magic_armor: 'Armure magique' };
 const RACES = { human: 'Humain', demon: 'Démon', angel: 'Ange' };
 const kindOf = a => (/PV|Attaque|Attaqué|ratée/.test(a) ? 'combat' : /Déplacement|Franchit|approche/.test(a) ? 'move' : 'other'), FILTERS = [['all', 'Tout'], ['combat', 'Combats & attaques'], ['move', 'Déplacements'], ['other', 'Pactes, sorts & bâtiments']];
 function History({ id, close }) {
@@ -36,7 +36,7 @@ function RankUp({ me, after }) {
 }
 const DLABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération', see: 'Vision', range: 'Portée', strength: 'Force', agility: 'Agilité', armor: 'Armure physique', magic_armor: 'Armure magique' };
 const sg = v => (v > 0 ? `+${v}` : `${v}`);
-const KIND_FR = { item: 'objet', buff: 'effet', mount: 'monture', building: 'bâtiment' };
+const KIND_FR = { item: 'objet', buff: 'effet', mount: 'monture', building: 'bâtiment', height: 'hauteur' };
 /** Détail d'une caractéristique au survol : base, puis chaque objet / sort / pacte / monture qui l'ajoute ou la retire. */
 export function StatDetail({ keys, B, note }) {
   const rows = keys.map(k => [k, B[k]]).filter(([, b]) => b);

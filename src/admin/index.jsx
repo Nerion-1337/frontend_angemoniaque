@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
-import { LayoutDashboard, Users, ScrollText, Gem, Grid3x3, Crown, Skull, Sword, Sparkles, Castle, ArrowLeft, Menu } from 'lucide-react';
-import Dashboard from './Dashboard.jsx'; import Races from './Races.jsx'; import Entities from './Entities.jsx'; import MonsterDetails from './MonsterDetails.jsx'; import ItemsTab from './ItemsTab.jsx'; import SpellsTab from './SpellsTab.jsx'; import TilesTab from './TilesTab.jsx'; import PlayersTab from './PlayersTab.jsx'; import ScrollsTab from './ScrollsTab.jsx'; import ResourcesTab from './ResourcesTab.jsx';
+import { LayoutDashboard, Users, ScrollText, Gem, Grid3x3, Crown, Skull, Sword, Sparkles, Castle, ArrowLeft, Menu, TrendingUp } from 'lucide-react';
+import Dashboard from './Dashboard.jsx'; import Races from './Races.jsx'; import Entities from './Entities.jsx'; import MonsterDetails from './MonsterDetails.jsx'; import ItemsTab from './ItemsTab.jsx'; import SpellsTab from './SpellsTab.jsx'; import TilesTab from './TilesTab.jsx'; import PlayersTab from './PlayersTab.jsx'; import ScrollsTab from './ScrollsTab.jsx'; import ResourcesTab from './ResourcesTab.jsx'; import StatCostsTab from './StatCostsTab.jsx';
 import { Toast } from './ui.jsx';
-const SECTIONS = [['dashboard', 'Pilotage'], ['players', 'Joueurs'], ['races', 'Races & Rangs'], ['monster', 'Monstres'], ['item', 'Objets'], ['spell', 'Sorts'], ['scrolls', 'Parchemins'], ['tiles', 'Cases'], ['resources', 'Ressources'], ['building', 'Bâtiments']];
-const ICONS = { dashboard: LayoutDashboard, players: Users, races: Crown, monster: Skull, item: Sword, spell: Sparkles, scrolls: ScrollText, tiles: Grid3x3, resources: Gem, building: Castle };
+const SECTIONS = [['dashboard', 'Pilotage'], ['players', 'Joueurs'], ['races', 'Races & Rangs'], ['monster', 'Monstres'], ['item', 'Objets'], ['spell', 'Sorts'], ['scrolls', 'Parchemins'], ['tiles', 'Cases'], ['resources', 'Ressources'], ['building', 'Bâtiments'], ['upgrades', 'Améliorations']];
+const ICONS = { dashboard: LayoutDashboard, players: Users, races: Crown, monster: Skull, item: Sword, spell: Sparkles, scrolls: ScrollText, tiles: Grid3x3, resources: Gem, building: Castle, upgrades: TrendingUp };
 const SUBS = { dashboard: 'Vue d’ensemble du monde et journal d’administration', players: 'Tous les personnages par race : fiche, inventaire, coffre-fort, sorts, montures, bâtiments', races: 'Stats de base et paliers d’évolution', monster: 'Types (dont les montures), capacités, équipement, réapparition et placement sur les cartes',
-  item: 'Catalogue par rareté et type d’équipement ; Divin : familles et exemplaires uniques', spell: 'Catalogue des sorts par rareté', resources: 'Carte des ressources par monde : ressources naturelles et secteurs (parts, type de case, stock)', scrolls: 'Parchemin + ressources → objet, sort ou bâtiment (fabrication en jeu)', tiles: 'Types de case par monde : nom, description, énergie, sort en continu', building: 'Bâtiments, passifs et production' };
+  item: 'Catalogue par rareté et type d’équipement ; Divin : familles et exemplaires uniques', spell: 'Catalogue des sorts par rareté', resources: 'Carte des ressources par monde : ressources naturelles et secteurs (parts, type de case, stock)', scrolls: 'Parchemin + ressources → objet, sort ou bâtiment (fabrication en jeu)', tiles: 'Types de case par monde : nom, description, énergie, sort en continu', building: 'Bâtiments, passifs et production', upgrades: 'Coût en XP des améliorations de caractéristiques (paliers)' };
 const KEY = 'admin.section';   // dernière section ouverte (confort local ; absent = Pilotage)
 export default function Admin() {
   const section = useSelector(s => s.admin.section), msg = useSelector(s => s.admin.msg), tone = useSelector(s => s.admin.tone), d = useDispatch();
@@ -36,6 +36,7 @@ export default function Admin() {
         {t === 'scrolls' && <ScrollsTab />}
         {t === 'tiles' && <TilesTab />}
         {t === 'resources' && <ResourcesTab />}
+        {t === 'upgrades' && <StatCostsTab />}
         {t === 'building' && <Entities kind="building" />}
       </div>
     </main>
