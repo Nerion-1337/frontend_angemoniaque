@@ -1,10 +1,15 @@
 // Hôtel de ville / capitale de faction : un onglet à la fois — Boutique (objets), Sorts, Marché (acheter / vendre), Coffre.
 import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux';
-import { Store, ShoppingBag, Package, PlusCircle, Sparkles, X, Coins, ArrowRight, ArrowLeft, Check, Tag, Map as MapIco } from 'lucide-react';
+import { Store, ShoppingBag, Package, PlusCircle, Sparkles, X, Coins, ArrowRight, ArrowLeft, Check, Tag, Map as MapIco, Landmark, Flame, Feather } from 'lucide-react';
 import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import Modal from './Modal'; import { api } from '../lib/api'; import { useRefreshMe } from './GameCanvas';
 import { Tabs, useTab } from './Tabs';
-const CAP = { human: 'Hôtel de Ville', demon: 'Bastion Infernal', angel: 'Sanctuaire de la Providence' };
-const RACE = { human: 'Humains', demon: 'Démons', angel: 'Anges' };
+/** Thème de chaque capitale (nom, devise, emblème) ; couleurs : classes CSS .cap-<race>. Race inconnue → thème humain. */
+const THEME = {
+  human: { name: 'Hôtel de Ville', people: 'Humains', motto: 'Par le fer et la foi, la cité tient bon.', Icon: Landmark },
+  demon: { name: 'Bastion Infernal', people: 'Démons', motto: 'Ce que l’on prend, on le garde.', Icon: Flame },
+  angel: { name: 'Sanctuaire de la Providence', people: 'Anges', motto: 'La lumière guide, la Providence pourvoit.', Icon: Feather },
+};
+export const capTheme = race => THEME[race] ? { key: race, ...THEME[race] } : { key: 'human', ...THEME.human };
 export const itemStat = i => i.weapon_damage ? `Arme ×${i.weapon_damage}` : i.armor ? `Armure +${i.armor}` : 'Outil / parchemin';
 const Empty = ({ children }) => <p className="cap-empty">{children}</p>;
 export default function Capital() {
@@ -13,14 +18,16 @@ export default function Capital() {
   const [price, setPrice] = useState(150), [sell, setSell] = useState('');
   const all = () => { ls(); lm(); lc(); li(); lk(); refresh(); }, act = (f, ok, then) => run(f, () => { all(); then?.(); if (ok) d(A.toast(ok)); });
   const bag = inv?.items.filter(i => !i.equipped_slot && !i.in_chest) ?? [];
+  const th = capTheme(me.race), Emblem = th.Icon;
   const [tab, setTab] = useTab('capital', ['shop', 'spells', 'market', 'chest']);
   const tabs = [['shop', 'Boutique', Store], ['spells', 'Sorts', Sparkles], ['market', 'Marché', ShoppingBag, mk?.length], ['chest', 'Coffre', Package, ch?.items.length]];
   const full = ch ? (ch.used ?? ch.items.length) >= ch.size : false;
   const sumRes = list => Object.values((list ?? []).reduce((m, r) => { (m[r.id] ??= { id: r.id, name: r.name, qty: 0 }).qty += r.qty; return m; }, {}));   // piles regroupées par ressource
   const moveRes = (id, to) => act(() => api('/chest/resource', { characterId: me.id, resource: id, to }));
-  return <Modal onClose={() => d(A.setPanel(null))} className="inv capital" label="Capitale de faction">
+  return <Modal onClose={() => d(A.setPanel(null))} className={`inv capital cap-${th.key}`} label="Capitale de faction">
     <header className="cap-head">
-      <div><h3>{CAP[me.race]}</h3><small>Toutes les interactions ici coûtent 0 énergie.</small></div><span className="grow" />
+      <span className="cap-emblem" aria-hidden="true"><Emblem size={26} /></span>
+      <div><h3>{th.name}</h3><em className="cap-motto">{th.motto}</em><small>Capitale des {th.people} · toutes les interactions ici coûtent 0 énergie.</small></div><span className="grow" />
       <span className="cap-gold"><Coins size={16} /> {me.gold} <small>or</small></span>
       <button className="x" aria-label="Fermer" onClick={() => d(A.setPanel(null))}><X size={14} /></button>
     </header>
@@ -50,7 +57,7 @@ export default function Capital() {
     </section>}
 
     {tab === 'market' && <section className="cap-pane">
-      <p className="cap-hint">Marché des {RACE[me.race] ?? 'joueurs'} : offres entre joueurs de votre race.</p>
+      <p className="cap-hint">Marché des {th.people} : offres entre joueurs de votre race.</p>
       <h4>Offres en cours</h4>
       {mk && !mk.length && <Empty>Aucune offre pour le moment.</Empty>}
       <div className="cap-grid">{mk?.map(l => <article key={l.id} className="cap-card"><b>{l.name}</b><small>{l.kind === 'item' ? 'Objet' : l.kind}</small>

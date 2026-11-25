@@ -662,3 +662,33 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .admin .costcard .headrow{display:flex;align-items:center;gap:8px}.admin .costcard .form{grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
 .admin .costprev{display:block;color:var(--mute);margin-top:4px}.admin .costprev b{color:var(--gold)}
 .admin .bldextras .inlabel input{width:120px}
+
+/* Hôtel de ville selon la race : --capc = couleur RVB de la faction (Humains bronze, Démons braise, Anges lumière) */
+.capital{--capc:240,210,138;--cap:rgb(var(--capc))}
+.capital.cap-human{--capc:217,180,122;background:linear-gradient(180deg,rgba(217,180,122,.07),transparent 40%),var(--glass2)}
+.capital.cap-demon{--capc:236,98,60;background:radial-gradient(120% 70% at 50% 0,rgba(140,24,16,.35),transparent 65%),linear-gradient(180deg,#1c0b0a,#120708)}
+.capital.cap-angel{--capc:191,228,255;background:radial-gradient(120% 70% at 50% 0,rgba(191,228,255,.16),transparent 65%),linear-gradient(180deg,#141a26,#0f1420)}
+.capital{border-color:rgba(var(--capc),.3)}
+.capital .cap-head{position:relative;overflow:hidden;padding:18px 18px;border-color:rgba(var(--capc),.35);background:radial-gradient(120% 160% at 0 0,rgba(var(--capc),.24),transparent 60%),rgba(255,255,255,.03)}
+.capital .cap-head::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;background:repeating-linear-gradient(135deg,rgba(var(--capc),.05) 0 2px,transparent 2px 14px)}
+.capital .cap-head>*{position:relative;z-index:1}
+.capital.cap-demon .cap-head::after{background:repeating-linear-gradient(0deg,rgba(var(--capc),.06) 0 1px,transparent 1px 9px)}
+.capital.cap-angel .cap-head::after{background:radial-gradient(circle at 85% 20%,rgba(255,255,255,.18),transparent 40%)}
+.cap-emblem{flex:none;display:grid;place-items:center;width:54px;height:54px;border-radius:50%;color:var(--cap);border:2px solid rgba(var(--capc),.6);background:radial-gradient(circle,rgba(var(--capc),.25),rgba(0,0,0,.25));box-shadow:0 0 22px rgba(var(--capc),.35)}
+.capital.cap-human .cap-emblem{border-radius:14px}
+.capital.cap-demon .cap-emblem{border-radius:12px 50% 12px 50%}
+.capital .cap-head>div{display:flex;flex-direction:column;gap:2px}
+.capital .cap-head h3{color:var(--cap);letter-spacing:.03em}
+.cap-motto{font-family:var(--serif);font-size:.95em;color:rgba(var(--capc),.85)}
+.capital .cap-gold{background:rgba(var(--capc),.16);color:var(--cap)}.capital .cap-gold small{color:var(--cap)}
+.capital .gtabs button.on{color:var(--cap);background:linear-gradient(180deg,rgba(var(--capc),.22),rgba(var(--capc),.08));box-shadow:inset 0 0 0 1px rgba(var(--capc),.4)}
+.capital .cap-card{border-top:2px solid rgba(var(--capc),.35)}
+.capital .cap-card:hover{border-color:rgba(var(--capc),.55);box-shadow:0 6px 18px rgba(var(--capc),.12)}
+.capital .cap-feature{border-color:rgba(var(--capc),.45);background:linear-gradient(110deg,rgba(var(--capc),.18),rgba(255,255,255,.03))}.capital .cap-feature>svg{color:var(--cap)}
+.capital .cap-meter i{background:linear-gradient(90deg,rgba(var(--capc),.55),var(--cap))}
+.capital .cap-pane h4{color:rgba(var(--capc),.95)}
+.capital .cap-chesthead{border-color:rgba(var(--capc),.3)}
+.acc-new{flex-wrap:wrap}.acc-races{display:flex;flex-wrap:wrap;gap:6px;flex:1 0 100%}.acc-races .chip{min-height:34px;padding:4px 14px;border-radius:99px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--mute)}
+.acc-races .chip.on{color:var(--race,var(--halo));border-color:var(--race,var(--halo));background:rgba(255,255,255,.08);font-weight:600}
+.capital.cap-demon button.primary:not(:disabled){background:linear-gradient(180deg,#f08a5d,#c8432a);color:#fff3ec}
+.capital.cap-angel button.primary:not(:disabled){background:linear-gradient(180deg,#e9f6ff,#9fd2f5);color:#132033}

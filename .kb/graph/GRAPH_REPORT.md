@@ -1,17 +1,17 @@
 # Graph Report - front  (2026-11-25)
 
 ## Corpus Check
-- 117 files · ~68,331 words
+- 117 files · ~68,513 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 8 file(s) not represented in the graph (top: (none) 4, .css 3, .conf 1)
 
 ## Summary
-- 620 nodes · 1981 edges · 16 communities (15 shown, 1 thin omitted)
+- 620 nodes · 1982 edges · 16 communities (15 shown, 1 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS · INFERRED: 4 edges (avg confidence: 0.85)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `ff707232`
+- Built from commit: `073520e0`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -63,7 +63,7 @@
 
 ### Community 0 - "api"
 Cohesion: 0.07
-Nodes (77): react, react-dom, App(), Account(), RACE, raceName(), Backdrop(), CAP (+69 more)
+Nodes (74): react, react-dom, App(), Account(), RACE, raceName(), Backdrop(), Capital() (+66 more)
 
 ### Community 1 - "terrain.js"
 Cohesion: 0.05
@@ -79,7 +79,7 @@ Nodes (49): base(), cellTint(), DEEP, FOREST, g2, GRASS, GRASS2, groundColor() (
 
 ### Community 4 - "Guild.jsx"
 Cohesion: 0.11
-Nodes (38): Confirm(), FmtBar(), FmtField(), PrevToggle(), rgbOf(), useFmt(), AddCard(), Arrows() (+30 more)
+Nodes (41): Confirm(), FmtBar(), FmtField(), PrevToggle(), rgbOf(), useFmt(), AddCard(), Arrows() (+33 more)
 
 ### Community 5 - "MonsterDetails.jsx"
 Cohesion: 0.11
@@ -130,7 +130,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **Why does `api()` connect `api` to `terrain.js`, `Empty`, `Guild.jsx`, `MonsterDetails.jsx`, `ResourcesTab.jsx`, `Races.jsx`, `TilesTab.jsx`, `StatCostsTab.jsx`, `ChatDock.jsx`?**
   _High betweenness centrality (0.144) - this node is a cross-community bridge._
 - **Should `api` be split into smaller, more focused modules?**
-  _Cohesion score 0.0661512027491409 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.06680393502630977 - nodes in this community are weakly interconnected._
 - **Why does `vitest` connect `MonsterDetails.jsx` to `api`, `terrain.js`, `Empty`, `Guild.jsx`, `ResourcesTab.jsx`, `Races.jsx`, `react-redux`, `TilesTab.jsx`, `StatCostsTab.jsx`, `ChatDock.jsx`?**
   _High betweenness centrality (0.113) - this node is a cross-community bridge._
 - **Should `terrain.js` be split into smaller, more focused modules?**

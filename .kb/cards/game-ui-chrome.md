@@ -46,6 +46,8 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Carte de case : si une condition de récolte manque à CE personnage (`harvestMissing`), pas d'action « Récolter » mais « Vous n'êtes pas équipé pour récolter X » ; survol / focus : ce qui manque, par option.
 - Hôtel de ville, Coffre : emplacements utilisés (objets + piles) ; ressources regroupées par type dans les colonnes Coffre et Sac, déplacées en un clic.
 - Invocations : chaque créature affiche sa taille (+taille vision / portée montée, volante +6) au lieu des anciens bonus de vue / portée. Admin Monstres : champ « Taille » (1 à 3) à la place des bonus de vue / portée de monture.
+- Hôtel de ville thématisé selon la race du personnage (`capTheme` : nom, devise, emblème Landmark / Flame / Feather ; classes `.cap-human|demon|angel`, couleur `--capc`) ; race inconnue → thème humain.
+- Compte & paramètres : la race du nouveau personnage vient de `GET /characters/races` (admin : toutes les races actives au choix ; joueur : sa race verrouillée) ; plus de race imposée par le premier personnage.
 
 ## Gotchas
 - Classe globale `.inl` déjà prise par le jeu (ligne d'insertion) : ne pas réutiliser de classes génériques sans préfixe.
