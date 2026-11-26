@@ -1,7 +1,22 @@
-import { useEffect, useState } from 'react'; import { useDispatch } from 'react-redux'; import { Flame, Feather, User, Lock, Megaphone, MessagesSquare } from 'lucide-react'; import { api } from '../lib/api'; import { postAuth } from '../lib/postAuth'; import { A } from '../store'; import Backdrop from './Backdrop';
+import { useEffect, useRef, useState } from 'react'; import { useDispatch } from 'react-redux'; import { Flame, Feather, User, Lock, Megaphone, MessagesSquare, Eye, EyeOff, Check, X as XIcon, ShieldCheck, Loader, BookOpen } from 'lucide-react'; import { checklist, strength, passwordOk } from '../lib/password.js'; import { solve } from '../lib/pow.js'; import { api } from '../lib/api'; import { postAuth } from '../lib/postAuth'; import { A } from '../store'; import Backdrop from './Backdrop';
+/** Jauge de solidité du mot de passe : barre animée (largeur et couleur), niveau, critères cochés au fil de la saisie. */
+export function PasswordMeter({ pw, email }) {
+  const s = strength(pw, email), list = checklist(pw, email);
+  return <div className={`pwmeter${pw ? ' on' : ''}`} aria-live="polite"><div className="pwbar"><i style={{ width: `${s.pct}%`, background: s.color }} /></div>
+    <div className="pwlvl"><span style={{ color: s.color }}>{s.label || 'Choisissez un mot de passe solide'}</span>{pw && <small>{s.pct} %</small>}</div>
+    <ul className="pwlist">{list.map(([l, ok]) => <li key={l} className={ok ? 'ok' : ''}>{ok ? <Check size={13} /> : <XIcon size={13} />}{l}</li>)}</ul></div>;
+}
+/** Preuve de travail anti-robot calculée en arrière-plan pendant la saisie (≈ 1 s) ; renouvelée si elle expire ou a servi. */
+function usePow(active) {
+  const [st, setSt] = useState({ pow: null, busy: false, n: 0 });
+  useEffect(() => { if (!active) return; const ac = new AbortController(); setSt(x => ({ ...x, pow: null, busy: true }));
+    api('/auth/challenge').then(c => solve(c.token, { signal: ac.signal })).then(pow => setSt(x => ({ ...x, pow, busy: false }))).catch(() => setSt(x => ({ ...x, busy: false })));
+    return () => ac.abort(); }, [active, st.n]);
+  return [st.pow, st.busy, () => setSt(x => ({ ...x, n: x.n + 1 }))];
+}
 const Logo = () => <h1 className="wordmark">Angemoniaque</h1>;
 /** Liens de l'écran d'accueil : annonces, forum, pages légales (lisibles sans compte). */
-export const HomeLinks = () => <nav className="homelinks"><a href="#forum"><MessagesSquare size={14} /> Annonces & forum</a><a href="#legal/cgu">CGU</a><a href="#legal/privacy">Confidentialité</a><a href="#legal/legal">Mentions légales</a><a href="#legal/cookies">Cookies</a></nav>;
+export const HomeLinks = () => <nav className="homelinks"><a href="#histoire"><BookOpen size={14} /> L’histoire du jeu</a><a href="#forum"><MessagesSquare size={14} /> Annonces & forum</a><a href="#legal/cgu">CGU</a><a href="#legal/privacy">Confidentialité</a><a href="#legal/legal">Mentions légales</a><a href="#legal/cookies">Cookies</a></nav>;
 const GIcon = () => <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>;
 /** Connexion avec Google : vraie (redirection) si les clés sont réglées, sinon simulée (email seulement) ; masquée si coupée. */
 function GoogleLogin({ done }) {
@@ -25,16 +40,18 @@ function LatestNews() {
   return <aside className="glass news"><h3><Megaphone size={16} /> Dernières annonces</h3>{list.map(t => <a key={t.id} href={`#forum/t/${t.id}`}><b>{t.title}</b><small>{new Date(t.created_at).toLocaleDateString('fr-FR')}</small></a>)}<a className="more" href="#forum">Toutes les annonces et le forum →</a></aside>;
 }
 export function Login() {
-  const d = useDispatch(), [mode, setMode] = useState('login'), [f, set] = useState({ email: '', password: '', confirm: '', tos: false }), [err, setErr] = useState(() => { const e = sessionStorage.getItem('loginError') ?? ''; sessionStorage.removeItem('loginError'); return e; }), [busy, setBusy] = useState(false), reg = mode === 'register';
+  const d = useDispatch(), [mode, setMode] = useState('login'), [f, set] = useState({ email: '', password: '', confirm: '', tos: false }), [err, setErr] = useState(() => { const e = sessionStorage.getItem('loginError') ?? ''; sessionStorage.removeItem('loginError'); return e; }), [busy, setBusy] = useState(false), [show, setShow] = useState(false), reg = mode === 'register';
+  const [pow, powBusy, renewPow] = usePow(reg), honey = useRef();
   const submit = async e => {
     e.preventDefault(); setErr('');
     if (!/^\S+@\S+\.\S+$/.test(f.email)) return setErr('Adresse email invalide');
-    if (reg && f.password.length < 8) return setErr('Mot de passe : 8 caractères minimum');
+    if (reg && !passwordOk(f.password, f.email)) return setErr('Mot de passe trop faible : suivez les critères sous le champ');
     if (reg && f.password !== f.confirm) return setErr('Les mots de passe ne correspondent pas');
     if (reg && !f.tos) return setErr('Acceptez les conditions générales d\'utilisation pour créer un compte');
+    if (reg && !pow) return setErr('Vérification anti-robot en cours : un instant…');
     setBusy(true);
-    try { const r = await api(reg ? '/auth/register' : '/auth/login', { email: f.email, password: f.password, ...(reg ? { acceptTos: true } : {}) }); done(r, f.email); }
-    catch (er) { setErr(er.message); } finally { setBusy(false); }
+    try { const r = await api(reg ? '/auth/register' : '/auth/login', { email: f.email, password: f.password, ...(reg ? { acceptTos: true, pow, website: honey.current?.value ?? '' } : {}) }); done(r, f.email); }
+    catch (er) { setErr(er.message); if (reg) renewPow(); }   // une preuve ne sert qu'une fois finally { setBusy(false); }
   };
   const done = (r, email) => { const p = postAuth(r, email); d(A.setAuth(p.auth)); if (p.hash) location.hash = p.hash; };
   const field = k => ({ value: f[k], onChange: e => set({ ...f, [k]: e.target.value }) }), tab = m => () => { setMode(m); setErr(''); };
@@ -42,10 +59,14 @@ export function Login() {
     <Logo /><p className="tag">Anges, Démons et Hommes se disputent trois mondes.</p>
     <div className="seg" role="tablist"><button type="button" role="tab" aria-selected={!reg} className={!reg ? 'on' : ''} onClick={tab('login')}>Connexion</button><button type="button" role="tab" aria-selected={reg} className={reg ? 'on' : ''} onClick={tab('register')}>Inscription</button></div>
     <label>Email<input type="email" autoComplete="email" {...field('email')} /></label>
-    <label>Mot de passe{reg && <small> (8 caractères minimum)</small>}<input type="password" autoComplete={reg ? 'new-password' : 'current-password'} {...field('password')} /></label>
+    <label>Mot de passe<span className="pwfield"><input type={show ? 'text' : 'password'} autoComplete={reg ? 'new-password' : 'current-password'} {...field('password')} />
+      <button type="button" className="pweye" aria-label={show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} onClick={() => setShow(!show)}>{show ? <EyeOff size={16} /> : <Eye size={16} />}</button></span></label>
+    {reg && <PasswordMeter pw={f.password} email={f.email} />}
+    {reg && <input ref={honey} name="website" className="hp" tabIndex={-1} autoComplete="off" aria-hidden="true" />}
     {reg && <label>Confirmer le mot de passe<input type="password" autoComplete="new-password" {...field('confirm')} /></label>}
     {reg && <label className="chk tos"><input type="checkbox" checked={f.tos} onChange={e => set({ ...f, tos: e.target.checked })} /><span>J'accepte les <a href="#legal/cgu">conditions générales d'utilisation</a> et la <a href="#legal/privacy">politique de confidentialité</a>.</span></label>}
-    <button className="primary" disabled={busy}>{busy ? 'Un instant…' : reg ? 'Créer mon compte' : 'Se connecter'}</button>
+    {reg && <small className="powstate">{pow ? <><ShieldCheck size={13} /> Vérification anti-robot prête</> : <><Loader size={13} className="spin" /> Vérification anti-robot en cours…</>}</small>}
+    <button className="primary" disabled={busy || (reg && (!passwordOk(f.password, f.email) || !pow))}>{busy ? 'Un instant…' : reg ? 'Créer mon compte' : 'Se connecter'}</button>
     {err && <p className="err" role="alert">{err}</p>}<GoogleLogin done={done} /><HomeLinks /></form><LatestNews /></main></>;
 }
 const RACES = [['human', 'Humain', User, 'Forgerons et fidèles. Un seul pacte, des Artefacts à conquérir.'], ['demon', 'Démon', Flame, 'Puissance brute, pactes multiples. Gardien des Arcanes.'], ['angel', 'Ange', Feather, 'Porteur des Reliques, il guide les mortels par ses pactes.']];

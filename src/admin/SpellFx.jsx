@@ -7,7 +7,7 @@ import { api } from '../lib/api.js';
 import { Plus, Trash2 } from 'lucide-react';
 import Pick from './Pick.jsx';
 import { Empty, confirmDel } from './ui.jsx';
-import { STAT_LABEL, POOL_STATS, TARGET_LABEL, AFFECTS_LABEL, SUMMON_LABEL, LINK_MODES, modeLabel, fxSummary, fxBody } from './spellFx.js';
+import { STAT_LABEL, POOL_STATS, TARGET_LABEL, AFFECTS_LABEL, SUMMON_LABEL, LINK_MODES, modeLabel, fxSummary, fxBody } from '../lib/spellFx.js';
 
 /** Catalogues des éléments invocables (chargés une fois par éditeur). */
 function useSummonables() {

@@ -2,15 +2,15 @@
 title: Onglet Sorts : éditeur des effets (moteur de sorts) et liens ; sorts liés en jeu
 slug: spell-fx-ui
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/admin/SpellFx.jsx
   - src/admin/ItemsTab.jsx
   - src/admin/MonsterDetails.jsx
-  - src/admin/spellFx.js
+  - src/lib/spellFx.js
 symbols:
-  - src/admin/spellFx.js:fxBody
-  - src/admin/spellFx.js:fxSummary
+  - src/lib/spellFx.js:fxBody
+  - src/lib/spellFx.js:fxSummary
 tests:
   - test/spellFx.test.js
 ---

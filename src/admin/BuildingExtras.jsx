@@ -7,7 +7,7 @@ import { api } from '../lib/api.js';
 import { Plus } from 'lucide-react';
 import Pick from './Pick.jsx';
 import { Empty, confirmDel } from './ui.jsx';
-import { fxSummary } from './spellFx.js'; import { groupDraft } from './building.js';
+import { fxSummary } from '../lib/spellFx.js'; import { groupDraft } from './building.js';
 
 /** Bloc contrôlé : `draft.occupant_attack` et `draft.production` (fusionnés au corps par `buildingBody`). */
 export function BuildingExtras({ draft, set, resources }) {

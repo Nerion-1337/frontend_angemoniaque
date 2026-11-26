@@ -38,6 +38,6 @@ export default function Account() {
       <a className="acc-card link" href="#admin"><div className="grow"><b>Espace administrateur</b><small>Joueurs, contenus du jeu, cartes.</small></div><ChevronRight size={18} /></a></>}
 
     <h4>Session</h4>
-    <button className="danger wide" onClick={() => { setToken(null); location.reload(); }}><LogOut size={14} /> Se déconnecter</button>
+    <button className="danger wide" onClick={async () => { await api('/auth/logout', undefined, 'POST').catch(() => {}); setToken(null); location.reload(); }}><LogOut size={14} /> Se déconnecter</button>
   </Panel>;
 }

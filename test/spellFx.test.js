@@ -1,6 +1,6 @@
 // Lot 2 : éditeur des effets de sort (miroir du schéma back).
 import { test, expect } from 'vitest';
-import { fxDraft, fxBody, fxSummary, LINK_MODES, modeLabel } from '../src/admin/spellFx.js';
+import { fxDraft, fxBody, fxSummary, LINK_MODES, modeLabel } from '../src/lib/spellFx.js';
 test('moteur désactivé → {} (sort historique)', () => {
   expect(fxDraft({}).on).toBe(false); expect(fxBody(fxDraft({}))).toEqual({});
 });

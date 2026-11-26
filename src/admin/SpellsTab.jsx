@@ -7,7 +7,7 @@ import { Ad } from '../store/admin.js';
 import { api } from '../lib/api.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
 import { ShopFields, shopLabel } from './shop.jsx';
-import { SpellEffects } from './SpellFx.jsx'; import { fxDraft, fxBody, fxSummary } from './spellFx.js';
+import { SpellEffects } from './SpellFx.jsx'; import { fxDraft, fxBody, fxSummary } from '../lib/spellFx.js';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
 
 const blank = { name: '', kind: '', rarity: 'commun', energyCost: '', damage: '', description: '', price: '', durationH: '', usableBy: [], shop: true, shop_races: [], fx: fxDraft({}), xpUse: '' };

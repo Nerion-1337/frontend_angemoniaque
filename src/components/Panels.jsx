@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react'; import CreatureIcon from './CreatureIcon';
 import { GROUP } from '../lib/equipment';
 import { Tabs, useTab } from './Tabs';
-import { fxSummary } from '../admin/spellFx.js';
+import { fxSummary } from '../lib/spellFx.js';
 import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
 /** Fenêtre de jeu centrée (comme l'Hôtel de ville ou l'inventaire) : Échap ou clic hors de la fenêtre pour fermer. */
 export const Panel = ({ title, wide, children }) => { const d = useDispatch(), close = () => d(A.setPanel(null));

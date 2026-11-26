@@ -4,7 +4,7 @@ import { forumRoute, isForumHash, accessBadges, ago, pager, googleReturn } from 
 test('routes du forum et des pages légales', () => {
   expect(forumRoute('#forum')).toEqual({ view: 'home' }); expect(forumRoute('#forum/c/3')).toEqual({ view: 'category', id: 3, page: 1 });
   expect(forumRoute('#forum/t/9/2')).toEqual({ view: 'topic', id: 9, page: 2 }); expect(forumRoute('#forum/mod')).toEqual({ view: 'mod' });
-  expect(forumRoute('#legal')).toEqual({ view: 'legal', key: 'cgu' }); expect(forumRoute('#legal/privacy')).toEqual({ view: 'legal', key: 'privacy' });
+  expect(forumRoute('#legal')).toEqual({ view: 'legal', key: 'cgu' }); expect(forumRoute('#histoire')).toEqual({ view: 'story' }); expect(forumRoute('#legal/privacy')).toEqual({ view: 'legal', key: 'privacy' });
   expect(isForumHash('#admin')).toBe(false); expect(isForumHash('')).toBe(false); expect(isForumHash('#forum/t/x')).toBe(true);
 });
 test('badges d’accès d’une catégorie', () => {

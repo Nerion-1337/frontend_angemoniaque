@@ -30,6 +30,7 @@ tests:
 - Équipe : barre de modération du sujet (épingler, verrouiller, masquer, déplacer, supprimer), masquer / sourdine par message, compteur de signalements ; admin : nommer / retirer modérateur ; onglet Modération (signalements ; admin : catégories et accès, pages légales avec nouvelle version des CGU).
 - Tout contenu (messages, pages légales) est rendu comme TEXTE (`white-space: pre-wrap`), jamais en HTML ; l'email d'un auteur n'est jamais affiché.
 
+- Route `#histoire` (page L'histoire, story-page) dans le même cadre ; lien sur l'écran de connexion.
 ## Gotchas
 - `.stage:has(> .news)` place l'encart des annonces à côté du formulaire (une colonne sous 760 px).
 
