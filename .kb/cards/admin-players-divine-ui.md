@@ -24,6 +24,7 @@ Section admin « Joueurs » (liste paginée par race, fiche éditable) et raret�
 objets, avec familles divines et exemplaires uniques.
 
 ## Business rules
+- Fiche : changer le rang n'envoie que `specialization_id` (diff) ; le serveur ajoute ou retire l'écart de base entre paliers (note affichée sous le sélecteur).
 - Liste : 20 par page, onglets par race avec effectifs, recherche pseudo/e-mail.
 - Fiche : n'envoie que les caractéristiques MODIFIÉES, en entiers ≥ 0 (`statDiff`) ; rang choisi parmi les paliers de la race ; téléportation vers la case libre la plus proche ; bloquer/débloquer.
 - Objets séparés en Équipé / Sac / Coffre-fort ; ajout au sac ou au coffre ; retrait par emplacement ; sorts, montures, divins ajoutés ou retirés.

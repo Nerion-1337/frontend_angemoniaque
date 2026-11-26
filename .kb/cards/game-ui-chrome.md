@@ -29,6 +29,7 @@ Habillage de l'interface de jeu (hors guilde) : barre d'accès Messagerie / Para
 compte, navigation du haut libellée, en-tête des panneaux et boutons harmonisés.
 
 ## Business rules
+- Logo « Angemoniaque » (`.logo` en jeu, `.wordmark` accueil / forum / histoire, admin) : UNE règle CSS partagée (dégradé bleu ciel → or → braise, ombres portées) ; boîte ajustée au mot (`width:fit-content`), sinon le dégradé s'étire sur la largeur et le mot reste bleu-blanc.
 - Barre d'accès en bas à droite : « Messages » (pastille = total des non-lus des trois canaux) et « Paramètres » (ouvre / ferme le panneau du compte) ; libellés masqués sous 600 px.
 - Messagerie : canaux Vision, Guilde, Courrier avec leurs non-lus ; discussion en bulles (les miennes à droite, auteur et heure relative, messages enchaînés du même auteur regroupés sous 5 min) ; envoi par Entrée ou bouton, désactivé si vide ; erreurs en toast.
 - Courrier : cartes repliables (non lus marqués), « Répondre » pré-remplit destinataire et « Re : objet » ; « Nouveau courrier » ouvre le formulaire (destinataire, objet, message).

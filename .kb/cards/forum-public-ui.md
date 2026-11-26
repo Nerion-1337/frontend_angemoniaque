@@ -27,7 +27,7 @@ tests:
 - Connexion Google : mode lu sur `/auth/google/config` ; `google` → redirection `/api/auth/google/start` ; `mock` → email à saisir (bouton « (simulé) ») ; `off` → bouton masqué.
 - Inscription : case « J'accepte les CGU et la politique de confidentialité » obligatoire (envoie `acceptTos: true`).
 - Forum : catégories refusées grisées avec la raison ; écrire masqué avec la raison du refus ; bandeau d'acceptation des CGU quand la version a changé.
-- Équipe : barre de modération du sujet (épingler, verrouiller, masquer, déplacer, supprimer), masquer / sourdine par message, compteur de signalements ; admin : nommer / retirer modérateur ; onglet Modération (signalements ; admin : catégories et accès, pages légales avec nouvelle version des CGU).
+- Équipe : barre de modération du sujet (épingler, verrouiller, masquer, déplacer, supprimer), masquer / sourdine par message, compteur de signalements ; admin : nommer / retirer modérateur ; onglet Modération en sous-onglets, un seul élément affiché à la fois (`ForumMod` : Signalements ; admin : Catégories — une catégorie à la fois, choisie par pastille, + « Nouvelle » — et Pages légales avec nouvelle version des CGU ; un modérateur ne voit que Signalements, sans barre d'onglets).
 - Tout contenu (messages, pages légales) est rendu comme TEXTE (`white-space: pre-wrap`), jamais en HTML ; l'email d'un auteur n'est jamais affiché.
 
 - Route `#histoire` (page L'histoire, story-page) dans le même cadre ; lien sur l'écran de connexion.

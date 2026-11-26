@@ -36,11 +36,15 @@ function CatRow({ k, onSaved }) {
       <button className="sm primary" disabled={f.name.trim().length < 2} onClick={save}>{isNew ? <><Plus size={13} /> Créer</> : <><Save size={13} /> Enregistrer</>}</button></div></div>;
 }
 function Categories() {
-  const [list, setList] = useState(null), load = () => api('/admin/forum/categories').then(setList);
+  const [list, setList] = useState(null), [sel, setSel] = useState(null), load = () => api('/admin/forum/categories').then(setList);
   useEffect(() => { load(); }, []);
+  useEffect(() => { if (list && sel === null) setSel(list[0]?.id ?? 'new'); }, [list]);   // première catégorie par défaut
+  const cur = list?.find(k => k.id === sel);
   return <section><h3 className="fo-h"><FolderTree size={16} /> Catégories et accès</h3>
     <p className="fo-muted">Lecture « Tout le monde » : visible depuis l'écran d'accueil sans compte. Races et rang minimal : un des personnages du compte doit y correspondre. L'équipe voit et écrit partout.</p>
-    {list?.map(k => <CatRow key={`${k.id}-${k.position}-${k.name}`} k={k} onSaved={load} />)}<h4 className="fo-h">Nouvelle catégorie</h4><CatRow k={BLANK} onSaved={load} /></section>;
+    <div className="fo-subtabs">{list?.map(k => <button key={k.id} className={sel === k.id ? 'on' : ''} onClick={() => setSel(k.id)}>{k.name}</button>)}
+      <button className={sel === 'new' ? 'on' : ''} onClick={() => setSel('new')}><Plus size={13} /> Nouvelle</button></div>
+    {!list ? null : cur ? <CatRow key={`${cur.id}-${cur.position}-${cur.name}`} k={cur} onSaved={load} /> : <CatRow key="new" k={BLANK} onSaved={load} />}</section>;
 }
 function LegalEdit() {
   const [list, setList] = useState([]), [key, setKey] = useState('cgu'), [f, set] = useState(null), [bump, setBump] = useState(false), [msg, setMsg] = useState('');
@@ -55,6 +59,11 @@ function LegalEdit() {
       <div className="fo-row">{key === 'cgu' && <label className="chk"><input type="checkbox" checked={bump} onChange={e => setBump(e.target.checked)} /> Nouvelle version (version {f.version + 1}) : chaque membre devra la réaccepter pour écrire</label>}
         <span className="grow" />{msg && <small className="fo-msg">{msg}</small>}<button className="primary" onClick={save}><Save size={14} /> Enregistrer</button></div></div>}</section>;
 }
+const TABS = [['reports', 'Signalements', Flag, Reports], ['cats', 'Catégories', FolderTree, Categories], ['legal', 'Pages légales', ScrollText, LegalEdit]];
+/** Onglets : un seul élément affiché à la fois ; catégories et pages légales réservées à l'admin. */
 export default function ForumMod({ me }) {
-  return <><Reports />{me.admin && <><Categories /><LegalEdit /></>}</>;
+  const tabs = me.admin ? TABS : TABS.slice(0, 1), [tab, setTab] = useState('reports'), View = (tabs.find(t => t[0] === tab) ?? tabs[0])[3];
+  return <>{tabs.length > 1 && <nav className="fo-tabs" role="tablist">{tabs.map(([k, l, I]) =>
+    <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}><I size={15} /> {l}</button>)}</nav>}
+    <View /></>;
 }

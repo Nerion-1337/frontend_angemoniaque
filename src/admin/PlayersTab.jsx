@@ -73,6 +73,7 @@ function PlayerSheet({ id, close, onSaved }) {
       <div className="form">
         <div className="fcell"><small>Rang (palier)</small><select value={form.specialization_id ?? ''} onChange={e => setForm({ ...form, specialization_id: e.target.value })}>
           {p.ranks.map(r => <option key={r.id} value={r.id}>{r.current_rank} · {r.name}</option>)}</select></div>
+        <small className="hint">Changer de rang ajoute (ou retire) l'écart des caractéristiques de base entre les deux paliers ; les points achetés sont gardés. Une valeur modifiée ici en même temps prime.</small>
       </div>
       {STAT_GROUPS.map(([g, fields]) => <div key={g}><h4>{g}</h4><div className="form">{fields.map(([k, l]) =>
         <div key={k} className="fcell"><small>{l}</small><input type="number" min="0" value={form[k] ?? ''} onChange={e => setForm({ ...form, [k]: e.target.value })} /></div>)}</div></div>)}
