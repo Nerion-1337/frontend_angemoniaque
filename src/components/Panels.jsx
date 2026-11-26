@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react'; import CreatureIcon from './CreatureIcon';
+import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react'; import CreatureIcon from './CreatureIcon'; import { RankingTable, PlayerCard, RACE_NAME } from './Ranking';
 import { Tabs, useTab } from './Tabs';
 import { fxSummary } from '../lib/spellFx.js';
 import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
@@ -7,36 +7,67 @@ export const Panel = ({ title, wide, children }) => { const d = useDispatch(), c
   return <Modal onClose={close} className={'panel' + (wide ? ' wide' : '')} label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={close}><X size={14} /></button></header><div className="pbody">{children}</div></Modal>; };
 const KV = ({ items }) => <div className="kv">{items.map(([k, v]) => <span key={k}>{k} <b>{v}</b></span>)}</div>;
 
+export const STAT_FR = { strength: 'Force', agility: 'Agilité', armor: 'Armure', magic_armor: 'Armure magique', see: 'Vision', range: 'Portée', recovery: 'Régénération', hp_max: 'PV max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max' };
+/** Coût d'une bénédiction (miroir de back/game/faithPact.ts:blessingCost) : au prorata, arrondi au supérieur. */
+export const blessCost = (b, v, h) => Math.ceil(b.cost * (v / b.max) * (h / b.maxH) - 1e-9);
+const tierInfo = t => `${t.name} — vous rapporte ${t.xp_hour} XP et ${t.gold_hour} or / h ; transfère ${t.percent} % de vos caractéristiques à l'Humain pendant ${Number(t.duration_h)} h, puis ${Number(t.cooldown_h)} h d'attente`;
+/** Bénédiction d'un fidèle par le dieu : caractéristique, valeur (≤ max), durée (1 h à max) ; coût en énergie divine affiché. */
+function Bless({ x, bl, me, run, reload }) {
+  const keys = Object.keys(bl), [st, setSt] = useState(x.request_choice && bl[x.request_choice] ? x.request_choice : keys[0]), b = bl[st];
+  const [v, setV] = useState(1), [h, setH] = useState(1), val = Math.min(Math.max(1, v | 0), b?.max ?? 1), hrs = Math.min(Math.max(1, h | 0), b?.maxH ?? 1), cost = b ? blessCost(b, val, hrs) : 0;
+  if (!keys.length) return <small className="note">Aucune bénédiction réglée par l'administration.</small>;
+  return <div className="row wrap"><select value={st} onChange={e => setSt(e.target.value)}>{keys.map(k => <option key={k} value={k}>{STAT_FR[k] ?? k}</option>)}</select>
+    <label className="row">+<input type="number" min="1" max={b.max} value={v} onChange={e => setV(e.target.value)} style={{ width: '5em' }} /><small>/ {b.max}</small></label>
+    <label className="row"><input type="number" min="1" max={b.maxH} value={h} onChange={e => setH(e.target.value)} style={{ width: '5em' }} /><small>h / {b.maxH}</small></label>
+    <button className="primary" disabled={cost > me.divine_energy_current} onClick={() => run(() => api(`/faiths/${x.id}/bless`, { characterId: me.id, stat: st, value: val, hours: hrs }), reload)}>Bénir (−{cost} ÉD)</button></div>;
+}
 export function FaithPanel() {
-  const d = useDispatch(), { me } = useSelector(s => s.game), run = useDo(), [pacts, lp] = useData(`/pacts/${me.id}`), [f, lf] = useData(`/faiths/${me.id}`), [q, setQ] = useState(''), [god, setGod] = useState(''); const reload = () => { lp(); lf(); };
-  const human = me.race === 'human', isGod = me.rank.current_rank >= 5, partner = p => (human ? p.ethereal : p.human);
+  const d = useDispatch(), { me } = useSelector(s => s.game), run = useDo(), [pacts, lp] = useData(`/pacts/${me.id}`), [f, lf] = useData(`/faiths/${me.id}`), [gods, lg] = useData(`/faiths/gods/${me.id}`), [q, setQ] = useState(''), [pray, setPray] = useState({});
+  const reload = () => { lp(); lf(); lg(); };
+  const human = me.race === 'human', isGod = me.rank.current_rank >= 5;
   const [tab, setTab] = useTab('faith', ['pacts', 'requests', 'faith', ...(isGod ? ['altar'] : [])]);
-  const nReq = (pacts?.incoming.length ?? 0) + (pacts?.outgoing.length ?? 0);
+  const nReq = (pacts?.incoming.length ?? 0) + (pacts?.outgoing.length ?? 0), pr = f?.prayers, bl = f?.blessings ?? {};
   return <Panel title="Pactes & Fidèles" wide>
-    <Tabs label="Pactes et fidèles" value={tab} onChange={setTab} tabs={[['pacts', 'Pactes', Handshake, pacts?.active.length], ['requests', 'Demandes', Inbox, pacts?.incoming.length || null], ['faith', 'Foi', Flame], ...(isGod ? [['altar', 'Autel', Crown, f?.asGod.length]] : [])]} />
+    <Tabs label="Pactes et fidèles" value={tab} onChange={setTab} tabs={[['pacts', 'Pactes', Handshake, pacts?.active.length], ['requests', 'Demandes', Inbox, pacts?.incoming.length || null], ['faith', 'Foi', Flame], ...(isGod ? [['altar', 'Autel', Crown, f?.asGod.filter(x => x.status === 'pending' || x.request_choice).length || null]] : [])]} />
     {tab === 'requests' && <>
-    <h4>Demander un pacte {human ? '(1 pacte maximum)' : '(3 de base, selon le rang)'}</h4>
-    <small>{human ? 'Nommez l\'Ange ou le Démon avec qui vous voulez vous lier' : 'Nommez l\'Humain avec qui vous voulez vous lier'} : l'autre partie doit accepter pour que le pacte soit conclu. Vous pouvez envoyer et recevoir plusieurs demandes.</small>
-    <div className="row"><input placeholder={human ? 'Nom de l\'Ange ou du Démon' : 'Nom de l\'Humain'} value={q} onChange={e => setQ(e.target.value)} /><button className="primary" onClick={() => run(() => api('/pacts/request', { characterId: me.id, targetPseudo: q }), () => { setQ(''); reload(); d(A.toast('Demande envoyée')); })}>Envoyer</button></div>
+    <h4>Demander un pacte {pacts && <small>({pacts.limit.used} / {pacts.limit.max} pacte{pacts.limit.max > 1 ? 's' : ''} selon votre rang)</small>}</h4>
+    <small>{human ? 'Nommez l\'Ange ou le Démon avec qui vous voulez vous lier' : 'Nommez l\'Humain avec qui vous voulez vous lier'} : l'autre partie doit accepter pour que le pacte soit conclu.</small>
+    <div className="row"><input placeholder={human ? 'Nom de l\'Ange ou du Démon' : 'Nom de l\'Humain'} value={q} onChange={e => setQ(e.target.value)} /><button className="primary" disabled={!q.trim()} onClick={() => run(() => api('/pacts/request', { characterId: me.id, targetPseudo: q.trim() }), () => { setQ(''); reload(); })}>Demander</button></div>
     {nReq === 0 && <p className="empty">Aucune demande en cours.</p>}
-    {pacts?.incoming.length > 0 && <h4>Demandes reçues ({pacts.incoming.length})</h4>}    {pacts?.incoming.map(p => <div key={p.id} className="item row2"><span><b>{partner(p)}</b> souhaite conclure un pacte avec vous</span><span className="row"><button className="primary" onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: true }), () => { reload(); d(A.toast('Pacte conclu')); })}>Accepter</button><button onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: false }), reload)}>Refuser</button></span></div>)}
+    {pacts?.incoming.length > 0 && <h4>Demandes reçues ({pacts.incoming.length})</h4>}
+    {pacts?.incoming.map(p => <div key={p.id} className="item row2"><span className="row"><PlayerCard p={p} /><small>souhaite conclure un pacte avec vous</small></span><span className="row"><button className="primary" onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: true }), () => { reload(); d(A.toast('Pacte conclu')); })}>Accepter</button><button onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: false }), reload)}>Refuser</button></span></div>)}
     {pacts?.outgoing.length > 0 && <h4>Demandes envoyées ({pacts.outgoing.length})</h4>}
-    {pacts?.outgoing.map(p => <div key={p.id} className="item row2"><span>En attente de <b>{partner(p)}</b></span><button onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Annuler</button></div>)}
+    {pacts?.outgoing.map(p => <div key={p.id} className="item row2"><span className="row"><small>En attente de</small><PlayerCard p={p} /></span><button onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Annuler</button></div>)}
     </>}
     {tab === 'pacts' && <>
-    <h4>Pactes conclus ({pacts?.active.length ?? 0})</h4>{human && <small>Activer le pacte donne temporairement 50 % de la Force et de l'Agilité de l'être lié ; celui-ci perd moitié moins que votre gain.</small>}
+    <h4>Pactes conclus ({pacts?.active.length ?? 0})</h4>
+    <small>{human ? 'Activer un pacte vous transfère, pour une durée limitée, une part des caractéristiques de l\'être lié (selon la force du pacte qu\'il a choisie) ; il les perd pendant ce temps.' : 'Choisissez pour chaque pacte sa composition (survolez pour le détail) : plus elle vous rapporte, plus elle transfère de vos caractéristiques à l\'Humain quand il l\'active.'}</small>
     {!pacts?.active.length && <p className="empty">Aucun pacte conclu. Envoyez une demande depuis l'onglet « Demandes ».</p>}
-    {pacts?.active.map(p => <div key={p.id} className="item row2"><span>{p.ethereal} ⇄ {p.human}</span><span className="row">{human && <button onClick={() => run(() => api(`/pacts/${p.id}/activate`, { characterId: me.id }), () => d(A.toast('Bonus de pacte actif (1 h)')))}>Activer le bonus</button>}<button className="danger" onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Résilier</button></span></div>)}
+    {pacts?.active.map(p => { const cur = pacts.tiers.find(t => t.id === p.tier_id); return <div key={p.id} className="item row2"><PlayerCard p={p} /><span className="row">
+      {human ? <><span className="pill">Pacte {p.tier_name ?? '— (à choisir par l\'être lié)'}</span>
+          {p.bonus_left_s > 0 ? <small className="note">Bonus actif : encore {fmtWait(p.bonus_left_s)}</small> : p.ready_in_s > 0 ? <small className="err">Recharge : encore {fmtWait(p.ready_in_s)}</small> : null}
+          <button disabled={!p.tier_id || p.bonus_left_s > 0 || p.ready_in_s > 0} onClick={() => run(() => api(`/pacts/${p.id}/activate`, { characterId: me.id }), r => { reload(); d(A.toast(`Bonus de pacte actif (${r?.hours ?? ''} h)`)); })}>Activer le bonus</button></>
+        : <select title={cur ? tierInfo(cur) : 'Choisir une composition'} value={p.tier_id ?? ''} onChange={e => run(() => api(`/pacts/${p.id}/tier`, { characterId: me.id, tierId: Number(e.target.value) }), reload)}>
+            {!p.tier_id && <option value="">— Composition —</option>}{pacts.tiers.map(t => <option key={t.id} value={t.id} title={tierInfo(t)}>{t.name} · {t.xp_hour} XP / {t.gold_hour} or · {t.percent} %</option>)}</select>}
+      <button className="danger" onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Résilier</button></span></div>; })}
     </>}
     {tab === 'faith' && <>
-    <h4>Foi & prières de bénédiction (toutes les 72 h)</h4>
-    {!f?.asFollower.length && <p className="empty">Vous n'êtes fidèle d'aucun Dieu.</p>}
-    {f?.asFollower.map(x => <div key={x.id} className="item row2"><span>Dieu : <b>{x.god}</b> ({x.status})</span>{x.status === 'accepted' && <select defaultValue="" onChange={e => e.target.value && run(() => api(`/faiths/${x.id}/request`, { characterId: me.id, choice: e.target.value }), reload)}><option value="">Requête…</option><option value="strength">Force +1</option><option value="agility">Agilité +1</option><option value="hp_max">PV max +1</option><option value="recovery">Régénération +1</option><option value="heal">Soin complet</option></select>}{x.request_choice && <small>en attente : {x.request_choice}</small>}</div>)}
-    <div className="row"><input placeholder="Devenir fidèle de…" value={god} onChange={e => setGod(e.target.value)} /><button onClick={() => run(() => api('/faiths/join', { characterId: me.id, godPseudo: god }), reload)}>Demander</button></div>
+    <h4>Mes dieux {pr && <small>· prières : {pr.left} / {pr.max} (toutes les {pr.periodH} h){pr.left === 0 && pr.nextInS > 0 ? ` — prochaine dans ${fmtWait(pr.nextInS)}` : ''}</small>}</h4>
+    {!f?.asFollower.length && <p className="empty">Vous n'êtes fidèle d'aucun dieu.</p>}
+    {f?.asFollower.map(x => <div key={x.id} className="item row2"><span className="row"><PlayerCard p={x} /><small>{x.status === 'accepted' ? 'fidèle' : 'demande en attente'}</small></span>
+      {x.status === 'accepted' && <span className="row"><select value={pray[x.id] ?? ''} onChange={e => setPray({ ...pray, [x.id]: e.target.value })}><option value="">Prier pour…</option>{Object.keys(bl).map(k => <option key={k} value={k}>{STAT_FR[k] ?? k}</option>)}</select>
+        <button disabled={!pray[x.id] || !pr?.left} onClick={() => run(() => api(`/faiths/${x.id}/pray`, { characterId: me.id, stat: pray[x.id] }), reload)}>Prier</button>{x.request_choice && <small>en attente : {STAT_FR[x.request_choice] ?? x.request_choice}</small>}</span>}</div>)}
+    <h4>Dieux {RACE_NAME[me.race] ? `des ${RACE_NAME[me.race].toLowerCase()}s` : ''} ({gods?.length ?? 0})</h4>
+    {gods && !gods.length && <p className="empty">Aucun dieu de votre race pour l'instant.</p>}
+    {gods?.map(g => <div key={g.id} className="item row2"><span className="row"><PlayerCard p={g} /><small>{g.followers} fidèle{g.followers > 1 ? 's' : ''}</small></span>
+      {g.my_status ? <span className="pill">{g.my_status === 'accepted' ? 'Votre dieu' : 'Demande envoyée'}</span> : <button className="primary" onClick={() => run(() => api('/faiths/join', { characterId: me.id, godId: g.id }), reload)}>Devenir fidèle</button>}</div>)}
     </>}
-    {tab === 'altar' && isGod && <><h4>Autel du Dieu — mes fidèles <small>ÉD {me.divine_energy_current}/{me.divine_energy_max}</small></h4>{f?.asGod.map(x => <div key={x.id} className="item row2"><span>{x.follower} ({x.status})</span>
-      {x.status === 'pending' && <><button onClick={() => run(() => api(`/faiths/${x.id}/accept`, { characterId: me.id, accept: true }), reload)}>Accepter</button><button onClick={() => run(() => api(`/faiths/${x.id}/accept`, { characterId: me.id, accept: false }), reload)}>Refuser</button></>}
-      {x.request_choice && <button onClick={() => run(() => api(`/faiths/${x.id}/answer`, { characterId: me.id }), reload)}>Exaucer « {x.request_choice} » (−5 ÉD)</button>}</div>)}</>}</Panel>;
+    {tab === 'altar' && isGod && <><h4>Autel — mes fidèles <small>ÉD {me.divine_energy_current}/{me.divine_energy_max} · rapportent {f?.income.xp ?? 0} XP et {f?.income.gold ?? 0} or / h (par tranche de {f?.followersStep} fidèle{f?.followersStep > 1 ? 's' : ''})</small></h4>
+      {!f?.asGod.length && <p className="empty">Aucun fidèle.</p>}
+      {f?.asGod.map(x => <div key={x.id} className="item"><div className="row2"><span className="row"><PlayerCard p={x} />{x.request_choice && <span className="pill">prie pour : {STAT_FR[x.request_choice] ?? x.request_choice}</span>}</span>
+        {x.status === 'pending' && <span className="row"><button className="primary" onClick={() => run(() => api(`/faiths/${x.id}/accept`, { characterId: me.id, accept: true }), reload)}>Accepter</button><button onClick={() => run(() => api(`/faiths/${x.id}/accept`, { characterId: me.id, accept: false }), reload)}>Refuser</button></span>}</div>
+        {x.status === 'accepted' && <Bless key={x.request_choice ?? 'x'} x={x} bl={bl} me={me} run={run} reload={reload} />}</div>)}</>}
+  </Panel>;
 }
 
 const LOCO_FR = { land: 'terrestre', air: 'volante', water: 'aquatique' };
@@ -158,3 +189,6 @@ export function WorldPanel() {
       <div className="chips">{found.map(([id, n]) => <button key={id} className={`chip${focus === id ? ' on' : ''}`} onClick={() => setFocus(focus === id ? null : id)}><i className="resdot" style={{ background: RES_INFO[id]?.color ?? '#ccc' }} />{RES_INFO[id]?.name ?? id}<small>{n}</small></button>)}</div></div>}
     <small>Molette : zoom · glisser : déplacer · cadre bleu : votre vision ({me.actor.see} cases) autour de ({P.x}, {P.y}).{!up && ' La carte des ressources de ce monde s\'achète à l\'Hôtel de ville de ce monde ou s\'ouvre avec son parchemin.'}</small></Modal>;
 }
+
+/** Classement en jeu (bouton de la barre d'accès) : s'ouvre sur la page du joueur. */
+export function RankingPanel() { const { me } = useSelector(s => s.game); return <Panel title="Classement" wide><RankingTable me={me.pseudo} /></Panel>; }

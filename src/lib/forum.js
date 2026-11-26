@@ -1,9 +1,10 @@
 // Annonces, forum public et pages légales : helpers purs (testés dans test/forum.test.js).
-/** Route d'après le hash : #histoire · #forum · #forum/c/ID[/page] · #forum/t/ID[/page] · #forum/mod · #legal[/clé]. */
+/** Route d'après le hash : #histoire · #classement · #forum · #forum/c/ID[/page] · #forum/t/ID[/page] · #forum/mod · #legal[/clé]. */
 export function forumRoute(hash) {
   const h = String(hash ?? '').replace(/^#/, ''), [root, a, b, c] = h.split('/');
   if (root === 'legal') return { view: 'legal', key: a || 'cgu' };
   if (root === 'histoire') return { view: 'story' };
+  if (root === 'classement') return { view: 'ranking' };
   if (root !== 'forum') return null;
   const n = v => Math.max(1, Math.trunc(Number(v)) || 1);
   if (a === 'c' && Number(b) > 0) return { view: 'category', id: Number(b), page: n(c) };

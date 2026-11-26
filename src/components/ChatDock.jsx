@@ -1,6 +1,6 @@
-// Barre d'accès (bas à droite) : Messagerie et Paramètres ; fenêtre de messagerie (vision, guilde, courrier).
+// Barre d'accès (bas à droite) : Messagerie, Classement et Paramètres ; fenêtre de messagerie (vision, guilde, courrier).
 import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux';
-import { MessageCircle, Settings, X, Send, PenLine, Reply, Inbox } from 'lucide-react';
+import { MessageCircle, Settings, X, Send, PenLine, Reply, Inbox, Trophy } from 'lucide-react';
 import { api } from '../lib/api'; import { A } from '../store'; import { CHANNELS, ago, reSubject, groupChat } from '../lib/chat';
 
 function Chat({ msgs, me }) {
@@ -59,6 +59,7 @@ export default function ChatDock() {
     <div className="dockbar">
       <button className={`dockbtn${open ? ' on' : ''}`} aria-label={`Messagerie${total ? ` (${total} non lu${total > 1 ? 's' : ''})` : ''}`} onClick={() => setOpen(!open)}>
         <MessageCircle size={20} /><span>Messages</span>{total > 0 && <em className="count">{total > 99 ? '99+' : total}</em>}</button>
+      <button className={`dockbtn${panel === 'ranking' ? ' on' : ''}`} aria-label="Classement des joueurs" onClick={() => d(A.setPanel(panel === 'ranking' ? null : 'ranking'))}><Trophy size={20} /><span>Classement</span></button>
       <button className={`dockbtn${panel === 'account' ? ' on' : ''}`} aria-label="Compte et paramètres" onClick={() => d(A.setPanel(panel === 'account' ? null : 'account'))}><Settings size={20} /><span>Paramètres</span></button>
     </div>
   </div>;

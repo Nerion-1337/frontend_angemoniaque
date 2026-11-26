@@ -781,3 +781,9 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fo-subtabs button.on{background:rgba(240,210,138,.16);border-color:var(--halo);color:var(--halo)}
 
 .divcost{color:var(--div)}
+/* ---- Classement (public et en jeu) ; fiche joueur (demandes de pacte et de foi) ---- */
+.ranking{display:grid;gap:10px}.ranking .tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+.ranking table{width:100%;border-collapse:collapse}.ranking th,.ranking td{padding:7px 10px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.ranking th{color:var(--mute);font-weight:500}.ranking td:first-child{color:var(--mute);width:3.5em}.ranking tr.me td{background:color-mix(in srgb,var(--halo) 14%,transparent)}
+.pcard{display:inline-flex;flex-direction:column;gap:1px;min-width:0}.pcard small{color:var(--mute)}
+.ftable{display:grid;gap:6px}.ftable .cell input{width:100%}

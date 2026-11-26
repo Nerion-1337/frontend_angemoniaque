@@ -1,9 +1,9 @@
 // Annonces, forum public et pages légales, accessibles depuis l'écran d'accueil (#forum, #legal/<clé>) avec ou sans compte.
 // Écrire exige un compte et les CGU en vigueur acceptées ; l'équipe (mod / admin) modère sur place (ForumMod.jsx pour les réglages).
 import { useEffect, useState } from 'react';
-import { Megaphone, MessagesSquare, Pin, Lock, EyeOff, Eye, ArrowLeft, Flag, Pencil, Trash2, Send, Shield, ScrollText, VolumeX, Home, LogIn, BookOpen } from 'lucide-react';
+import { Megaphone, MessagesSquare, Pin, Lock, EyeOff, Eye, ArrowLeft, Flag, Pencil, Trash2, Send, Shield, ScrollText, VolumeX, Home, LogIn, BookOpen, Trophy } from 'lucide-react';
 import { api, hasToken } from '../lib/api'; import { forumRoute, accessBadges, ago, ROLE_LABEL, pager } from '../lib/forum.js';
-import Backdrop from './Backdrop'; import ForumMod from './ForumMod'; import Story from './Story';
+import Backdrop from './Backdrop'; import ForumMod from './ForumMod'; import Story from './Story'; import { RankingTable, RankingTitle } from './Ranking';
 const go = h => { location.hash = h; };
 function useLoad(path, deps) {
   const [st, set] = useState({ data: null, err: '' }), reload = () => api(path).then(data => set({ data, err: '' })).catch(e => set({ data: null, err: e.message }));
@@ -106,12 +106,13 @@ export default function Forum({ hash }) {
   return <><Backdrop /><main className="stage fo-stage"><div className="glass fo">
     <header className="fo-top"><h1 className="wordmark fo-mark">Angemoniaque</h1><nav className="fo-nav">
       <button className={r.view === 'story' ? 'on' : ''} onClick={() => go('#histoire')}><BookOpen size={15} /> L’histoire</button>
-      <button className={!['legal', 'mod', 'story'].includes(r.view) ? 'on' : ''} onClick={() => go('#forum')}><MessagesSquare size={15} /> Annonces & forum</button>
+      <button className={!['legal', 'mod', 'story', 'ranking'].includes(r.view) ? 'on' : ''} onClick={() => go('#forum')}><MessagesSquare size={15} /> Annonces & forum</button>
+      <button className={r.view === 'ranking' ? 'on' : ''} onClick={() => go('#classement')}><Trophy size={15} /> Classement</button>
       <button className={r.view === 'legal' ? 'on' : ''} onClick={() => go('#legal/cgu')}><ScrollText size={15} /> Informations légales</button>
       {me?.staff && <button className={r.view === 'mod' ? 'on' : ''} onClick={() => go('#forum/mod')}><Shield size={15} /> Modération</button>}
       <span className="grow" /><button onClick={() => go('')}>{hasToken() ? <><Home size={15} /> Retour au jeu</> : <><LogIn size={15} /> Connexion</>}</button></nav></header>
     <div className="fo-scroll">{r.view === 'home' && <Home_ />}{r.view === 'category' && <Category id={r.id} page={r.page} />}{r.view === 'topic' && <Topic id={r.id} page={r.page} />}
-      {r.view === 'legal' && <Legal k={r.key} />}{r.view === 'story' && <Story />}{r.view === 'mod' && (me?.staff ? <ForumMod me={me} /> : <p className="fo-muted">Réservé à l'équipe de modération.</p>)}</div>
+      {r.view === 'legal' && <Legal k={r.key} />}{r.view === 'story' && <Story />}{r.view === 'ranking' && <><RankingTitle /><RankingTable /></>}{r.view === 'mod' && (me?.staff ? <ForumMod me={me} /> : <p className="fo-muted">Réservé à l'équipe de modération.</p>)}</div>
     <footer className="fo-foot"><a href="#legal/cgu">CGU</a><a href="#legal/privacy">Confidentialité</a><a href="#legal/legal">Mentions légales</a><a href="#legal/rules">Règlement</a><a href="#legal/cookies">Cookies</a></footer>
   </div></main></>;
 }

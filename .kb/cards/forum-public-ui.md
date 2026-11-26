@@ -22,7 +22,7 @@ tests:
 Écran d'accueil (liens, dernières annonces, connexion Google, case CGU à l'inscription) et espace Annonces / forum / pages légales accessible sans compte ; modération sur place pour l'équipe.
 
 ## Business rules
-- Routes par hash (`lib/forum.js:forumRoute`) : `#forum`, `#forum/c/ID[/page]`, `#forum/t/ID[/page]`, `#forum/mod`, `#legal/<clé>` ; App les affiche AVANT l'écran de connexion (avec ou sans compte).
+- Routes par hash (`lib/forum.js:forumRoute`) : `#forum`, `#classement` (card `faith-pact-ui`), `#forum/c/ID[/page]`, `#forum/t/ID[/page]`, `#forum/mod`, `#legal/<clé>` ; App les affiche AVANT l'écran de connexion (avec ou sans compte).
 - Retour Google : App lit `#google-token=` (jeton enregistré, hash effacé, admin → `#admin`) ou `#google-error=` (message affiché par l'écran de connexion via sessionStorage).
 - Connexion Google : mode lu sur `/auth/google/config` ; `google` → redirection `/api/auth/google/start` ; `mock` → email à saisir (bouton « (simulé) ») ; `off` → bouton masqué.
 - Inscription : case « J'accepte les CGU et la politique de confidentialité » obligatoire (envoie `acceptTos: true`).
