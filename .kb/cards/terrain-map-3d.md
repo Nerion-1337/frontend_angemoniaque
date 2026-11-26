@@ -66,6 +66,7 @@ et de montures pour les estimations, scène 3D, carte de case, légende et bouss
 - Monture volante : seules ses ailes battent (références gardées) ; le cavalier, enfant de la monture, ne pivote jamais avec elles et garde sa propre animation (ticks chaînés).
 - Monstres, invocations et montures : design du catalogue (`creature(e)`) ramené à une emprise d'environ une case sur sa longueur / hauteur (l'envergure peut déborder ; ×1,3 si taille ≥ 2) ; monture : échelle telle que la selle soit à ~0,62 ; cavalier posé sur la selle hors de l'échelle de la créature (`mounted`), chacun garde son animation ; étiquette au-dessus de la hauteur réelle.
 - Carte modernisée (même structure) : dessus des cases biseauté (plateau + quatre biseaux plus sombres, remplace le quadrillage blanc, gardé très discret à moins de ~4 cases), léger damier de teintes, ombres de nuages qui défilent (texture de bruit en coordonnées monde dans le shader du sol), particules d'ambiance (pollen le jour, lucioles la nuit), curseurs de case à coins lumineux pulsés, étalonnage final (vignette, contraste, saturation).
+- Étalonnage final adouci (demande joueur 2026-11-26, « éléments trop clairs ») : contraste ×0,7 autour de 0,45, luminosité ×0,82, saturation ×0,88, bloom réduit (0,15 + nuit 0,07). Ne pas remonter ces valeurs sans demande.
 ## Gotchas
 - Toute modification du terrain ou de l'énergie se fait des DEUX côtés (back et front) ; les fichiers générés se régénèrent par `tools/gen_*`.
 - `setWorld` est un état global : les tests doivent le fixer avant tout calcul.

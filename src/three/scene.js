@@ -23,11 +23,12 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.04; sun.shadow.radius = 4;
   const rt = new THREE.WebGLRenderTarget(W(), H(), { samples: 4, type: THREE.HalfFloatType }), comp = new EffectComposer(r, rt), bloom = new UnrealBloomPass(new THREE.Vector2(W(), H()), 0.3, 0.6, 0.92);
   comp.addPass(new RenderPass(scene, cam)); comp.addPass(bloom); comp.addPass(new OutputPass());
-  // Étalonnage final (après la sortie sRGB) : vignette douce, léger contraste et saturation.
-  const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, vig: { value: 0.32 }, sat: { value: 1.08 }, con: { value: 1.05 } },
+  // Étalonnage final (après la sortie sRGB) : vignette douce ; carte adoucie (demande joueur : éléments trop clairs) —
+  // contraste −30 % autour d'un gris moyen, luminosité ×0,82, saturation ×0,88.
+  const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, vig: { value: 0.32 }, sat: { value: 0.88 }, con: { value: 0.7 }, bri: { value: 0.82 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: `uniform sampler2D tDiffuse; uniform float vig, sat, con; varying vec2 vUv;
-      void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = mix(vec3(l), c.rgb, sat); c.rgb = (c.rgb - 0.5) * con + 0.5;
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float vig, sat, con, bri; varying vec2 vUv;
+      void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = mix(vec3(l), c.rgb, sat); c.rgb = ((c.rgb - 0.45) * con + 0.45) * bri;
         vec2 d = vUv - 0.5; c.rgb *= 1.0 - vig * smoothstep(0.35, 0.85, length(d * vec2(1.25, 1.0))); gl_FragColor = c; }` });
   comp.addPass(grade);
 
@@ -44,7 +45,7 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
     sun.userData.dir = new THREE.Vector3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - Math.max(elev, 34)), THREE.MathUtils.degToRad(150));
     sun.intensity = L(1.7, 3.1, day) * (1 - warm * 0.15); sun.color.set(day < 0.45 ? 0xa9c0ff : warm > 0.3 ? 0xffc890 : 0xfff1d6);
     hemi.intensity = L(1.0, 0.95, day); hemi.color.set(day < 0.45 ? 0x8ea3e6 : 0xdfeeff); hemi.groundColor.set(day < 0.45 ? 0x353c5c : 0x6b5a45); r.toneMappingExposure = L(1.25, 1.3, day);
-    fog.color.copy(NIGHT).lerp(DUSK, S(elev, -4, 6)).lerp(DAY, S(elev, 8, 28)); fog.density = 0.009 + (1 - day) * 0.003; bloom.strength = 0.22 + (1 - day) * 0.1; if (last) buildTerrain();
+    fog.color.copy(NIGHT).lerp(DUSK, S(elev, -4, 6)).lerp(DAY, S(elev, 8, 28)); fog.density = 0.009 + (1 - day) * 0.003; bloom.strength = 0.15 + (1 - day) * 0.07; if (last) buildTerrain();
   }
 
   // ---- terrain (maillage continu), eau, végétation
