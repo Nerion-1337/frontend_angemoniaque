@@ -5,7 +5,7 @@ import { tileBody, hpPerHour, spellSummary } from '../src/admin/tiles.js';
 import { setTileCosts, costOf, spellLine } from '../src/lib/tiles.js';
 afterEach(() => setTileCosts([]));
 test('tileBody : sans sort → spellId et spellMode null ; nom nettoyé, coût numérique', () => {
-  expect(tileBody({ name: ' Forêt ', description: 'x', energyCost: '3', spellId: '', spellMode: 'bonus' })).toEqual({ name: 'Forêt', description: 'x', energyCost: 3, spellId: null, spellMode: null });
+  expect(tileBody({ name: ' Forêt ', description: 'x', energyCost: '3', divineEnergyCost: '2', spellId: '', spellMode: 'bonus' })).toEqual({ name: 'Forêt', description: 'x', energyCost: 3, divineEnergyCost: 2, spellId: null, spellMode: null });
   expect(tileBody({ name: 'Pic', energyCost: 2, spellId: '7', spellMode: 'malus' })).toMatchObject({ spellId: 7, spellMode: 'malus' });
 });
 test('effet horaire : miroir de tileHpDelta (back)', () => {

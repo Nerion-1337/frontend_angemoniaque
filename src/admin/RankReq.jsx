@@ -18,6 +18,7 @@ function Path({ mode, label, c, set, cat }) {
     {!c.on ? <small className="muted">Non proposé pour ce rang.</small> : <>
       <div className="form">
         <div className="cell"><small>Coût en énergie</small><input type="number" min="0" value={c.energyCost} onChange={e => set({ ...c, energyCost: e.target.value })} /></div>
+        <div className="cell"><small title="0 = aucune (par défaut) ; toujours payée par le personnage">Coût en énergie divine (0 = aucune)</small><input type="number" min="0" value={c.divineEnergyCost} onChange={e => set({ ...c, divineEnergyCost: e.target.value })} /></div>
         {mode === 'temporary' && <div className="cell"><small>Durée (heures)</small><input type="number" min="1" value={c.durationH} onChange={e => set({ ...c, durationH: e.target.value })} /></div>}
         <div className="cell span-all"><label className="check"><input type="checkbox" checked={c.consume} onChange={e => set({ ...c, consume: e.target.checked })} /> Objets et ressources consommés (sinon : seulement exigés)</label></div>
       </div>

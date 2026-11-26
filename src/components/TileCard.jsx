@@ -3,6 +3,7 @@ const cache = new Map(), HEALTH = { 'En pleine forme': '#5fd08a', 'Bon état': '
 function useCell(t, mapId, extra = '') { const [c, set] = useState(null); useEffect(() => { if (!t) return set(null); const k = `${mapId}:${t.x},${t.y}${extra}`; if (cache.has(k) && Date.now() - cache.get(k).at < 3000) return set(cache.get(k).v);
   api(`/map/${mapId}/cell?x=${t.x}&y=${t.y}${extra}`).then(v => { cache.set(k, { v, at: Date.now() }); set(v); }).catch(() => {}); }, [t?.x, t?.y]); return c; }
 const cellCost = c => c?.tile?.cost ?? c?.terrain.cost;   // coût admin « Cases » du monde, sinon celui du terrain
+const divCost = c => (c?.tile?.divineCost > 0 ? ` ✦ ${c.tile.divineCost}` : '');   // énergie divine par case (admin, 0 par défaut)
 /** Description du type de case + sort passif (effet continu) — textes saisis en admin, rendus comme texte. */
 function TileInfo({ tile }) {
   if (!tile?.description && !tile?.spell) return null;
@@ -53,7 +54,7 @@ export default function TileCard() {
         else msg = r.name; }
       if (msg) d(A.toast(msg)); await refresh(); d(A.setSelected(null)); } catch (er) { d(A.toast(er.message)); } };
     const ICON = { go: Footprints, approach: Footprints, attack: Swords, breath: Crosshair, interact: DoorOpen, ride: PawPrint, harvest: Pickaxe, build: Hammer, info: Eye };
-    const resName = sc?.deposit?.resource ?? res?.resource, lvl = levelAt(t.x, t.y, mapId), cost = res ? (cellCost(sc) >= 99 ? '∞' : cellCost(sc)) : '…';
+    const resName = sc?.deposit?.resource ?? res?.resource, lvl = levelAt(t.x, t.y, mapId), cost = res ? (cellCost(sc) >= 99 ? '∞' : cellCost(sc)) + divCost(sc) : '…';
     const costOf = ([k, , mv, ac, mc]) => k === 'info' ? null : mv === Infinity ? 'impossible' : mc ? `⚡${mc} monture${mv ? ` + ${E(mv)}` : ''}` : E(mv, ac);
     const pos = { left: Math.max(8, Math.min(selected.sx + 14, innerWidth - 348)), top: Math.max(8, Math.min(selected.sy + 14, innerHeight - 440)) };   // reste dans l'écran
     return <><div className="card tcard" style={pos} role="dialog" aria-label={`Case ${t.x}, ${t.y}`}>
@@ -77,5 +78,5 @@ export default function TileCard() {
         <button key={k} className="sm" onClick={() => { buildKind.current = k; setKind(k); run('build'); }}>{l} <small>×{me.scrolls[k]}</small></button>)}</div>}
     </div>{info && <InfoModal cell={info} close={() => setInfo(null)} />}</>;
   }
-  return hover ? <div className="card hover" style={{ left: hover.sx + 14, top: hover.sy + 14 }}>{hc ? <><div><b>{hc.terrain.zone ?? hc.tile?.name ?? KIND[hc.terrain.kind]}</b> <small>({hc.x}, {hc.y}) · ⚡ {cellCost(hc) >= 99 ? '∞' : cellCost(hc)}/case · {hc.terrain.resource ?? 'aucune ressource'}</small></div><Entity e={hc.entity} /><small>Trajet : {E(pe(hover))}</small></> : '…'}</div> : null;
+  return hover ? <div className="card hover" style={{ left: hover.sx + 14, top: hover.sy + 14 }}>{hc ? <><div><b>{hc.terrain.zone ?? hc.tile?.name ?? KIND[hc.terrain.kind]}</b> <small>({hc.x}, {hc.y}) · ⚡ {cellCost(hc) >= 99 ? '∞' : cellCost(hc)}{divCost(hc)}/case · {hc.terrain.resource ?? 'aucune ressource'}</small></div><Entity e={hc.entity} /><small>Trajet : {E(pe(hover))}</small></> : '…'}</div> : null;
 }

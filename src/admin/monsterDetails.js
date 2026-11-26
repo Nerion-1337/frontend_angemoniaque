@@ -17,7 +17,7 @@ export const pickFilter = (list, q, labelOf) => {
   return (list ?? []).filter(o => String(labelOf(o) ?? '').toLowerCase().includes(s));
 };
 /** Libellé d'un sort du catalogue (recherche + listes de capacités). */
-export const spellLabel = s => `${s.name} (n°${s.id})${s.kind ? ` · ${s.kind}` : ''}${s.energy_cost != null ? ` · ${s.energy_cost} énergie` : ''}`;
+export const spellLabel = s => `${s.name} (n°${s.id})${s.kind ? ` · ${s.kind}` : ''}${s.energy_cost != null ? ` · ${s.energy_cost} énergie` : ''}${s.divine_energy_cost ? ` · ${s.divine_energy_cost} énergie divine` : ''}`;
 /** Libellé d'une capacité (active = lançable, passive = en continu sans énergie, cible + périmètre). */
 export const capLabel = x => `${spellLabel({ name: x.name, id: x.spell_id, kind: x.kind, energy_cost: x.energy_cost })}${x.mode === 'passive' ? ` · CONTINU${x.target ? ` (${x.target === 'ally' ? 'alliés' : 'ennemis'})` : ''} · rayon ${x.radius}` : ''}`;
 /** Libellé d'une pièce d'équipement du monstre (objet du catalogue + partie du corps). */

@@ -43,6 +43,7 @@ export default function ScrollsTab() {
           <Pick options={targets[f.targetKind]} value={f.targetId} onPick={v => setF({ ...f, targetId: v })} labelOf={o => o.name} placeholder="— Choisir —" /></div>
         {f.targetKind === 'item' && <div className="cell"><small>Quantité produite</small><input type="number" min="1" value={f.qtyOut} onChange={e => setF({ ...f, qtyOut: e.target.value })} /></div>}
         <div className="cell"><small>Coût en énergie</small><input type="number" min="0" value={f.energyCost} onChange={e => setF({ ...f, energyCost: e.target.value })} /></div>
+        <div className="cell"><small title="0 = aucune (par défaut) ; toujours payée par le personnage">Coût en énergie divine (0 = aucune)</small><input type="number" min="0" value={f.divineEnergyCost} onChange={e => setF({ ...f, divineEnergyCost: e.target.value })} /></div>
         <div className="cell span-all">
           <label className="check"><input type="checkbox" checked={f.consumeScroll} onChange={e => setF({ ...f, consumeScroll: e.target.checked })} /> Parchemin consommé à la fabrication</label>
           <label className="check"><input type="checkbox" checked={f.atCapital} onChange={e => setF({ ...f, atCapital: e.target.checked })} /> Fabrication seulement à l'hôtel de ville</label>
@@ -64,7 +65,7 @@ export default function ScrollsTab() {
         <td><b>{r.scroll_name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
         <td>{TARGET_LABEL[r.target_kind]} : <b>{r.target_name ?? `n°${r.target_id} (supprimé)`}</b>{r.qty_out > 1 ? ` ×${r.qty_out}` : ''}</td>
         <td>{Object.entries(r.resources ?? {}).map(([id, q]) => `${resLabel(cat.resources, id)} ×${q}`).join(', ') || '—'}</td>
-        <td>{r.energy_cost ? `⚡${r.energy_cost}` : '—'}</td>
+        <td>{[r.energy_cost ? `⚡${r.energy_cost}` : '', r.divine_energy_cost ? `✦${r.divine_energy_cost}` : ''].filter(Boolean).join(' ') || '—'}</td>
         <td><small>{r.consume_scroll ? 'consommé' : 'conservé'}{r.at_capital ? ' · hôtel de ville' : ''}</small></td>
         <td><button className="sm danger" title="Supprimer" onClick={() => del(r)}><Trash2 size={13} /></button></td>
       </tr>)}</tbody></table></div>}

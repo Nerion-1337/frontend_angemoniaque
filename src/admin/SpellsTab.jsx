@@ -10,7 +10,7 @@ import { ShopFields, shopLabel } from './shop.jsx';
 import { SpellEffects } from './SpellFx.jsx'; import { fxDraft, fxBody, fxSummary } from '../lib/spellFx.js';
 import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from './rarity.js';
 
-const blank = { name: '', kind: '', rarity: 'commun', energyCost: '', damage: '', description: '', price: '', durationH: '', usableBy: [], shop: true, shop_races: [], fx: fxDraft({}), xpUse: '' };
+const blank = { name: '', kind: '', rarity: 'commun', energyCost: '', divineEnergyCost: '', damage: '', description: '', price: '', durationH: '', usableBy: [], shop: true, shop_races: [], fx: fxDraft({}), xpUse: '' };
 
 export default function SpellsTab() {
   const d = useDispatch();
@@ -29,7 +29,7 @@ export default function SpellsTab() {
   useEffect(() => { load(); setEdit(null); setF(blank); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [rar]);
   const js = v => (typeof v === 'string' ? JSON.parse(v || '[]') : (v ?? []));
   // La ligne de l'API est en snake_case (energy_cost…) ; le formulaire en camelCase : correspondance explicite (avant : énergie et durée vides à l'édition).
-  const open = row => { setEdit(row ? row.id : 'new'); setF(row ? { ...blank, name: row.name ?? '', kind: row.kind ?? '', rarity: row.rarity ?? 'commun', energyCost: row.energy_cost ?? '', damage: row.damage ?? '', description: row.description ?? '', price: row.price ?? '', durationH: row.duration_h ?? '', xpUse: row.xp_use ?? '', usableBy: js(row.usable_by), shop: row.shop !== false, shop_races: js(row.shop_races), fx: fxDraft(row.effects) } : blank); };
+  const open = row => { setEdit(row ? row.id : 'new'); setF(row ? { ...blank, name: row.name ?? '', kind: row.kind ?? '', rarity: row.rarity ?? 'commun', energyCost: row.energy_cost ?? '', divineEnergyCost: row.divine_energy_cost ?? '', damage: row.damage ?? '', description: row.description ?? '', price: row.price ?? '', durationH: row.duration_h ?? '', xpUse: row.xp_use ?? '', usableBy: js(row.usable_by), shop: row.shop !== false, shop_races: js(row.shop_races), fx: fxDraft(row.effects) } : blank); };
   const save = async () => {
     try {
       const body = { ...f };
@@ -66,6 +66,7 @@ export default function SpellsTab() {
             <select value={f.rarity} onChange={e => setF(x => ({ ...x, rarity: e.target.value }))}>
               {RARITIES.map(r => <option key={r} value={r}>{RARITY_LABEL[r]}</option>)}</select></div>
           <div className="cell"><small>Coût en énergie</small><input type="number" value={f.energyCost} onChange={e => num('energyCost', e.target.value)} /></div>
+          <div className="cell"><small title="0 = aucune (par défaut) ; toujours payée par le personnage">Coût en énergie divine (0 = aucune)</small><input type="number" min="0" placeholder="0" value={f.divineEnergyCost} onChange={e => num('divineEnergyCost', e.target.value)} /></div>
           <div className="cell"><small>Dégâts / effet</small><input type="number" value={f.damage} onChange={e => num('damage', e.target.value)} /></div>
           <div className="cell"><small>Durée (heures ; 0 = instantané)</small><input type="number" value={f.durationH} onChange={e => num('durationH', e.target.value)} /></div>
           <div className="cell"><small>XP par lancer (pondérée par l'écart de rang avec la cible)</small><input type="number" min="0" value={f.xpUse} onChange={e => num('xpUse', e.target.value)} /></div>
@@ -92,7 +93,7 @@ export default function SpellsTab() {
           <td><b>{r.name}</b> <button className="sm" onClick={() => edit === r.id ? setEdit(null) : open(r)}>{edit === r.id ? 'Fermer' : 'Éditer'}</button></td>
           <td>{r.kind ?? '—'}{fxSummary(r.effects) && <><br /><small>{fxSummary(r.effects)}</small></>}</td>
           <td><span className={`rar ${r.rarity ?? 'commun'}`}>{RARITY_LABEL[r.rarity ?? 'commun']}</span></td>
-          <td>{r.energy_cost ?? ''}</td>
+          <td>{r.energy_cost ?? ''}{r.divine_energy_cost > 0 && <small className="divcost"> · ✦{r.divine_energy_cost}</small>}</td>
           <td>{r.damage ?? ''}</td>
           <td>{r.duration_h ? `${r.duration_h} h` : '—'}</td>
           <td className="ux">{usableBadge(r.usable_by)}</td>

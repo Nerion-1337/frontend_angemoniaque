@@ -51,7 +51,7 @@ export default function Capital() {
       {shop && !shop.spells.length && <Empty>Aucun sort enseigné ici.</Empty>}
       <div className="cap-grid">{shop?.spells.map(sp => { const has = known?.spells.some(k => k.id === sp.id), poor = me.gold < sp.price;
         return <article key={sp.id} className={`cap-card${has ? ' owned' : ''}`}><b>{sp.name}</b><small>{sp.description}</small>
-          <div className="cap-foot"><span className="stock">⚡ {sp.energy_cost}</span>
+          <div className="cap-foot"><span className="stock">⚡ {sp.energy_cost}{sp.divine_energy_cost > 0 && <span className="divcost"> ✦ {sp.divine_energy_cost}</span>}</span>
             {has ? <span className="pill ok"><Check size={13} /> Appris</span>
               : <button className="primary sm" disabled={poor} title={poor ? 'Or insuffisant' : ''} onClick={() => act(() => api('/shop/learn', { characterId: me.id, spellId: sp.id }), `${sp.name} appris`)}><Coins size={13} /> {sp.price}</button>}</div></article>; })}</div>
     </section>}

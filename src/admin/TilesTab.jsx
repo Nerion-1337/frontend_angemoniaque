@@ -19,7 +19,7 @@ export default function TilesTab() {
   useEffect(() => { load(); api('/admin/content/spells').then(setSpells).catch(() => {}); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader
   const worlds = [...new Map((rows ?? []).map(r => [r.map_id, r.map_name])).entries()];
   const view = (rows ?? []).filter(r => r.map_id === world);
-  const open = r => { setEdit(r.kind); setF({ name: r.name, description: r.description ?? '', energyCost: r.energy_cost, spellId: r.spell_id ?? '', spellMode: r.spell_mode ?? 'malus' }); };
+  const open = r => { setEdit(r.kind); setF({ name: r.name, description: r.description ?? '', energyCost: r.energy_cost, divineEnergyCost: r.divine_energy_cost ?? 0, spellId: r.spell_id ?? '', spellMode: r.spell_mode ?? 'malus' }); };
   const save = async () => {
     try {
       await api(`/admin/content/tiles/${world}/${edit}`, tileBody(f), 'PUT');
@@ -40,6 +40,7 @@ export default function TilesTab() {
         <div className="cell"><small>Nom affiché</small><input value={f.name} maxLength={80} onChange={e => setF({ ...f, name: e.target.value })} /></div>
         <div className="cell"><small>Coût d'énergie par case</small><input type="number" min="0" max="99" value={f.energyCost} onChange={e => setF({ ...f, energyCost: e.target.value === '' ? '' : Number(e.target.value) })} />
           {edit === 'deep' && <small>Infranchissable à pied quel que soit ce coût.</small>}</div>
+        <div className="cell"><small title="0 = aucune (par défaut) ; payée par le personnage, même monté">Énergie divine par case (0 = aucune)</small><input type="number" min="0" max="99" value={f.divineEnergyCost} onChange={e => setF({ ...f, divineEnergyCost: e.target.value === '' ? '' : Number(e.target.value) })} /></div>
         <div className="cell span-all"><small>Description (affichée dans la carte de case du jeu)</small>
           <textarea rows="2" maxLength={500} value={f.description} onChange={e => setF({ ...f, description: e.target.value })} /></div>
         <div className="cell span2"><small>Sort appliqué en continu</small>
@@ -61,7 +62,7 @@ export default function TilesTab() {
         <td><span className="swatch" style={{ background: hex(COLORS[r.kind]) }} /></td>
         <td><b>{r.name}</b></td>
         <td><code>{r.kind}</code></td>
-        <td>⚡ {r.kind === 'deep' ? `${r.energy_cost} (∞ à pied)` : r.energy_cost}</td>
+        <td>⚡ {r.kind === 'deep' ? `${r.energy_cost} (∞ à pied)` : r.energy_cost}{r.divine_energy_cost > 0 && <small className="divcost"> ✦{r.divine_energy_cost}</small>}</td>
         <td className="desc">{r.description || '—'}</td>
         <td>{r.spell_id ? <span className={r.spell_mode}>{spellSummary(r)}</span> : '—'}</td>
         <td><button className="sm" onClick={() => edit === r.kind ? setEdit(null) : open(r)}>{edit === r.kind ? 'Fermer' : 'Éditer'}</button></td>

@@ -71,7 +71,7 @@ export function MountsPanel() {
       <div className="head"><span className="row"><CreatureIcon c={x} size={34} /><b>{x.name}</b></span><span className="pill">{x.active ? 'Montée' : x.summon_id ? (ctl ? 'Invoquée · contrôlée' : 'Invoquée') : 'Au repos'}</span></div>
       <small>{loco} · {x.can_ride ? 'peut être montée' : 'ne se monte pas'}</small>
       <KV items={[['Vie', `${x.hp_current}/${st.hp_max ?? x.hp_max}`], ['Énergie', `${x.energy_current}/${st.energy_max ?? x.energy_max}`], ['Régén.', `+${st.recovery ?? x.recovery}/h`], ['Taille', `${x.size ?? 1} (+${x.flying ? 6 : x.size ?? 1} vue / portée montée)`], ['Force', st.strength ?? x.strength], ['Agilité', st.agility ?? x.agility], ['Armure', `${st.armor ?? x.armor}/${st.magic_armor ?? 0}`]]} />
-      {x.capacities.length > 0 && <><h5>Capacités</h5><div className="chips">{x.capacities.map(c => <span key={c.id} className="chip" title={fxSummary(c.effects)}>{c.name} · ⚡{c.energy_cost}</span>)}</div>
+      {x.capacities.length > 0 && <><h5>Capacités</h5><div className="chips">{x.capacities.map(c => <span key={c.id} className="chip" title={fxSummary(c.effects)}>{c.name} · ⚡{c.energy_cost}{c.divine_energy_cost > 0 && ` ✦${c.divine_energy_cost}`}</span>)}</div>
         <small className="note">{x.active ? 'Lançables depuis « Actions » (énergie de la créature).' : 'Lançables en la contrôlant ou en la montant.'}</small></>}
       {x.slots.length > 0 && <><h5>Équipement</h5><MountGear x={x} bag={bag} act={act} me={me} locked={!!x.summon_id} /></>}
       <div className="row">
@@ -98,7 +98,7 @@ function Craft({ rc, me, sel, blk, run, after }) {
   return <><h4><Hammer size={14} /> Fabrication <small>(parchemin + ressources)</small></h4>
     {rc.map(r => { const miss = Object.keys(r.missing ?? {}).length > 0, build = r.target_kind === 'building';
       return <div key={r.id} className="item row2"><div><b>{r.target_name}</b>{r.qty_out > 1 && <small> ×{r.qty_out}</small>}<br />
-        <small>{r.scroll_name}{r.consume_scroll ? ' (consommé)' : ''} · {Object.entries(r.resources ?? {}).map(([k, q]) => `${k} ×${q}`).join(', ') || 'aucune ressource'}{r.energy_cost ? ` · ⚡${r.energy_cost}` : ''}{r.at_capital ? ' · à la capitale' : ''}</small>
+        <small>{r.scroll_name}{r.consume_scroll ? ' (consommé)' : ''} · {Object.entries(r.resources ?? {}).map(([k, q]) => `${k} ×${q}`).join(', ') || 'aucune ressource'}{r.energy_cost ? ` · ⚡${r.energy_cost}` : ''}{r.divine_energy_cost ? ` · ✦${r.divine_energy_cost} énergie divine` : ''}{r.at_capital ? ' · à la capitale' : ''}</small>
         {miss && <><br /><small className="err">Manque : {lack(r.missing)}</small></>}</div>
         <button disabled={miss || (build && !!blk)} title={build ? `Case (${sel.x}, ${sel.y})` : ''} onClick={() => run(() => api('/craft', { characterId: me.id, recipeId: r.id, ...(build ? sel : {}) }), after)}>{build ? 'Bâtir ici' : 'Fabriquer'}</button></div>; })}</>;
 }
@@ -127,7 +127,7 @@ export function ActionsPanel() {
     {tab === 'spells' && <>
     <h4><Sparkles size={14} /> Sorts & invocations <span className="pill">{sp?.active ?? 0}/{sp?.maxSummons ?? 1} invoc.</span></h4>
     {sp && !sp.spells.length && <p className="empty">Aucun sort appris. Les sorts de base s'apprennent à la boutique de la capitale.</p>}
-    {sp?.spells.map(s => { const off = (s.kind === 'summon' && (!!blk || sp.active >= sp.maxSummons)) || (s.kind === 'attack' && !occ(sel.x, sel.y)); return <div key={s.id} className="item row2"><div><b>{s.name}</b>{s.source && s.source !== 'appris' && <small> · {s.source}</small>}<br /><small>{fxSummary(s.effects) || s.description}</small></div><button disabled={off} onClick={() => run(() => api('/spells/cast', { characterId: me.id, spellId: s.id, x: sel.x, y: sel.y }), after)}>Lancer ⚡{s.energy_cost}</button></div>; })}
+    {sp?.spells.map(s => { const off = (s.kind === 'summon' && (!!blk || sp.active >= sp.maxSummons)) || (s.kind === 'attack' && !occ(sel.x, sel.y)); return <div key={s.id} className="item row2"><div><b>{s.name}</b>{s.source && s.source !== 'appris' && <small> · {s.source}</small>}<br /><small>{fxSummary(s.effects) || s.description}</small></div><button disabled={off} onClick={() => run(() => api('/spells/cast', { characterId: me.id, spellId: s.id, x: sel.x, y: sel.y }), after)}>Lancer ⚡{s.energy_cost}{s.divine_energy_cost > 0 && ` ✦${s.divine_energy_cost}`}</button></div>; })}
     </>}
     {tab === 'gather' && <>
     <h4><Pickaxe size={14} /> Bâtiments adjacents & récolte</h4>{!bldgs.length && <p className="empty">Aucun bâtiment sur une case voisine.</p>}

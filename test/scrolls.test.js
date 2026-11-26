@@ -4,8 +4,8 @@ import { recipeDraft, recipeBody, resLabel } from '../src/admin/scrolls.js';
 import { shopLabel } from '../src/admin/shop.jsx';
 import { itemBody } from '../src/admin/divine.js';
 test('recipeBody : nouveau parchemin nommé, entiers bornés, quantité 1 hors objets', () => {
-  const f = { ...recipeDraft(), newScrollName: ' Plan ', targetKind: 'building', targetId: '4', qtyOut: 5, resources: { bois: '3', fer: 0 }, energyCost: '-2' };
-  expect(recipeBody(f)).toEqual({ targetKind: 'building', targetId: 4, qtyOut: 1, resources: { bois: 3, fer: 1 }, consumeScroll: true, atCapital: false, energyCost: 0, newScrollName: 'Plan' });
+  const f = { ...recipeDraft(), newScrollName: ' Plan ', targetKind: 'building', targetId: '4', qtyOut: 5, resources: { bois: '3', fer: 0 }, energyCost: '-2', divineEnergyCost: '4' };
+  expect(recipeBody(f)).toEqual({ targetKind: 'building', targetId: 4, qtyOut: 1, resources: { bois: 3, fer: 1 }, consumeScroll: true, atCapital: false, energyCost: 0, divineEnergyCost: 4, newScrollName: 'Plan' });
 });
 test('recipeBody : recette existante → garde son parchemin', () => {
   const f = recipeDraft({ id: 1, scroll_item_id: 9, target_kind: 'item', target_id: 2, qty_out: 3, resources: { bois: 2 }, consume_scroll: false, at_capital: true, energy_cost: 5 });

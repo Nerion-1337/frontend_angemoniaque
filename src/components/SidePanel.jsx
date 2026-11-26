@@ -21,7 +21,7 @@ const statLine = i => [i.data?.kind === 'bag' ? `Agrandit le sac : +${i.data.add
   ...Object.entries(i.bonuses ?? {}).filter(([, v]) => v).map(([k, v]) => `${v > 0 ? '+' : ''}${v} ${BONUS_LABEL[k] ?? k}`), i.req_strength ? `Force req. ${i.req_strength}` : null].filter(Boolean).join(' · ');
 const fmtLock = sec => { const h = Math.floor(sec / 3600), m = Math.ceil((sec % 3600) / 60); return h ? `${h} h ${String(m).padStart(2, '0')}` : `${m} min`; };
 /** Passage au rang suivant par conditions : une ligne et un bouton par voie proposée (définitive, temporaire) ; rang temporaire affiché avec son échéance. */
-const condText = (c, xp) => [...(c.items ?? []).map(i => `objet n°${i.itemId} ×${i.qty}`), ...Object.entries(c.resources ?? {}).map(([k, q]) => `${k} ×${q}`), c.energyCost ? `⚡${c.energyCost}` : null, xp != null ? `${xp} XP` : null].filter(Boolean).join(', ') || 'aucune condition';
+const condText = (c, xp) => [...(c.items ?? []).map(i => `objet n°${i.itemId} ×${i.qty}`), ...Object.entries(c.resources ?? {}).map(([k, q]) => `${k} ×${q}`), c.energyCost ? `⚡${c.energyCost}` : null, c.divineEnergyCost ? `✦${c.divineEnergyCost} énergie divine` : null, xp != null ? `${xp} XP` : null].filter(Boolean).join(', ') || 'aucune condition';
 function RankUp({ me, after }) {
   const run = useDo(), [r, load] = useData(`/characters/${me.id}/rank-up`, [me.xp, me.energy_current]);
   if (!r) return null;

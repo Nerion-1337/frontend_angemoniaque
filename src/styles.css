@@ -779,3 +779,5 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .fo-tabs button:not(.on):hover{background:rgba(255,255,255,.06);color:var(--ink)}.fo-tabs button.on{background:rgba(240,210,138,.18);color:var(--halo);font-weight:600}
 .fo-subtabs{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 12px}.fo-subtabs button{display:inline-flex;gap:5px;align-items:center;padding:5px 12px;border-radius:99px;font-size:.92em}
 .fo-subtabs button.on{background:rgba(240,210,138,.16);border-color:var(--halo);color:var(--halo)}
+
+.divcost{color:var(--div)}
