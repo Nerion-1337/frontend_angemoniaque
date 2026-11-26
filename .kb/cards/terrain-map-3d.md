@@ -43,11 +43,11 @@ tests:
 ---
 ## Purpose
 Rendu client du monde : miroir exact du modèle du back (carte 1 dessinée, monde 2 par zones, carte 3 générée), règles d'énergie
-et de montures pour les estimations, scène 3D, carte de case, légende et boussole.
+et de l'invocation montée pour les estimations, scène 3D, carte de case, légende et boussole.
 
 ## Business rules
 - Le miroir `terrain.js` / `humanMap.js` / `resources.js` est identique au back : même type, coût, ressource (nom affiché, id stocké) pour chaque case.
-- Estimation d'énergie (`pathEnergy`) : pas Chebyshev ; monture aérienne = 1 ; aquatique = 1 sur l'eau ; terre ferme impossible si la monture n'est pas terrestre (`terrestrial`, défaut : un aquatique ne l'est pas) — amphibie = les deux ; à pied = coût admin du type de case du monde (`costOf`), eau profonde impossible.
+- Estimation d'énergie (`pathEnergy`) : pas Chebyshev ; monture aérienne = 1 ; aquatique = 1 sur l'eau ; terre ferme impossible si l'invocation montée n'est pas terrestre (`terrestrial`, défaut : un aquatique ne l'est pas) — amphibie = les deux ; à pied = coût admin du type de case du monde (`costOf`), eau profonde impossible.
 - `pathEnergy` calcule toujours sur le monde COURANT (`setWorld`, appelé à chaque rafraîchissement du personnage).
 - L'option d'attaque est masquée dans la zone sacrée (drapeau `safe` de `/map/{id}/cell`), comme le refus 403 du back.
 - La carte de case affiche le type réglé en admin (nom, description, effet continu, coût) ; jamais de PV exacts (état public).
@@ -63,8 +63,8 @@ et de montures pour les estimations, scène 3D, carte de case, légende et bouss
 - Personnage selon la race ET le rang (`person(race, me, rank)`, rang 1-5) : rang 2 épaulières et ceinture de bronze (démon : épaulières à pointe), 3 plastron d'argent et diadème, 4 or et aura au sol, 5 couronne, orbes en orbite, lumière, taille ×1,08 ; ailes et cornes grandissent avec le rang ; ange séraphin (4 ailes) au rang 5 ; ailes de démon dès le rang 3. La clé d'entité inclut le rang (modèle reconstruit au passage de rang).
 - Néphilim = hybride : aile de plumes à gauche, aile membraneuse à droite, une corne, demi-halo brisé, yeux vairons (or / rouge), tenue blanche à écharpe pourpre ; étiquette mauve.
 - Hôtel de ville selon `building_race` (`capital(race)`) : humain = hôtel de pierre, toit d'ardoise, beffroi à horloge, bannières ; démon = bastion d'obsidienne à pointes, coulées de lave, braseros ; ange = sanctuaire de marbre à colonnes, dôme d'or, anneaux de lumière ; sans race = humain.
-- Monture volante : seules ses ailes battent (références gardées) ; le cavalier, enfant de la monture, ne pivote jamais avec elles et garde sa propre animation (ticks chaînés).
-- Monstres, invocations et montures : design du catalogue (`creature(e)`) ramené à une emprise d'environ une case sur sa longueur / hauteur (l'envergure peut déborder ; ×1,3 si taille ≥ 2) ; monture : échelle telle que la selle soit à ~0,62 ; cavalier posé sur la selle hors de l'échelle de la créature (`mounted`), chacun garde son animation ; étiquette au-dessus de la hauteur réelle.
+- Invocation montée volante : seules ses ailes battent (références gardées) ; le cavalier, enfant de la monture, ne pivote jamais avec elles et garde sa propre animation (ticks chaînés).
+- Monstres et invocations (montées ou non) : design du catalogue (`creature(e)`) ramené à une emprise d'environ une case sur sa longueur / hauteur (l'envergure peut déborder ; ×1,3 si taille ≥ 2) ; monture : échelle telle que la selle soit à ~0,62 ; cavalier posé sur la selle hors de l'échelle de la créature (`mounted`), chacun garde son animation ; étiquette au-dessus de la hauteur réelle.
 - Carte modernisée (même structure) : dessus des cases biseauté (plateau + quatre biseaux plus sombres, remplace le quadrillage blanc, gardé très discret à moins de ~4 cases), léger damier de teintes, ombres de nuages qui défilent (texture de bruit en coordonnées monde dans le shader du sol), particules d'ambiance (pollen le jour, lucioles la nuit), curseurs de case à coins lumineux pulsés, étalonnage final (vignette, contraste, saturation).
 - Étalonnage final réglé par le joueur (2026-11-26) : luminosité ×1, contraste ×1 (neutre), saturation neutre, bloom 0,15 (+0,07 la nuit). Ne pas changer sans demande.
 - Blancs détaillés : exposition 1,05–1,1 (au lieu de 1,25–1,3, qui brûlait murs blancs et fleurs) compensée par `gam` 0,88 (tons moyens relevés dans l'étalonnage).

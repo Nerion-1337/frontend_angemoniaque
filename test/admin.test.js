@@ -11,9 +11,11 @@ test('slice admin : navigation de section / entité et message', () => {
   expect(s.detail.id).toBe(3);
 });
 test("descripteurs de champs : chaque type d'entité couvre les règles transverses demandées", () => {
-  for (const k of ['monster', 'item', 'mount', 'building']) expect(FIELDS[k]).toBeTruthy();
+  for (const k of ['monster', 'item', 'building']) expect(FIELDS[k]).toBeTruthy();
+  expect(FIELDS.mount).toBeUndefined();   // plus de montures (migration 43)
   expect(FIELDS.item.some(f => f[0] === 'durability')).toBe(true);
-  expect(FIELDS.monster.some(f => ['speed', 'carry', 'mountable', 'locomotion', 'rarity'].includes(f[0]))).toBe(true);   // montures fusionnées dans les monstres
+  expect(FIELDS.monster.map(f => f[0])).toEqual(expect.arrayContaining(['mountable', 'resummon_delay_h', 'locomotion', 'rarity', 'size']));
+  expect(FIELDS.monster.some(f => ['speed', 'carry'].includes(f[0]))).toBe(false);
   expect(FIELDS.building.some(f => f[0] === 'structure')).toBe(true);
   expect(FIELDS.rank.some(f => f[0] === 'prereq_xp')).toBe(true);
   expect(FIELDS.rank.some(f => f[0] === 'multipliers')).toBe(true);

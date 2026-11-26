@@ -154,8 +154,8 @@ export default function MonsterDetails() {
       : t === 'loco' ? <div key={k} className="cell span2"><small>{label} (combinable)</small><div className="seg2">{LOCO.map(([v, l]) =>
         <button key={v} type="button" className={`chip${(draft?.[k] || ['land']).includes(v) ? ' on' : ''}`} aria-pressed={(draft?.[k] || ['land']).includes(v)} onClick={() => set(k, toggleLoco(draft?.[k], v))}>{l}</button>)}</div></div>
         : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft?.[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>;
-  /** Groupe « Monture » : seulement la case à cocher tant que le type ne sert pas de monture. */
-  const groupKeys = (title, keys) => (title === 'Monture' && !draft?.mountable ? ['mountable'] : keys);
+  /** Groupe « Invocation et monte » : la taille ne sert qu'à un type montable. */
+  const groupKeys = (title, keys) => (title === 'Invocation et monte' && !draft?.mountable ? keys.filter(k => k !== 'size') : keys);
   const view = monsters.filter(m => matches(q, m.name, m.id));
   const onMap = m => (status?.instances ?? []).some(i => i.prototype === m.id || i.id === m.id);
   return <section className="split">
@@ -163,7 +163,7 @@ export default function MonsterDetails() {
       <div className="headrow"><Search value={q} onChange={setQ} /><button className="sm" onClick={newOne}><Plus size={14} /> Nouveau type</button></div>
       <small className="count">{view.length} / {monsters.length}</small>
       <div className="list">{view.map(m => <button key={m.id} className={`item row2${String(sel) === String(m.id) ? ' on' : ''}`} onClick={() => open(m.id)}><b>{m.name}</b>
-        <small>{RARITY_LABEL[m.rarity] ?? 'Commun'}{m.mountable ? ` · monture (${locoLabel(m.locomotion)})` : ''} · PV {m.hp_max}{m.xp_reward ? ` · ${m.xp_reward} XP` : ''}{onMap(m) ? ' · sur carte(s)' : ''} · n°{m.id}</small></button>)}
+        <small>{RARITY_LABEL[m.rarity] ?? 'Commun'}{m.mountable ? ` · montable (${locoLabel(m.locomotion)})` : ''} · PV {m.hp_max}{m.xp_reward ? ` · ${m.xp_reward} XP` : ''}{onMap(m) ? ' · sur carte(s)' : ''} · n°{m.id}</small></button>)}
         {!view.length && <Empty>Aucun type de monstre.</Empty>}</div>
     </div>
     <div className="detailpane">
@@ -201,8 +201,6 @@ export default function MonsterDetails() {
         <h4>Passives ({passives?.length ?? 0})</h4>
         {(passives ?? []).map(x => <span key={x.id} className="tag"><b>{capLabel(x)}</b><button className="sm danger" onClick={() => delCap(x)}>×</button></span>)}
         {actives?.length === 0 && passives?.length === 0 && <p className="note">Aucune capacité.</p>}
-        {draft?.mountable && draft?.mount_id && <><h4>En tant que monture</h4><ElementSpells kind="mount" refId={draft.mount_id} /></>}
-        {draft?.mountable && !draft?.mount_id && <p className="note">Enregistrez le type comme monture pour lui lier des sorts de monture.</p>}
       </div>}
 
       {tab === 'spec' && <div>

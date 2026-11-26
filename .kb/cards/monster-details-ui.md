@@ -29,7 +29,7 @@ Onglet admin « Monstres » : liste des types, puis fiche à 4 onglets — Carac
 Spécificités (quantités max, parties du corps équipables), Liste (instances du type : placement, déplacement, butin, équipement).
 
 ## Business rules
-- Montures fusionnées (lot B) : groupe « Rareté et déplacement » (rareté, déplacement combinable Terrestre / Aérien / Aquatique, jamais vide — `toggleLoco`) et groupe « Monture » (case « Peut servir de monture », puis vitesse, portage, bonus de vue et de portée) ; la liste affiche rareté et « monture (modes) ». Plus de section « Montures » dans la navigation.
+- Montures fusionnées (lot B) : groupe « Rareté et déplacement » (rareté, déplacement combinable Terrestre / Aérien / Aquatique, jamais vide — `toggleLoco`) et groupe « Invocation et monte » (case « Montable », taille si montable, délai avant de relancer son sort après sa mort `resummon_delay_h`, heures ; ancien libellé « Peut servir de monture », puis vitesse, portage, bonus de vue et de portée) ; la liste affiche rareté et « monture (modes) ». Plus de section « Montures » dans la navigation.
 - Un champ JSON non retouché (objet reçu de l'API) s'enregistre tel quel (`jsonOr`).
 - Le champ « Garde (relique/arcane/artefact) » n'est plus dans la fiche : l'objet divin gardé se règle par monstre (butin / objets divins).
 - Capacités : actives (lancées à la demande) et passives (en continu, sans énergie, cible alliés/ennemis + rayon) ; catalogue global de sorts avec recherche.
@@ -41,7 +41,6 @@ Spécificités (quantités max, parties du corps équipables), Liste (instances 
 - Mise en page : liste des types à gauche (recherche, PV, XP au tueur) + fiche à droite ; onglets Caractéristiques (groupes Identité, Vie et énergie, Combat, Rang et récompenses — rang, XP donnée au tueur une fois, or), Capacités, Équipement et quantité, Sur les cartes ; quitter une fiche modifiée demande confirmation.
 - Silhouette : les 10 emplacements d'un personnage (deux armes, deux bracelets, deux bagues ; `SLOTS`, `SLOT_SHORT`, `SLOT_POS`) ; l'équipement d'un monstre posé se retire par emplacement.
 - Réapparition et objet divin porté : réglés sur CHAQUE monstre posé (« Sur les cartes » → Sélectionner → `RespawnPanel` sur la ligne de l'instance), plus sur le type ; objet divin porté = famille (une pièce à la fois, plafond et détenus affichés) ; un sauvage n'a pas ce panneau. Le tableau des monstres posés résume la réapparition et la pièce portée.
-- Créatures en jeu (`Panels.jsx:MountGear`) : mêmes emplacements ; seuls les objets du sac du bon type (`GROUP`) sont proposés.
 
 - Groupe « Apparence » (champs `model` / `icon`, type 'look') : composant Appearance (design 3D + icône) ; vide → null (automatique).
 ## Gotchas
@@ -53,4 +52,4 @@ Spécificités (quantités max, parties du corps équipables), Liste (instances 
 - Classes admin : jamais une classe globale du jeu (`.inl` = ligne d'insertion du glisser-déposer → `.inlabel`).
 
 ## Tests
-`test/monsterRespawn.test.js` (`respawnBody`, `respawnSummary`, plus de champ « Garde », `toggleLoco`, `locoLabel`) ; `test/admin.test.js` (`jsonOr` objet, champs de monture du monstre) ; `test/monsterDetails.test.js` (silhouette à bascule + liste retirable, 7 `SLOTS`, filtres, libellés, `placeBody`, effets en corps de bloc, `<thead>/<tbody>`, `Pick` paginé, `MiniMap`) ; `test/adminDom.test.js`.
+`test/monsterRespawn.test.js` (`respawnBody`, `respawnSummary`, plus de champ « Garde », `toggleLoco`, `locoLabel`) ; `test/admin.test.js` (`jsonOr` objet, champs montable / délai de ré-invocation du monstre, plus de vitesse / portage) ; `test/monsterDetails.test.js` (silhouette à bascule + liste retirable, 7 `SLOTS`, filtres, libellés, `placeBody`, effets en corps de bloc, `<thead>/<tbody>`, `Pick` paginé, `MiniMap`) ; `test/adminDom.test.js`.

@@ -2,7 +2,7 @@ import { terrain } from './terrain'; import { costOf } from './tiles';
 const water = k => k === 'shallow' || k === 'deep';
 /** Énergie d'un trajet (8 directions) jusqu'à stopAt cases de la cible. Miroir de game/movement.ts (stepCost) :
  *  aérienne = 1/case ; aquatique = 1 sur l'eau ; non terrestre = terre ferme impossible (défaut : un aquatique n'est pas
- *  terrestre, comme le navire) ; sinon coût du type de case, eau peu profonde = 4, eau profonde interdite. Amphibie = aquatique + terrestre. */
+ *  terrestre) ; sinon coût du type de case, eau peu profonde = 4, eau profonde interdite. Amphibie = aquatique + terrestre. */
 export function pathEnergy(from, to, { flying = false, aquatic = false, terrestrial = !aquatic, stopAt = 0 } = {}) {
   let { x, y } = from, cost = 0;
   while (x !== to.x || y !== to.y) {

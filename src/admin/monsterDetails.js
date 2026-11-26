@@ -50,7 +50,7 @@ export const MONSTER_GROUPS = [
   ['Combat', ['strength', 'agility', 'armor', 'magic_armor', 'range', 'see']],
   ['Rang et récompenses', ['rank', 'xp_reward', 'gold_current']],
   ['Rareté et déplacement', ['rarity', 'locomotion']],
-  ['Monture', ['mountable', 'size', 'speed', 'carry']],
+  ['Invocation et monte', ['mountable', 'size', 'resummon_delay_h']],
   ['Apparence', ['model', 'icon']],
 ];
 /** Déplacement : combinaison de 1 à 3 modes (CHECK migration 25). */

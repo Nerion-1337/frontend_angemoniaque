@@ -1,4 +1,4 @@
-// Onglet Sorts : éditeur des effets (moteur de sorts) dont l'invocation d'un élément ; fiches d'objet / bâtiment / monstre-monture :
+// Onglet Sorts : éditeur des effets (moteur de sorts) dont l'invocation d'un élément ; fiches d'objet / bâtiment :
 // sorts liés à l'élément avec leur mode d'application (ElementSpells).
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -13,7 +13,7 @@ import { STAT_LABEL, POOL_STATS, TARGET_LABEL, AFFECTS_LABEL, SUMMON_LABEL, LINK
 function useSummonables() {
   const [cat, setCat] = useState({});
   useEffect(() => { Promise.all([api('/admin/catalog'), api('/admin/content/monsters'), api('/admin/content/buildings')])
-    .then(([c, m, b]) => setCat({ monster: m, mount: m.filter(x => x.mountable), item: c.items, building: b, spells: c.spells })).catch(() => {}); }, []);
+    .then(([c, m, b]) => setCat({ monster: m, item: c.items, building: b, spells: c.spells })).catch(() => {}); }, []);
   return cat;
 }
 
@@ -46,17 +46,17 @@ export function SpellEffects({ fx, set }) {
       <label className="check"><input type="checkbox" checked={fx.sumOn} onChange={e => u('sumOn', e.target.checked)} /> Le sort invoque un élément</label>
       {fx.sumOn && <div className="row add">
         <select value={fx.sumKind} onChange={e => set({ ...fx, sumKind: e.target.value, sumRef: '' })}>{Object.entries(SUMMON_LABEL).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
-        <Pick options={cat[fx.sumKind] ?? []} value={fx.sumRef} onPick={v => u('sumRef', v)} labelOf={o => o.name} placeholder={fx.sumKind === 'mount' ? '— Monstre montable —' : '— Choisir —'} />
+        <Pick options={cat[fx.sumKind] ?? []} value={fx.sumRef} onPick={v => u('sumRef', v)} labelOf={o => o.name} placeholder="— Choisir —" />
         {fx.sumKind === 'item' && <label className="inlabel"><small>×</small><input type="number" min="1" max="99" className="nb" value={fx.sumQty} onChange={e => u('sumQty', e.target.value)} /></label>}
         <label className="inlabel"><small>durée</small><input type="number" min="0" className="nb" value={fx.sumH} onChange={e => u('sumH', e.target.value)} /><small>h (0 = permanent)</small></label></div>}
-      {fx.sumOn && <p className="note">Monstre : invocation de combat contrôlable près du lanceur (limite d'invocations). Monture : ajoutée aux montures du lanceur. Objet : dans son sac.
+      {fx.sumOn && <p className="note">Monstre : invocation de combat contrôlable près du lanceur (limite d'invocations) ; s'il est montable, le lanceur peut monter dessus. Objet : dans son sac.
         Bâtiment : copie posée près de lui, à lui. Temporaire : retiré à l'échéance (tick horaire).</p>}
       <p className="note">« Rendre / retirer » agit sur la valeur actuelle sans dépasser le maximum ; « max » change la capacité. Aperçu : {fxSummary(fxBody(fx)) || '—'}</p>
     </>}
   </div>;
 }
 
-/** Sorts liés à UN élément (fiche objet, bâtiment, monstre servant de monture) avec leur mode d'application. */
+/** Sorts liés à UN élément (fiche objet, bâtiment) avec leur mode d'application. */
 export function ElementSpells({ kind, refId }) {
   const d = useDispatch(), cat = useSummonables(), [rows, setRows] = useState(null), [n, setN] = useState({ spellId: '', mode: LINK_MODES[kind][0][0] });
   const load = () => api(`/admin/content/element-spells?kind=${kind}&refId=${refId}`).then(setRows).catch(e => d(Ad.msg(e.message)));

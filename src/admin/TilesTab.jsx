@@ -28,8 +28,8 @@ export default function TilesTab() {
   };
   const sp = spells.find(s => String(s.id) === String(f?.spellId));
   return <section>
-    <p className="note">Chaque monde a ses propres types de case. Le coût d'énergie s'applique à chaque pas (à pied ou en monture terrestre ;
-      une monture volante paie toujours 1, l'eau profonde reste infranchissable à pied). Un sort passif agit à chaque tick horaire sur les personnages présents sur la case.</p>
+    <p className="note">Chaque monde a ses propres types de case. Le coût d'énergie s'applique à chaque pas (à pied ou sur une invocation montée terrestre ;
+      une invocation montée volante paie toujours 1, l'eau profonde reste infranchissable à pied). Un sort passif agit à chaque tick horaire sur les personnages présents sur la case.</p>
     <div className="tabs">{worlds.map(([id, file]) =>
       <button key={id} className={world === id ? 'on' : ''} onClick={() => { setWorld(id); setEdit(null); }}>{WORLD_LABEL[id] ?? file}</button>)}</div>
     {rows && !rows.length && <Empty>Aucun type de case en base : appliquer la migration 15_types_de_case.sql.</Empty>}

@@ -26,7 +26,7 @@ export default function Appearance({ draft, set }) {
   return <div className="look">
     <div className="lookhead"><Preview design={D} />
       <div className="lookinfo"><b>{D.name}</b><small>{auto ? 'Automatique (d’après le nom ou le milieu)' : 'Design choisi'} · {HABITATS.find(h => h[0] === D.hab)?.[1]}</small>
-        <div className="lookicon"><CreatureIcon c={{ ...draft, model: D.key }} size={56} /><small>Icône affichée pour une invocation ou une monture (initiales du nom).</small></div>
+        <div className="lookicon"><CreatureIcon c={{ ...draft, model: D.key }} size={56} /><small>Icône affichée pour une invocation, montée ou non (initiales du nom).</small></div>
         {!auto && <button className="sm" onClick={() => set('model', '')}>Revenir à l’automatique</button>}</div></div>
     <div className="seg2">{HABITATS.map(([k, l]) => <button key={k} type="button" className={`chip${hab === k ? ' on' : ''}`} onClick={() => setHab(k)}>{l} ({CREATURES.filter(c => c.hab === k).length})</button>)}</div>
     <div className="lookgrid">{CREATURES.filter(c => c.hab === hab).map(c => <button key={c.key} type="button" className={`lookcard${draft?.model === c.key ? ' on' : ''}`} onClick={() => set('model', c.key)} title={c.name}>

@@ -49,7 +49,7 @@ export const CHAPTERS = [
   { id: 'compagnons', I: PawPrint, title: 'XI. Compagnons', tone: 'green',
     text: ['Nul ne voyage seul longtemps. On apprivoise un destrier, un griffon, un serpent des mers ; on le monte pour aller plus vite, plus haut, plus loin, et il combat à vos côtés avec sa propre attaque.',
       'Les plus doués savent aussi invoquer : un sort, et une créature se lève, que l’on peut même diriger en personne, le temps de lui prêter sa volonté.'],
-    game: 'Montures terrestres, aquatiques ou volantes (taille = hauteur), invocations par sort, prise de contrôle d’une invocation.' },
+    game: 'Invocations par sort, prise de contrôle d’une invocation ; une invocation montable (terrestre, aquatique ou volante, taille = hauteur) se monte.' },
   { id: 'pactes', I: Handshake, title: 'XII. Les pactes et la foi', tone: 'blue',
     text: ['Les Hommes et les êtres éthérés ont besoin les uns des autres. Un pacte lie un Homme à un Ange ou à un Démon : chacun y gagne une part de la force de l’autre. L’Homme n’en scelle qu’un ; l’Ange et le Démon, d’autant plus que leur rang est haut.',
       'Et quand un être atteint le rang Divin, il cesse d’être un simple combattant : il devient un dieu. Des fidèles le rejoignent, et il choisit les bénédictions qu’il leur accorde.'],

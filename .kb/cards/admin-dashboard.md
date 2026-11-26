@@ -2,7 +2,7 @@
 title: Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques
 slug: admin-dashboard
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/admin/index.jsx
   - src/admin/Dashboard.jsx
@@ -25,7 +25,7 @@ tests:
 ---
 ## Purpose
 Back-office d'administration (`src/admin/`, route `#admin`) : application plein écran à sections (Pilotage, Joueurs, Races & Rangs,
-Monstres (dont les montures), Objets, Sorts, Parchemins, Cases, Ressources, Bâtiments), éditeur générique d'entités, règles transverses, toasts et éléments partagés.
+Monstres (dont les types montables), Objets, Sorts, Parchemins, Cases, Ressources, Bâtiments), éditeur générique d'entités, règles transverses, toasts et éléments partagés.
 
 ## Business rules
 - Accès : `#admin` ET `auth.admin` ; sinon « Accès réservé ».

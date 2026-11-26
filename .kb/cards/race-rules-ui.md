@@ -2,7 +2,7 @@
 title: Races (apparition, limites, équipement de départ) dans l'admin, écran de création piloté par le serveur, horloge au Pilotage
 slug: race-rules-ui
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/admin/xpRank.js
   - src/admin/XpRank.jsx
@@ -31,7 +31,7 @@ Pilotage (dernier et prochain tick).
 ## Business rules
 - Apparition : monde + centre X/Y + rayon ; vide = capitale de la race ; un centre sans monde n'est pas envoyé (`rulesBody`).
 - Limites : par compte (nouvelle race : 3) et population totale ; vide = illimité. Le compte admin n'y est jamais soumis.
-- Équipement de départ (bouton « Départ ») : palier (vide = premier), or, XP, objets (sac ou coffre, quantité), sorts (sans doublon), montures (une seule active), ressources ; enregistré en entier (`kitBody`).
+- Équipement de départ (bouton « Départ ») : palier (vide = premier), or, XP, objets (sac ou coffre, quantité), sorts (sans doublon), ressources (plus de montures) ; enregistré en entier (`kitBody`).
 - Toutes les valeurs envoyées sont des entiers ≥ 0.
 - L'en-tête de chaque race résume apparition et limites (`rulesLabel`) ; l'infobulle du bouton Départ résume le kit (`kitSummary`).
 - Chaque rang a un bouton « Passage » (conditions pour passer à ce rang, card `rank-req-ui`).

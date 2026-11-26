@@ -6,11 +6,10 @@ export const STAT_LABEL = {
 };
 export const POOL_STATS = ['hp', 'energy', 'divine_energy'];
 export const TARGET_LABEL = { self: 'Soi-même', single: 'Cible unique', area: "Zone d'impact" };
-/** Invocation (lot D) et modes des sorts liés à un élément (objet, monture, bâtiment). */
-export const SUMMON_LABEL = { monster: 'Monstre', mount: 'Monture', item: 'Objet', building: 'Bâtiment' };
+/** Invocation (lot D) et modes des sorts liés à un élément (objet, bâtiment). */
+export const SUMMON_LABEL = { monster: 'Monstre', item: 'Objet', building: 'Bâtiment' };
 export const LINK_MODES = {
   item: [['passive', 'En continu (tant qu\'il est porté)'], ['active', 'À activer (lançable par le porteur)'], ['on_hit', 'Au coup porté (arme)'], ['on_struck', 'À l\'attaque reçue (armure, bouclier)']],
-  mount: [['passive', 'En continu (monture active)'], ['active', 'À activer (lançable par le cavalier)']],
   building: [['passive', 'En continu (chaque heure)'], ['active', 'À activer (propriétaire à côté)']],
 };
 export const modeLabel = (kind, mode) => (LINK_MODES[kind] ?? []).find(m => m[0] === mode)?.[1] ?? mode;

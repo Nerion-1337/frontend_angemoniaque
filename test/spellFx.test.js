@@ -26,6 +26,6 @@ test('invocation : quantité seulement pour un objet, durée bornée, sans élé
 });
 test('modes de lien : au coup porté / à l\'attaque reçue pour les objets seulement', () => {
   expect(LINK_MODES.item.map(m => m[0])).toEqual(['passive', 'active', 'on_hit', 'on_struck']);
-  expect(LINK_MODES.building.map(m => m[0])).toEqual(['passive', 'active']); expect(LINK_MODES.mount.map(m => m[0])).toEqual(['passive', 'active']);
+  expect(LINK_MODES.building.map(m => m[0])).toEqual(['passive', 'active']); expect(LINK_MODES.mount).toBeUndefined();
   expect(modeLabel('item', 'on_struck')).toBe("À l'attaque reçue (armure, bouclier)");
 });

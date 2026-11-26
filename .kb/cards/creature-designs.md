@@ -29,7 +29,7 @@ Catalogue de 85 designs 3D de créatures (30 aériens, 40 terrestres, 15 aquatiq
 - Plans (`three/creatures.js`) : quadrupède, bipède, oiseau, serpent, arthropode, poisson, céphalopode, méduse, raie, tortue, hippocampe, arbre, élémentaire ; corps à contre-ombrage (couleurs de sommets dos / ventre), membres en chaînes articulées, ailes membraneuses (bras en bord d'attaque) ou à plumes (rémiges vers l'arrière), animation par `tick(t)` ; repère : regarde +z, pieds à y = 0, `userData.height` et `userData.saddle`.
 - Design d'une créature (`designFor`) : clé choisie (monsters.model) si elle existe, sinon nom reconnu (nom exact, ou un mot significatif du nom ; mots génériques ignorés : géant, royal, sombre…), sinon tiré de façon stable dans son milieu (déplacement : air si volant, eau si seulement aquatique, sinon terre).
 - Icônes (`lib/creatureIcons.js`) : glyphes au trait 24×24 dessinés ou repris de lucide (imports nommés) ; icône d'une créature = choisie (monsters.icon), sinon celle du design, sinon selon le milieu ; initiales = deux premières lettres significatives du nom (articles ignorés), « ? » si vide.
-- Médaillon (`CreatureIcon`) : glyphe en fond, initiales par-dessus, teinte selon le milieu ; utilisé dans le HUD (invocation contrôlée, monture) et le panneau Invocations.
+- Médaillon (`CreatureIcon`) : glyphe en fond, initiales par-dessus, teinte selon le milieu ; utilisé dans le HUD (invocation contrôlée, invocation montée) et le panneau Invocations.
 - Admin Monstres › Apparence (`admin/Appearance.jsx`) : aperçu 3D animé et tournant, catalogue par milieu, grille d'icônes filtrable ; vide = automatique (envoyé null).
 
 ## Gotchas

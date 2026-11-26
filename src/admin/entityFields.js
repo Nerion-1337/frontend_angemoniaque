@@ -6,8 +6,9 @@ export const FIELDS = {
     ['armor', 'Armure', 'number'], ['magic_armor', 'Armure magique', 'number'], ['range', 'Portée', 'number'], ['see', 'Portée de vue', 'number'],
     ['rank', 'Rang (écart de rang avec le joueur : bonus / malus d\'XP)', 'number'], ['xp_reward', 'XP donnée au tueur (une fois)', 'number'], ['gold_current', 'Or', 'number'],
     ['rarity', 'Rareté', 'rarity'], ['locomotion', 'Déplacement', 'loco'],
-    ['mountable', 'Peut servir de monture', 'check'], ['speed', 'Vitesse (monture)', 'number'], ['carry', 'Portage (monture)', 'number'],
-    ['size', 'Taille (1 à 3 : +1 vue / portée par niveau pour son cavalier)', 'number'],
+    ['mountable', 'Montable : invoqué, son propriétaire peut monter dessus', 'check'],
+    ['size', 'Taille (1 à 3 : +1 vue / portée par niveau pour son cavalier, s\'il est terrestre ou aquatique ; volant : +6)', 'number'],
+    ['resummon_delay_h', 'Délai avant de relancer son sort d\'invocation après sa mort (heures, décimales permises ; 0 = aucun)', 'number'],
     ['model', 'Design 3D', 'look'], ['icon', 'Icône', 'look'],
     ['data', 'Comportement (JSON : {"behavior":"...","loot":[...]})', 'json']
   ],
@@ -18,15 +19,6 @@ export const FIELDS = {
     ['strength_bonus', 'Bonus Force', 'number'], ['agility_bonus', 'Bonus Agilité', 'number'],
     ['req_strength', 'Force requise', 'number'], ['weapon_damage', 'Attaque (multiplicateur)', 'number'],
     ['data', 'Effets / effets spéciaux (JSON : {"buffs":[...],"trigger":"...","effects":{}})', 'json']
-  ],
-  mount: [
-    ['name', 'Nom'], ['hp_max', 'PV max', 'number'], ['armor', 'Armure', 'number'], ['energy_max', 'Endurance max', 'number'],
-    ['speed', 'Vitesse', 'number'], ['carry', 'Portage', 'number'],
-    ['bonus_see', 'Bonus portée vue', 'number'], ['bonus_range', 'Bonus portée combat', 'number'],
-    ['flying', 'Volant', 'check'], ['aquatic', 'Aquatique', 'check'],
-    ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'], ['recovery', 'Régén/h', 'number'],
-    ['special_attack_name', 'Attaque spéciale'], ['special_attack_damage', 'Dégâts spéciale', 'number'],
-    ['special_attack_energy', 'Coût spéciale', 'number']
   ],
   building: [
     ['name', 'Nom'], ['kind', 'Type (wall/tower/factory/totem/...)'], ['invulnerable', 'Invulnérable', 'check'],
@@ -54,4 +46,4 @@ export const FIELDS = {
 export const jsonOr = (v, def = null) => { if (v == null || v === '') return def; if (typeof v === 'object') return v; try { return JSON.parse(v); } catch { return def; } };
 export const jsonText = v => (v == null ? '' : JSON.stringify(v, null, 1));
 /** Segment d'URL (pluriel) de l'entité : les routes admin utilisent les noms de tables. */
-export const URL_KIND = { monster: 'monsters', item: 'items', mount: 'mounts', building: 'buildings' };
+export const URL_KIND = { monster: 'monsters', item: 'items', building: 'buildings' };

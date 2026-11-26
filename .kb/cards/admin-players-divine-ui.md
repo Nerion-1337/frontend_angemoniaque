@@ -27,7 +27,7 @@ objets, avec familles divines et exemplaires uniques.
 - Fiche : changer le rang n'envoie que `specialization_id` (diff) ; le serveur ajoute ou retire l'écart de base entre paliers (note affichée sous le sélecteur).
 - Liste : 20 par page, onglets par race avec effectifs, recherche pseudo/e-mail.
 - Fiche : n'envoie que les caractéristiques MODIFIÉES, en entiers ≥ 0 (`statDiff`) ; rang choisi parmi les paliers de la race ; téléportation vers la case libre la plus proche ; bloquer/débloquer.
-- Objets séparés en Équipé / Sac / Coffre-fort ; ajout au sac ou au coffre ; retrait par emplacement ; sorts, montures, divins ajoutés ou retirés.
+- Objets séparés en Équipé / Sac / Coffre-fort ; ajout au sac ou au coffre ; retrait par emplacement ; sorts et divins ajoutés ou retirés (plus d'onglet Montures, 2026-11-26).
 - Divin : même tableau et même formulaire que les autres raretés + famille ; une famille n'est envoyée qu'en rareté divin ; colonne « famille · exemplaires / plafond ».
 - Familles : plafond modifiable (vide = illimité), création (clé en minuscules), suppression des seules familles libres vides.
 - Exemplaires d'un objet divin : création dans la limite du plafond, suppression d'un exemplaire libre seulement.

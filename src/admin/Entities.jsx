@@ -5,7 +5,7 @@ import { FIELDS, jsonOr, jsonText, URL_KIND } from './entityFields.js';
 import { RuleForms, RulesList } from './EntityRules.jsx';
 import { BuildingExtras, BuildingSpells, ActivationEditor } from './BuildingExtras.jsx'; import { buildingBody, buildingDraft } from './building.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx';
-/** Éditeur générique d'entités (montures, bâtiments) : liste filtrable à gauche + fiche à droite (caractéristiques, règles transverses). */
+/** Éditeur générique d'entités (bâtiments) : liste filtrable à gauche + fiche à droite (caractéristiques, règles transverses). */
 export default function Entities({ kind }) {
   const d = useDispatch(), [rows, setRows] = useState(null), [sel, setSel] = useState(null), [draft, setDraft] = useState(null), [tab, setTab] = useState('data'), [q, setQ] = useState(''), [dirty, setDirty] = useState(false);
   const url = URL_KIND[kind], [cat, setCat] = useState({});

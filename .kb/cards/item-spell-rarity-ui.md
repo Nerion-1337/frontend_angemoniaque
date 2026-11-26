@@ -2,7 +2,7 @@
 title: Onglets admin Objets & Sorts (phase 4) : rareté + « qui peut s'en équiper / l'apprendre »
 slug: item-spell-rarity-ui
 status: done
-updated: 2026-11-24
+updated: 2026-11-26
 files:
   - src/admin/ItemsTab.jsx
   - src/admin/SpellsTab.jsx
@@ -21,7 +21,7 @@ détenteurs / apprenants, et paramètre « qui peut s'en équiper / l'apprendre 
 
 ## Business rules
 - Raretés proposées : commun, rare, epique, legendaire, divin ; l'affichage d'un objet passe par `rarity_n` (rareté historique normalisée).
-- « Qui peut s'en équiper / l'apprendre » ⊂ {humain, ange, demon, monstre, structure, monture} ; rien de coché = tout le monde.
+- « Qui peut s'en équiper / l'apprendre » ⊂ {humain, ange, demon, monstre, structure} ; rien de coché = tout le monde.
 - Filtre « type d'équipement » : les 7 slots + « sans type ».
 - « Détenu par » compte les inventaires (+ exemplaires divins détenus) ; « Appris par » compte les personnages qui ont le sort.
 - « Éditer » ouvre la ligne (`open(r)`) ; l'éditeur s'affiche au-dessus du tableau ; suppression confirmée.

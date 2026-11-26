@@ -1,5 +1,5 @@
 // Équipement de départ d'une race (races.start_kit) : rang, or, XP, ressources, objets (sac / coffre),
-// sorts et montures reçus par un NOUVEAU personnage de cette race.
+// et sorts reçus par un NOUVEAU personnage de cette race.
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
@@ -10,7 +10,7 @@ import { Empty } from './ui.jsx';
 import { kitDraft, kitBody, kitSummary } from './startKit.js';
 
 export default function StartKit({ race, catalog, onSaved }) {
-  const d = useDispatch(), [k, setK] = useState(() => kitDraft(race.start_kit)), [add, setAdd] = useState({ item: '', qty: 1, place: 'bag', spell: '', mount: '', res: '', rqty: 1 });
+  const d = useDispatch(), [k, setK] = useState(() => kitDraft(race.start_kit)), [add, setAdd] = useState({ item: '', qty: 1, place: 'bag', spell: '', res: '', rqty: 1 });
   const cat = catalog ?? {}, nameOf = (list, id) => (list ?? []).find(x => String(x.id) === String(id))?.name ?? `n°${id}`;
   const save = async () => { try { await api(`/admin/content/races/${race.id}/start-kit`, kitBody(k), 'PUT'); d(Ad.ok('Équipement de départ enregistré')); onSaved(); } catch (e) { d(Ad.msg(e.message)); } };
   const del = (f, i) => setK({ ...k, [f]: k[f].filter((_, j) => j !== i) });
@@ -35,12 +35,6 @@ export default function StartKit({ race, catalog, onSaved }) {
       <button className="sm" disabled={!add.spell || k.spells.includes(Number(add.spell))} onClick={() => setK({ ...k, spells: [...k.spells, Number(add.spell)] })}><Plus size={14} /> Ajouter</button></div>
     {k.spells.length ? <div className="chips">{k.spells.map((id, i) => <span key={id} className="chip on">{nameOf(cat.spells, id)}<button className="x-in" onClick={() => del('spells', i)}>×</button></span>)}</div> : <Empty>Aucun sort.</Empty>}
 
-    <h5>Montures</h5>
-    <div className="row add"><Pick options={cat.mounts} value={add.mount} onPick={v => setAdd({ ...add, mount: v })} labelOf={o => o.name} placeholder="— Monture —" />
-      <button className="sm" disabled={!add.mount} onClick={() => setK({ ...k, mounts: [...k.mounts, { mountId: Number(add.mount), active: !k.mounts.length }] })}><Plus size={14} /> Ajouter</button></div>
-    {k.mounts.length ? <div className="chips">{k.mounts.map((m, i) => <span key={i} className={`chip${m.active ? ' on' : ''}`}>
-      <label className="check"><input type="radio" name={`act-${race.id}`} checked={!!m.active} onChange={() => setK({ ...k, mounts: k.mounts.map((x, j) => ({ ...x, active: j === i })) })} /> {nameOf(cat.mounts, m.mountId)}{m.active ? ' (active)' : ''}</label>
-      <button className="x-in" onClick={() => del('mounts', i)}>×</button></span>)}</div> : <Empty>Aucune monture.</Empty>}
 
     <h5>Ressources</h5>
     <div className="row add"><Pick options={cat.resources} value={add.res} onPick={v => setAdd({ ...add, res: v })} labelOf={o => o.name} placeholder="— Ressource —" />

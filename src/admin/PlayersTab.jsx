@@ -1,6 +1,6 @@
 // Section admin « Joueurs » : liste paginée de tous les personnages par race (pseudo, rang, position, XP, or),
 // et fiche éditable : caractéristiques, XP, or, rang ; objets (équipés / sac / coffre-fort), sorts,
-// montures, bâtiments et objets divins possédés.
+// bâtiments et objets divins possédés.
 import { useEffect, useState } from 'react'; import { WORLDS } from '../lib/worlds.js';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
@@ -46,11 +46,11 @@ export default function PlayersTab() {
   </section>;
 }
 
-const TABS = [['stats', 'Caractéristiques'], ['items', 'Objets'], ['spells', 'Sorts'], ['mounts', 'Montures'], ['buildings', 'Bâtiments'], ['divine', 'Objets divins']];
+const TABS = [['stats', 'Caractéristiques'], ['items', 'Objets'], ['spells', 'Sorts'], ['buildings', 'Bâtiments'], ['divine', 'Objets divins']];
 /** Fiche d'un joueur : onglets d'édition. */
 function PlayerSheet({ id, close, onSaved }) {
   const d = useDispatch(), [p, setP] = useState(null), [tab, setTab] = useState('stats'), [form, setForm] = useState({}), [cat, setCat] = useState(null), [free, setFree] = useState([]);
-  const [ni, setNi] = useState({ itemId: '', qty: 1, place: 'bag' }), [ns, setNs] = useState(''), [nm, setNm] = useState(''), [nd, setNd] = useState(''), [tp, setTp] = useState({ map: '', x: '', y: '' });
+  const [ni, setNi] = useState({ itemId: '', qty: 1, place: 'bag' }), [ns, setNs] = useState(''), [nd, setNd] = useState(''), [tp, setTp] = useState({ map: '', x: '', y: '' });
   const load = () => api(`/admin/players/${id}`).then(v => { setP(v); setForm({ ...v.character }); setTp({ map: v.character.map_id ?? 1, x: v.character.x ?? 0, y: v.character.y ?? 0 }); }).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { load(); }, [id]);   // corps de bloc
   useEffect(() => { api('/admin/catalog').then(setCat).catch(() => {}); }, []);
@@ -110,14 +110,6 @@ function PlayerSheet({ id, close, onSaved }) {
         <button className="x-in" title="Retirer" onClick={delWith(`le sort « ${s.name} »`, `/admin/players/${id}/spells/${s.spell_id}`, 'Sort retiré')}>×</button></span>)}</div> : <Empty>Aucun sort.</Empty>}
     </>}
 
-    {tab === 'mounts' && <>
-      <div className="row add"><Pick options={cat?.mounts ?? []} value={nm} onPick={setNm} labelOf={o => o.name} placeholder="— Monture —" />
-        <button className="sm" onClick={grant('mount', nm, 'Monture ajoutée')}><Plus size={14} /> Ajouter</button></div>
-      {p.mounts.length ? <div className="tablewrap"><table><thead><tr><th>Monture</th><th>Active</th><th>PV</th><th>Énergie</th><th /></tr></thead><tbody>
-        {p.mounts.map((m, n) => <tr key={`${m.mount_id}-${n}`}><td><b>{m.name}</b></td><td>{m.active ? 'oui' : '—'}</td><td>{m.hp_current} / {m.hp_max}</td><td>{m.energy_current} / {m.energy_max}</td>
-          <td><button className="sm danger" title="Retirer" onClick={delWith(`la monture « ${m.name} »`, `/admin/players/${id}/mounts/${m.mount_id}`, 'Monture retirée')}><Trash2 size={13} /></button></td></tr>)}
-      </tbody></table></div> : <Empty>Aucune monture.</Empty>}
-    </>}
 
     {tab === 'buildings' && (p.buildings.length ? <div className="tablewrap"><table><thead><tr><th>Bâtiment</th><th>Type</th><th>Structure</th><th>Position</th><th /></tr></thead><tbody>
       {p.buildings.map(b => <tr key={b.id}><td><b>{b.name}</b> <small>n°{b.id}</small></td><td>{b.kind}</td><td>{b.structure}</td><td>{posLabel(b)}</td>

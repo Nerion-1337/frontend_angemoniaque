@@ -3,13 +3,13 @@
 import { test, expect } from 'vitest';
 import fs from 'node:fs';
 
-test('rarity.js : miroir des constantes back (5 raretés, 6 kinds) + badge vide = tout le monde', () => {
+test('rarity.js : miroir des constantes back (5 raretés, 5 kinds : plus de « monture ») + badge vide = tout le monde', () => {
   const s = fs.readFileSync('src/admin/rarity.js', 'utf8');
   const m = fs.readFileSync('../back/src/routes/admin/common.ts', 'utf8');
   expect(s.includes("'commun', 'rare', 'epique', 'legendaire', 'divin'")).toBe(true);
   expect(m.includes("'commun', 'rare', 'epique', 'legendaire', 'divin'")).toBe(true);
-  expect(s.includes("'humain', 'ange', 'demon', 'monstre', 'structure', 'monture'")).toBe(true);
-  expect(m.includes("'humain', 'ange', 'demon', 'monstre', 'structure', 'monture'")).toBe(true);
+  expect(s.includes("'humain', 'ange', 'demon', 'monstre', 'structure']")).toBe(true);
+  expect(m.includes("'humain', 'ange', 'demon', 'monstre', 'structure']")).toBe(true);
   expect(s.includes('Tout le monde')).toBe(true);
 });
 

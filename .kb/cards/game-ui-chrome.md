@@ -1,5 +1,5 @@
 ---
-title: Interface de jeu : barre d accès, messagerie, paramètres, navigation du haut, panneaux, montures
+title: Interface de jeu : barre d accès, messagerie, paramètres, navigation du haut, panneaux, invocations (montées ou non)
 slug: game-ui-chrome
 status: done
 updated: 2026-11-26
@@ -35,11 +35,11 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Courrier : cartes repliables (non lus marqués), « Répondre » pré-remplit destinataire et « Re : objet » ; « Nouveau courrier » ouvre le formulaire (destinataire, objet, message).
 - Guilde sans guilde : message d'état au lieu de la saisie ; liste vide : message d'état.
 - Paramètres : personnage actif (race en clair, rang, case), personnages du compte (« Jouer » / « En jeu »), création (limite 3 sauf admin), administration, déconnexion.
-- Navigation du haut : disques libellés (Pactes, Montures, Guilde, Carte) ; un second clic referme le panneau ouvert.
-- Panneau Montures : par monture, état (Au repos / Montée / Invoquée à pied), modes de déplacement, caractéristiques équipement compris, capacités ; boutons « Monter dessus » (si le type sert de monture) et « Invoquer (sans monter) », puis « Descendre » ou « Contrôler / Revenir » et « Renvoyer » ; équipement par partie du corps autorisée, verrouillé pendant l'invocation à pied (règles serveur : card back `mount-call`).
+- Navigation du haut : disques libellés (Pactes, Invocations, Guilde, Carte) ; un second clic referme le panneau ouvert.
+- Panneau Invocations (2026-11-26, plus de montures) : chaque invocation (créée par un sort) avec médaillon, état (Invoquée / contrôlée / Montée), déplacement, « peut être montée », caractéristiques ; boutons « Monter dessus » (type montable, case voisine du héros, sinon grisé + rappel), « Contrôler » / « Revenir », « Renvoyer », « Descendre » si montée.
 - Les styles ajoutés ne visent que `.panel`, `.inv:not(.guild)`, `.scroll`, `.dock`, `.portrait`, `.mainico` : la guilde garde son apparence.
 - Fenêtres en onglets (`Tabs` / `useTab`, un seul onglet affiché, dernier onglet retenu par fenêtre en localStorage, onglet disparu → le premier) : Actions (Sorts, Construire, Récolte & bâtiments, Combat ; la case ciblée s'affiche pour Sorts et Construire), Pactes & Fidèles (Pactes, Demandes, Foi, Autel pour un Dieu), Invocations : PAS d'onglets — une seule liste de créatures (possédées : invocables, montables ou non ; puis celles invoquées par un sort).
-- « Montures » devient « Invocations » (navigation et titre). Monture invoquée à pied : « Monter dessus » actif depuis une case voisine (sinon grisé + rappel), aussi dans la carte de case (« Monter sur X » : approche puis montée).
+- Carte de case : sur sa propre invocation montable, action « Monter sur X » (approche puis `/summons/ride`). Actions › Sorts : « Lancer et monter » pour un sort qui invoque un monstre montable (`summon_mountable`) ; délai de relance affiché, bouton grisé et « Recharge : encore … » tant que `cooldown_left_s` > 0 ; plus de souffle de monture ni de navire.
 - Changement de personnage : `useRefreshMe` lit `charId` au moment de l'appel et ignore une réponse arrivée après un changement ; l'intervalle de rafraîchissement est relancé au changement (sinon l'ancien personnage revenait).
 - Hôtel de ville (`Capital`) : en-tête (nom, or), onglets Boutique, Sorts, Marché (offres + vente : objet du sac, prix), Coffre (jauge, extension, colonnes Coffre ⇄ Sac) ; cartes d'objets en grille ; bouton grisé si or insuffisant / épuisé / coffre plein.
 - Invocations : statut par créature (Au repos / Invoquée / contrôlée / Montée) ; au repos : « Invoquer », « Invoquer et monter » si montable ; invoquée : « Monter dessus » (case voisine), « Contrôler », « Renvoyer » ; montée : « Descendre », « Descendre et la laisser invoquée ».

@@ -34,8 +34,8 @@ export default function TileCard() {
     const e = sc?.entity, t = { x: selected.x, y: selected.y }, dist = Math.max(Math.abs(t.x - P.x), Math.abs(t.y - P.y)), range = me.range_eff, attackable = e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && !(e.kind !== 'monster' && (inSafeZone(P.map_id, P.x, P.y) || inSafeZone(P.map_id, t.x, t.y))), res = sc?.terrain;
     const acts = []; if (!e && (t.x !== P.x || t.y !== P.y)) acts.push(['go', 'S\'y rendre', pe(t), 0]);
     if (e && dist > 1 && e.char_id !== me.id) acts.push(['approach', `S'approcher à côté de ${e.name}`, pe(t, { stopAt: 1 }), 0]);
-    if (attackable) { acts.push(['attack', `Attaquer ${e.name}`, pe(t, { stopAt: range }), 5]); if (mount?.special_attack_name) acts.push(['breath', `${mount.special_attack_name} (${mount.special_attack_damage} dég.)`, pe(t, { stopAt: range }), 0, mount.special_attack_energy]); }
-    const ownMount = e?.kind === 'summon' && hero && !mount && me.summons.find(x => x.id === e.summon_id && x.char_mount_id);   // monture invoquée à pied : on peut monter dessus depuis la case voisine
+    if (attackable) { acts.push(['attack', `Attaquer ${e.name}`, pe(t, { stopAt: range }), 5]); }
+    const ownMount = e?.kind === 'summon' && hero && !mount && me.summons.find(x => x.id === e.summon_id && x.mountable && !x.ridden);   // son invocation montable : monter dessus depuis la case voisine
     if (ownMount) acts.push(['ride', `Monter sur ${e.name}`, dist > 1 ? pe(t, { stopAt: 1 }) : 0, 0]);
     if (e?.kind === 'building') acts.push(['interact', e.building_kind === 'door' ? `Franchir ${e.name}` : `Interagir avec ${e.name} (ou l'activer)`, 0, 0]);
     const dep = sc?.deposit, miss = sc?.harvestMissing, canTry = !e && (res?.resource || dep) && !(res?.kind === 'deep' && !fly && !aq), noTool = canTry && miss?.length > 0;   // pas équipé : pas d'action de récolte
@@ -45,10 +45,10 @@ export default function TileCard() {
     const run = async act => { try {
       if (act === 'info') { setInfo(await api(`/map/${mapId}/cell?x=${t.x}&y=${t.y}&details=1`)); return; }
       let msg = null;
-      if (act === 'ride') { if (dist > 1) await api('/actions/approach', { characterId: me.id, ...t }); await api('/mounts/summon', { characterId: me.id, cmId: ownMount.char_mount_id }); }
+      if (act === 'ride') { if (dist > 1) await api('/actions/approach', { characterId: me.id, ...t }); await api('/summons/ride', { characterId: me.id, summonId: ownMount.id }); }
       if (act === 'go') await api('/actions/move', { characterId: me.id, ...t }); if (act === 'approach') await api('/actions/approach', { characterId: me.id, ...t });
       if (act === 'build') await api('/buildings/place', { characterId: me.id, kind: buildKind.current ?? kinds[0], ...t }); if (act === 'harvest') await api('/actions/gather', { characterId: me.id, ...t });
-      if (act === 'attack' || act === 'breath') { const r = await api('/combat/attack', { ...ids, useMountBreath: act === 'breath' }); msg = r.missed ? `Raté ! (${r.hitChance}% de chances de toucher)` : `Touché : -${r.dmg} PV${r.killed ? ' — cible vaincue !' : ''}`; }
+      if (act === 'attack') { const r = await api('/combat/attack', ids); msg = r.missed ? `Raté ! (${r.hitChance}% de chances de toucher)` : `Touché : -${r.dmg} PV${r.killed ? ' — cible vaincue !' : ''}`; }
       if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital'));
         else if (r.activation) { const x = await api(`/buildings/${r.id}/activate`, { characterId: me.id }); msg = `${r.name} activé${x.results?.length ? ` : ${x.results.map(y => `${y.spell} → ${y.effect}`).join(' ; ')}` : ''}`; }   // conditions d'activation (lot E)
         else msg = r.name; }

@@ -30,7 +30,7 @@ Champ « Coût en énergie divine (0 = aucune) » à côté de chaque coût en �
 
 ## Business rules
 - Corps envoyés : `divineEnergyCost` entier ≥ 0 (recettes, cases, voies de rang : 0 si vide) ; sorts : champ vide = non envoyé (création → 0 côté serveur).
-- En jeu, ✦N (classe `.divcost`, couleur `--div`) n'apparaît que si le coût est > 0 : bouton « Lancer », capacités de monture, boutique de sorts, recettes, conditions de rang, carte de case (survol et case choisie).
+- En jeu, ✦N (classe `.divcost`, couleur `--div`) n'apparaît que si le coût est > 0 : bouton « Lancer », capacités de l'invocation montée, boutique de sorts, recettes, conditions de rang, carte de case (survol et case choisie).
 - Libellé « (0 = aucune) » DANS le titre de la cellule (une note sous le champ décale la grille de l'admin).
 
 ## Gotchas
