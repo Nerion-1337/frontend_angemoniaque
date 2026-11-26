@@ -24,8 +24,8 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   const rt = new THREE.WebGLRenderTarget(W(), H(), { samples: 4, type: THREE.HalfFloatType }), comp = new EffectComposer(r, rt), bloom = new UnrealBloomPass(new THREE.Vector2(W(), H()), 0.3, 0.6, 0.92);
   comp.addPass(new RenderPass(scene, cam)); comp.addPass(bloom); comp.addPass(new OutputPass());
   // Étalonnage final (après la sortie sRGB) : vignette douce ; carte adoucie (demande joueur : éléments trop clairs) —
-  // réglage choisi par le joueur : contraste −5 % autour d'un gris moyen, luminosité 90 %, saturation neutre, halo 0,15.
-  const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, vig: { value: 0.32 }, sat: { value: 1.0 }, con: { value: 0.95 }, bri: { value: 0.9 } },
+  // réglage choisi par le joueur : contraste −5 % autour d’un gris moyen, luminosité 100 %, saturation neutre, halo 0,15.
+  const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, vig: { value: 0.32 }, sat: { value: 1.0 }, con: { value: 0.95 }, bri: { value: 1.0 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: `uniform sampler2D tDiffuse; uniform float vig, sat, con, bri; varying vec2 vUv;
       void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = mix(vec3(l), c.rgb, sat); c.rgb = ((c.rgb - 0.45) * con + 0.45) * bri;
