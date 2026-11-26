@@ -2,7 +2,7 @@
 title: Objets : caractéristiques offertes (toutes celles du joueur), armure magique dans les fiches
 slug: item-stats-ui
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/components/TileCard.jsx
   - src/admin/SpellsTab.jsx
@@ -36,6 +36,7 @@ bâtiment, sort et joueur connaissent l'armure magique.
 - Objets : champ « XP par utilisation » (`xp_use` ; arme : chaque coup porté, parchemin : à l'utilisation). Sorts : « XP par lancer » (`xpUse`).
 - Arme : « Portée (cases) » ; si portée > 1, bloc « Puissance selon la distance » : % à la case 1, case de 100 %, % à la dernière case, phrase de résumé (`itemBody` : case X ≤ portée sinon null, % bornés 0..100, vide = 100, envoyés seulement avec une case X) ; l'inventaire affiche « Portée N (a % → 100 % à X → b % à N) ». Carte de case : ligne portée (distance, hauteur, à portée ou non, puissance, hors d'atteinte).
 
+- Parchemin (slot scroll) : « Ouvre la carte des ressources du monde » (liste des mondes) → `data = { kind: 'resource_map', map_id }` ; vider le choix retire ce data ; l'agrandissement de sac reste prioritaire.
 ## Gotchas
 - Les champs Armure / Force + / Agilité + / Armure magique isolés ont été remplacés par le groupe : ne pas les remettre (doublons).
 

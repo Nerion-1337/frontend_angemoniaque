@@ -2,7 +2,7 @@
 title: 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions
 slug: terrain-map-3d
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/lib/terrain.js
   - src/lib/humanMap.js
@@ -37,6 +37,8 @@ tests:
   - test/lib.test.js
   - test/world.test.js
   - test/levels.test.js
+  - test/personLook.test.js
+  - test/mountRider.test.js
 ---
 ## Purpose
 Rendu client du monde : miroir exact du modèle du back (carte 1 dessinée, monde 2 par zones, carte 3 générée), règles d'énergie
@@ -57,6 +59,10 @@ et de montures pour les estimations, scène 3D, carte de case, légende et bouss
 - Personnages : jambes, torse, bras, tête (cheveux, yeux), tenue par race (cape humaine ; robe, ailes en plumes et auréole d'ange ; cornes, épaulières, queue et yeux luisants de démon), respiration / bras animés. Créatures : modèle généré (museau, yeux luisants, cornes ou oreilles, pattes, queue ; teinte et proportions tirées du nom ; ailes qui battent si volante) ; une invocation non « golem » utilise ce modèle.
 - Royaume des Morts : miroir `lib/resources3.js` (3 ressources uniques, rendues comme plante / arbre / minerai) ; légende dédiée.
 
+- Personnage selon la race ET le rang (`person(race, me, rank)`, rang 1-5) : rang 2 épaulières et ceinture de bronze (démon : épaulières à pointe), 3 plastron d'argent et diadème, 4 or et aura au sol, 5 couronne, orbes en orbite, lumière, taille ×1,08 ; ailes et cornes grandissent avec le rang ; ange séraphin (4 ailes) au rang 5 ; ailes de démon dès le rang 3. La clé d'entité inclut le rang (modèle reconstruit au passage de rang).
+- Néphilim = hybride : aile de plumes à gauche, aile membraneuse à droite, une corne, demi-halo brisé, yeux vairons (or / rouge), tenue blanche à écharpe pourpre ; étiquette mauve.
+- Hôtel de ville selon `building_race` (`capital(race)`) : humain = hôtel de pierre, toit d'ardoise, beffroi à horloge, bannières ; démon = bastion d'obsidienne à pointes, coulées de lave, braseros ; ange = sanctuaire de marbre à colonnes, dôme d'or, anneaux de lumière ; sans race = humain.
+- Monture volante : seules ses ailes battent (références gardées) ; le cavalier, enfant de la monture, ne pivote jamais avec elles et garde sa propre animation (ticks chaînés).
 ## Gotchas
 - Toute modification du terrain ou de l'énergie se fait des DEUX côtés (back et front) ; les fichiers générés se régénèrent par `tools/gen_*`.
 - `setWorld` est un état global : les tests doivent le fixer avant tout calcul.

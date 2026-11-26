@@ -2,7 +2,7 @@
 import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux';
 import { Store, ShoppingBag, Package, PlusCircle, Sparkles, X, Coins, ArrowRight, ArrowLeft, Check, Tag, Map as MapIco, Landmark, Flame, Feather } from 'lucide-react';
 import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import Modal from './Modal'; import { api } from '../lib/api'; import { useRefreshMe } from './GameCanvas';
-import { Tabs, useTab } from './Tabs';
+import { Tabs, useTab } from './Tabs'; import { worldName } from '../lib/worlds.js';
 /** Thème de chaque capitale (nom, devise, emblème) ; couleurs : classes CSS .cap-<race>. Race inconnue → thème humain. */
 const THEME = {
   human: { name: 'Hôtel de Ville', people: 'Humains', motto: 'Par le fer et la foi, la cité tient bon.', Icon: Landmark },
@@ -18,7 +18,7 @@ export default function Capital() {
   const [price, setPrice] = useState(150), [sell, setSell] = useState('');
   const all = () => { ls(); lm(); lc(); li(); lk(); refresh(); }, act = (f, ok, then) => run(f, () => { all(); then?.(); if (ok) d(A.toast(ok)); });
   const bag = inv?.items.filter(i => !i.equipped_slot && !i.in_chest) ?? [];
-  const th = capTheme(me.race), Emblem = th.Icon;
+  const th = capTheme(me.race), Emblem = th.Icon, world = me.actor?.pos?.map_id ?? 1, hasMap = (me.map_worlds ?? []).includes(world);
   const [tab, setTab] = useTab('capital', ['shop', 'spells', 'market', 'chest']);
   const tabs = [['shop', 'Boutique', Store], ['spells', 'Sorts', Sparkles], ['market', 'Marché', ShoppingBag, mk?.length], ['chest', 'Coffre', Package, ch?.items.length]];
   const full = ch ? (ch.used ?? ch.items.length) >= ch.size : false;
@@ -34,9 +34,9 @@ export default function Capital() {
     <Tabs tabs={tabs} value={tab} onChange={setTab} label="Services de la capitale" />
 
     {tab === 'shop' && <section className="cap-pane">
-      {shop?.mapUpgrade && <article className={`cap-feature${me.map_upgrade ? ' owned' : ''}`}><MapIco size={26} />
-        <div><b>Carte des ressources</b><small>Votre carte du monde met en valeur la ressource de votre choix, case par case. Sans ressource choisie, elle reste la carte habituelle.</small></div>
-        {me.map_upgrade ? <span className="pill ok"><Check size={13} /> Acquise</span>
+      {shop?.mapUpgrade && <article className={`cap-feature${hasMap ? ' owned' : ''}`}><MapIco size={26} />
+        <div><b>Carte des ressources — {worldName(world)}</b><small>Votre carte de ce monde met en valeur la ressource de votre choix, case par case. Elle ne vaut que pour ce monde : les autres s'ouvrent avec leur parchemin de carte des ressources.</small></div>
+        {hasMap ? <span className="pill ok"><Check size={13} /> Acquise</span>
           : <button className="primary" disabled={me.gold < shop.mapUpgrade.price} title={me.gold < shop.mapUpgrade.price ? 'Or insuffisant' : ''} onClick={() => act(() => api('/shop/map-upgrade', { characterId: me.id }), 'Carte améliorée : ouvrez la carte du monde')}><Coins size={14} /> {shop.mapUpgrade.price}</button>}</article>}
       <p className="cap-hint">Réserve de la faction : outils de récolte, armes, armures et parchemins de base.</p>
       {shop && !shop.items.length && <Empty>La réserve est vide.</Empty>}

@@ -1,7 +1,7 @@
 // Section admin « Joueurs » : liste paginée de tous les personnages par race (pseudo, rang, position, XP, or),
 // et fiche éditable : caractéristiques, XP, or, rang ; objets (équipés / sac / coffre-fort), sorts,
 // montures, bâtiments et objets divins possédés.
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react'; import { WORLDS } from '../lib/worlds.js';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
 import { api } from '../lib/api.js';
@@ -77,7 +77,8 @@ function PlayerSheet({ id, close, onSaved }) {
       {STAT_GROUPS.map(([g, fields]) => <div key={g}><h4>{g}</h4><div className="form">{fields.map(([k, l]) =>
         <div key={k} className="fcell"><small>{l}</small><input type="number" min="0" value={form[k] ?? ''} onChange={e => setForm({ ...form, [k]: e.target.value })} /></div>)}</div></div>)}
       <h4>Améliorations</h4>
-      <label className="check"><input type="checkbox" checked={!!ch.map_upgrade} onChange={run(() => api(`/admin/players/${id}`, { map_upgrade: !ch.map_upgrade }, 'PUT'), ch.map_upgrade ? 'Amélioration de carte retirée' : 'Amélioration de carte accordée')} /> Carte des ressources (amélioration vendue à l'Hôtel de ville)</label>
+      <div className="row wrap">{Object.entries(WORLDS).map(([w, n]) => { const has = (ch.map_worlds ?? []).includes(+w), next = has ? ch.map_worlds.filter(x => x !== +w) : [...(ch.map_worlds ?? []), +w];
+        return <label key={w} className="check"><input type="checkbox" checked={has} onChange={run(() => api(`/admin/players/${id}`, { map_worlds: next }, 'PUT'), has ? `Carte des ressources retirée (${n})` : `Carte des ressources accordée (${n})`)} /> Carte des ressources — {n}</label>; })}</div>
       <h4>Position</h4>
       <div className="row"><select value={tp.map} onChange={e => setTp({ ...tp, map: e.target.value })}>{(cat?.maps ?? [{ id: 1 }, { id: 2 }, { id: 3 }]).map(m => <option key={m.id} value={m.id}>Monde {m.id}{m.name_file ? ` (${m.name_file})` : ''}</option>)}</select>
         <input type="number" className="nb" value={tp.x} onChange={e => setTp({ ...tp, x: e.target.value })} /><input type="number" className="nb" value={tp.y} onChange={e => setTp({ ...tp, y: e.target.value })} />

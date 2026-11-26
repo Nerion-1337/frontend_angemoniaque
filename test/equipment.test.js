@@ -20,3 +20,9 @@ test('portée d\'arme : défaut 1 ; grande portée : départ → 100 % à la cas
   const far = itemBody({ name: 'Arc', slot: 'weapon', reach: 3, full_power_at: 4, power_start: 10 }); expect(far.full_power_at).toBeNull(); expect(far.power_start).toBeUndefined();
   const helm = itemBody({ name: 'Casque', slot: 'head', reach: 4 }); expect(helm.reach).toBeUndefined(); expect(helm.full_power_at).toBeUndefined();
 });
+test('parchemin de carte des ressources : data = { kind: resource_map, map_id } ; retiré si on vide le monde (migration 38)', () => {
+  expect(itemBody({ name: 'Carte', slot: 'scroll', map_world: '3' }).data).toEqual({ kind: 'resource_map', map_id: 3 });
+  expect(itemBody({ name: 'Carte', slot: 'scroll', map_world: '', was_map: true }).data).toEqual({});
+  expect(itemBody({ name: 'Sac', slot: 'scroll', bag_add: 5, bag_max: 30, map_world: 2 }).data.kind).toBe('bag');
+  expect(itemBody({ name: 'Épée', slot: 'weapon', map_world: 2 }).data).toBeUndefined();
+});

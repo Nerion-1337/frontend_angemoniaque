@@ -144,7 +144,7 @@ export const mapResources = (mapId, w, h) => { const n = {}; for (let i = 0; i <
 const RES_INFO = Object.fromEntries([...RESOURCES, ...RESOURCES2, ...RESOURCES3].map(r => [r.id, r]));
 export function WorldPanel() {
   const { me } = useSelector(s => s.game), d = useDispatch(), P = me.actor.pos, [lm] = useData(`/map/${P.map_id}/landmarks`), cv = useRef(), base = useRef(), hl = useRef(), [view, setView] = useState({ z: 1, x: 0, y: 0 }), drag = useRef(null), S = 720;
-  const [focus, setFocus] = useState(null), up = !!me.map_upgrade;
+  const [focus, setFocus] = useState(null), up = (me.map_worlds ?? []).includes(P.map_id);   // carte des ressources de CE monde (migration 38)
   const found = useMemo(() => (up ? Object.entries(mapResources(P.map_id, P.width, P.height)).sort((a, b) => b[1] - a[1]) : []), [up, P.map_id]);
   useEffect(() => { setFocus(null); }, [P.map_id]);
   useEffect(() => {   // calque de mise en valeur : tout est assombri sauf les cases de la ressource choisie
@@ -173,5 +173,5 @@ export function WorldPanel() {
     <div className="legend">{(P.map_id === 2 ? [] : [['#4a7a46', 'Plaines'], ['#c9a86a', 'Terres arides'], ['#e6eef7', 'Glaces'], ['#3a3548', 'Pics d’éther'], ['#d9481f', 'Volcan'], ['#77777f', 'Massifs'], ['#2d5a30', 'Forêts'], ['#4aa0b0', 'Eau peu profonde'], ['#1b3f7a', 'Eau profonde']]).map(([c, t]) => <Dot key={t} c={c} t={t} />)}<Dot c="#ffd166" t="Capitale" /><Dot c="#b070ff" t="Portes" /><Dot c="#ff4d4d" t="Vous" />{P.map_id === 1 && <Dot c="#ffffff" t="Zone sacrée (JcJ interdit)" />}</div><MapLegend mapId={P.map_id} />
     {up && <div className="wmres"><h4>Carte des ressources <small>{focus ? 'cliquez à nouveau pour revenir à la carte habituelle' : 'choisissez une ressource à mettre en valeur'}</small></h4>
       <div className="chips">{found.map(([id, n]) => <button key={id} className={`chip${focus === id ? ' on' : ''}`} onClick={() => setFocus(focus === id ? null : id)}><i className="resdot" style={{ background: RES_INFO[id]?.color ?? '#ccc' }} />{RES_INFO[id]?.name ?? id}<small>{n}</small></button>)}</div></div>}
-    <small>Molette : zoom · glisser : déplacer · cadre bleu : votre vision ({me.actor.see} cases) autour de ({P.x}, {P.y}).{!up && ' La carte des ressources s\'achète à l\'Hôtel de ville.'}</small></Modal>;
+    <small>Molette : zoom · glisser : déplacer · cadre bleu : votre vision ({me.actor.see} cases) autour de ({P.x}, {P.y}).{!up && ' La carte des ressources de ce monde s\'achète à l\'Hôtel de ville de ce monde ou s\'ouvre avec son parchemin.'}</small></Modal>;
 }

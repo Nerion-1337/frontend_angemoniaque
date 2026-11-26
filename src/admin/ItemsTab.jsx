@@ -2,7 +2,7 @@
 // décompte « détenu par N », paramètre « qui peut s'en équiper » (usable_by).
 // Rareté « Divin » : MÊME tableau et MÊME formulaire que les autres objets, plus la famille divine
 // (relique / arcane / artefact ou famille créée ici, avec son plafond) et les exemplaires uniques (Divine.jsx).
-import { ElementSpells } from './SpellFx.jsx';
+import { ElementSpells } from './SpellFx.jsx'; import { WORLDS } from '../lib/worlds.js';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Ad } from '../store/admin.js';
@@ -13,7 +13,7 @@ import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from 
 import { itemBody, familyLabel, ITEM_STATS, statsLine } from './divine.js';
 import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, xp_use: '', reach: '', full_power_at: '', power_start: '', power_end: '' };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, map_world: '', was_map: false, xp_use: '', reach: '', full_power_at: '', power_start: '', power_end: '' };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -44,6 +44,7 @@ export default function ItemsTab() {
     v.usable_by = typeof row?.usable_by === 'string' ? JSON.parse(row.usable_by || '[]') : (row?.usable_by ?? []);
     v.bonuses = { ...(row?.bonuses ?? {}) };
     const bagD = row?.data?.kind === 'bag' ? row.data : null; v.was_bag = !!bagD; v.bag_add = bagD?.add ?? ''; v.bag_max = bagD?.max ?? '';
+    const mapD = row?.data?.kind === 'resource_map' ? row.data : null; v.was_map = !!mapD; v.map_world = mapD?.map_id ?? '';
     v.shop = !!row?.shop; v.shop_races = typeof row?.shop_races === 'string' ? JSON.parse(row.shop_races || '[]') : (row?.shop_races ?? []);
     setF(v);
   };
@@ -93,7 +94,9 @@ export default function ItemsTab() {
         <div className="cell"><small>Prix</small><input type="number" value={f.price} onChange={e => num('price', e.target.value)} /></div>
         <div className="cell"><small>Dégâts d'arme</small><input type="number" value={f.weapon_damage} onChange={e => num('weapon_damage', e.target.value)} /></div>
         {f.slot === 'scroll' && <><div className="cell"><small>Agrandit le sac de (emplacements)</small><input type="number" min="0" value={f.bag_add} placeholder="0 = non" onChange={e => setF(x => ({ ...x, bag_add: e.target.value }))} /></div>
-          <div className="cell"><small>… jusqu'à (capacité max du sac)</small><input type="number" min="1" value={f.bag_max} placeholder="ex. 30" onChange={e => setF(x => ({ ...x, bag_max: e.target.value }))} /></div></>}
+          <div className="cell"><small>… jusqu'à (capacité max du sac)</small><input type="number" min="1" value={f.bag_max} placeholder="ex. 30" onChange={e => setF(x => ({ ...x, bag_max: e.target.value }))} /></div>
+          <div className="cell"><small>Ouvre la carte des ressources du monde</small><select value={f.map_world} onChange={e => setF(x => ({ ...x, map_world: e.target.value }))}>
+            <option value="">— non</option>{Object.entries(WORLDS).map(([id, n]) => <option key={id} value={id}>{n}</option>)}</select></div></>}
         {f.slot === 'weapon' && <><div className="cell"><small>Portée (cases ; 1 = corps à corps)</small><input type="number" min="1" max="20" value={f.reach} placeholder="1" onChange={e => num('reach', e.target.value)} /></div>
           {Number(f.reach) > 1 && <div className="cell span2 powercurve"><small>Puissance selon la distance (grande portée)</small>
             <div className="pc-row"><label><small>Case 1</small><input type="number" min="0" max="100" value={f.power_start ?? ''} placeholder="100" onChange={e => num('power_start', e.target.value)} /> %</label>

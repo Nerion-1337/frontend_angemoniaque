@@ -146,7 +146,7 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   const ents = new Map(), root = new THREE.Group(); scene.add(root);
   function syncEntities(me, list) {
     const keep = new Set();
-    for (const e of list) { if (Math.max(Math.abs(e.x - me.pos.x), Math.abs(e.y - me.pos.y)) > see) continue; const key = `${e.kind}:${e.char_id ?? e.monster_id ?? e.summon_id ?? e.building_id ?? e.x + ',' + e.y}:${e.mount_name ?? ''}`; keep.add(key);
+    for (const e of list) { if (Math.max(Math.abs(e.x - me.pos.x), Math.abs(e.y - me.pos.y)) > see) continue; const key = `${e.kind}:${e.char_id ?? e.monster_id ?? e.summon_id ?? e.building_id ?? e.x + ',' + e.y}:${e.mount_name ?? ''}:${e.rank ?? ''}`; keep.add(key);
       const y = e.flying ? FLY_Y : SY(e.x, e.y); let o = ents.get(key); if (!o) { o = { g: makeEntity(e, e.char_id === me.id), t: new THREE.Vector3(e.x, y, e.y) }; o.g.position.copy(o.t); root.add(o.g); ents.set(key, o); }
       o.t.set(e.x, y, e.y); o.g.userData.cell = { x: e.x, y: e.y };
       if (e.flying) {   // volant au niveau +6 : fil et anneau vers la case survolée

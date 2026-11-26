@@ -2,7 +2,7 @@
 title: Admin « Joueurs » (liste paginée, fiche) et objets divins dans l'onglet Objets ; préfixe CSS admin
 slug: admin-players-divine-ui
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/admin/PlayersTab.jsx
   - src/admin/players.js
@@ -33,6 +33,7 @@ objets, avec familles divines et exemplaires uniques.
 - Le corps d'un objet (`itemBody`) ne contient que les champs du formulaire, jamais de `null` (le back refuse null sur les nombres).
 - Fiche joueur : case « Carte des ressources » (amélioration de l'Hôtel de ville) accordée / retirée directement.
 
+- Fiche joueur, Améliorations : une case « Carte des ressources — <monde> » par monde (PUT `map_worlds`).
 ## Gotchas
 - `Divine.jsx` (composants) et `divine.js` (fonctions) ne diffèrent que par l'extension : importer avec l'extension.
 - Les classes CSS admin ne doivent pas reprendre un nom global du jeu (voir `admin-dashboard`).

@@ -16,8 +16,11 @@ export const itemBody = f => {
   b.two_handed = f.slot === 'weapon' && !!f.two_handed;   // deux mains : armes seulement (un arc l'est toujours)
   // Parchemin d'agrandissement du sac : data = { kind: 'bag', add, max } (les autres parchemins gardent leur data).
   const add = Math.trunc(Number(f.bag_add) || 0), max = Math.trunc(Number(f.bag_max) || 0);
+  // Parchemin de carte des ressources d'un monde : data = { kind: 'resource_map', map_id } (migration 38).
+  const world = Math.trunc(Number(f.map_world) || 0);
   if (f.slot === 'scroll' && add > 0) b.data = { kind: 'bag', add, max: Math.max(max, add) };
-  else if (f.was_bag) b.data = {};
+  else if (f.slot === 'scroll' && world > 0) b.data = { kind: 'resource_map', map_id: world };
+  else if (f.was_bag || f.was_map) b.data = {};
   for (const k of NUM) if (f[k] !== '' && f[k] != null && !Number.isNaN(Number(f[k]))) b[k] = Number(f[k]);
   b.bonuses = bonusesBody(f.bonuses);
   // Portée (migrations 36-37) : armes seulement. Grande portée : puissance à la case 1 → 100 % à la case X (≤ portée) → puissance à la

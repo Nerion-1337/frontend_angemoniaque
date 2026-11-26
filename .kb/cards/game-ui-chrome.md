@@ -2,7 +2,7 @@
 title: Interface de jeu : barre d accès, messagerie, paramètres, navigation du haut, panneaux, montures
 slug: game-ui-chrome
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/components/ChatDock.jsx
   - src/components/Account.jsx
@@ -14,6 +14,7 @@ files:
   - src/components/Capital.jsx
   - src/components/GameCanvas.jsx
   - src/components/TileCard.jsx
+  - src/lib/worlds.js
 symbols:
   - src/lib/chat.js:ago
   - src/lib/chat.js:groupChat
@@ -41,7 +42,7 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Hôtel de ville (`Capital`) : en-tête (nom, or), onglets Boutique, Sorts, Marché (offres + vente : objet du sac, prix), Coffre (jauge, extension, colonnes Coffre ⇄ Sac) ; cartes d'objets en grille ; bouton grisé si or insuffisant / épuisé / coffre plein.
 - Invocations : statut par créature (Au repos / Invoquée / contrôlée / Montée) ; au repos : « Invoquer », « Invoquer et monter » si montable ; invoquée : « Monter dessus » (case voisine), « Contrôler », « Renvoyer » ; montée : « Descendre », « Descendre et la laisser invoquée ».
 - Pactes, Actions, Invocations, Compte : fenêtres CENTRÉES (`Panel` = `Modal`), fermées par Échap / clic extérieur / ×.
-- Hôtel de ville, onglet Boutique : offre « Carte des ressources » (prix serveur, « Acquise » si possédée). Carte du monde : si `map_upgrade`, liste des ressources présentes (nombre de cases) ; une ressource choisie est mise en valeur (le reste assombri), aucune = carte habituelle (terrain naturel ; les secteurs admin ne sont pas montrés).
+- Hôtel de ville, onglet Boutique : offre « Carte des ressources — <monde de cette capitale> » (prix serveur, « Acquise » si ce monde est dans `me.map_worlds`). Carte du monde : la mise en valeur des ressources n'apparaît que si le monde affiché est dans `me.map_worlds` ; sinon une note renvoie à l'Hôtel de ville de ce monde ou à son parchemin.
 - Carte de case sélectionnée : en-tête (nom, case, niveau, coût, ressource), infos, entité, jauge de toucher, une action = un bouton avec son coût (plus de liste + « Valider ») ; construction : choix du bâtiment en boutons ; reste dans l'écran.
 - Carte de case : si une condition de récolte manque à CE personnage (`harvestMissing`), pas d'action « Récolter » mais « Vous n'êtes pas équipé pour récolter X » ; survol / focus : ce qui manque, par option.
 - Hôtel de ville, Coffre : emplacements utilisés (objets + piles) ; ressources regroupées par type dans les colonnes Coffre et Sac, déplacées en un clic.
@@ -49,6 +50,7 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Hôtel de ville thématisé selon la race du personnage (`capTheme` : nom, devise, emblème Landmark / Flame / Feather ; classes `.cap-human|demon|angel`, couleur `--capc`) ; race inconnue → thème humain.
 - Compte & paramètres : la race du nouveau personnage vient de `GET /characters/races` (admin : toutes les races actives au choix ; joueur : sa race verrouillée) ; plus de race imposée par le premier personnage.
 
+- Sac : un parchemin de carte des ressources sélectionné propose « Utiliser » (désactivé si ce monde est déjà ouvert) ; ligne d'objet « Carte des ressources : <monde> ». Noms des mondes : `lib/worlds.js`.
 ## Gotchas
 - Classe globale `.inl` déjà prise par le jeu (ligne d'insertion) : ne pas réutiliser de classes génériques sans préfixe.
 - Un courrier envoyé à soi-même revient deux fois du serveur (deux participants) : la liste dédoublonne par id.
