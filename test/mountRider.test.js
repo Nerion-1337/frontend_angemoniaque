@@ -1,10 +1,12 @@
 import { test, expect } from 'vitest';
 import * as THREE from 'three';
-import { mountModel } from '../src/three/entities.js';
-// Monture volante : seules les ailes battent ; le cavalier (ajouté ensuite comme enfant) ne pivote pas avec elles.
-test('monture volante : le battement d’ailes ne fait pas pivoter le cavalier', () => {
-  const m = mountModel(true), rider = new THREE.Group(); m.add(rider);
-  for (const t of [0.1, 0.4, 1.3]) m.userData.tick(t);
-  expect(rider.rotation.z).toBe(0); expect(rider.rotation.x).toBe(0); expect(rider.rotation.y).toBe(0);
-  expect(m.userData.wings).toHaveLength(2); expect(m.userData.wings[0].rotation.z).not.toBe(0.25);
+import { creature, mounted } from '../src/three/entities.js';
+// Monture volante (design du catalogue) : seules ses ailes battent ; le cavalier, posé sur la selle, ne pivote pas avec elles.
+test('cavalier sur monture volante : ne pivote pas avec les battements d’ailes, posé sur la selle', () => {
+  const m = creature({ mount: true, model: 'griffon', name: 'Griffon' }), rider = new THREE.Group(), g = mounted(m, rider);
+  const before = rider.position.clone();
+  for (const t of [0.1, 0.4, 1.3]) g.userData.tick(t);
+  expect(rider.rotation.x).toBe(0); expect(rider.rotation.y).toBe(0); expect(rider.rotation.z).toBe(0);
+  expect(rider.position.equals(before)).toBe(true); expect(rider.parent).toBe(g); expect(rider.position.y).toBeCloseTo(m.userData.saddle.y - 0.36, 5); expect(m.userData.saddle.y).toBeCloseTo(0.62, 2);
+  expect(m.userData.design).toBe('griffon');
 });

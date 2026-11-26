@@ -15,6 +15,7 @@ files:
   - src/components/GameCanvas.jsx
   - src/components/TileCard.jsx
   - src/lib/worlds.js
+  - src/components/CreatureIcon.jsx
 symbols:
   - src/lib/chat.js:ago
   - src/lib/chat.js:groupChat
@@ -51,6 +52,7 @@ compte, navigation du haut libellée, en-tête des panneaux et boutons harmonis�
 - Compte & paramètres : la race du nouveau personnage vient de `GET /characters/races` (admin : toutes les races actives au choix ; joueur : sa race verrouillée) ; plus de race imposée par le premier personnage.
 
 - Sac : un parchemin de carte des ressources sélectionné propose « Utiliser » (désactivé si ce monde est déjà ouvert) ; ligne d'objet « Carte des ressources : <monde> ». Noms des mondes : `lib/worlds.js`.
+- HUD : barres de l'invocation contrôlée et de la monture sur UNE ligne, médaillon de créature (icône + initiales) à la place du nom ; plus de « bonus de vision » sur la barre de monture. Panneau Invocations : médaillon devant chaque monture / invocation.
 ## Gotchas
 - Classe globale `.inl` déjà prise par le jeu (ligne d'insertion) : ne pas réutiliser de classes génériques sans préfixe.
 - Un courrier envoyé à soi-même revient deux fois du serveur (deux participants) : la liste dédoublonne par id.

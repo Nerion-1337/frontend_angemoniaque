@@ -6,6 +6,7 @@ import { BodyParts, RespawnPanel } from './MonsterParts.jsx'; import { ElementSp
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 import { RARITIES, RARITY_LABEL } from './rarity.js';
 import { SLOT_LABEL, MONSTER_GROUPS, LOCO, toggleLoco, locoLabel, respawnSummary, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
+import Appearance from './Appearance.jsx';
 /**
  * Monstres (Étape 2 phase 3b) : liste des types (création) → clic sur un nom → onglets :
  *  1. Caractéristiques (édition des champs du type),
@@ -55,6 +56,7 @@ export default function MonsterDetails() {
     const body = {};
     for (const [k, , t] of FIELDS.monster) {
       if (t === 'check') { body[k] = !!draft[k]; continue; }
+      if (t === 'look') { body[k] = draft[k] || null; continue; }   // design / icône : vide = automatique
       if (draft[k] === undefined || draft[k] === '') continue;
       if (t === 'json') { const v = jsonOr(draft[k], undefined); if (v === undefined) { d(Ad.msg(`JSON invalide : ${k}`)); return; } body[k] = v; }
       else if (t === 'number') body[k] = Number(draft[k]);
@@ -171,7 +173,8 @@ export default function MonsterDetails() {
       {sel !== 'new' && <div className="tabs">{TABS.map(([k, label]) => <button key={k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>)}</div>}
 
       {tab === 'data' && <>
-        {MONSTER_GROUPS.map(([title, keys]) => <div key={title} className="fgroup"><h5>{title}</h5><div className="form">{groupKeys(title, keys).map(k => input(fieldOf(k)))}</div></div>)}
+        {MONSTER_GROUPS.map(([title, keys]) => <div key={title} className="fgroup"><h5>{title}</h5>{title === 'Apparence' ? <Appearance draft={draft} set={set} />
+          : <div className="form">{groupKeys(title, keys).map(k => input(fieldOf(k)))}</div>}</div>)}
         <details className="fgroup"><summary><h5>Avancé : comportement (JSON)</h5></summary>
           <textarea className="mono" rows="4" value={typeof draft?.data === 'string' ? draft.data : jsonText(draft?.data ?? null)} onChange={e => set('data', e.target.value)} /></details>
         <div className="actions sticky">

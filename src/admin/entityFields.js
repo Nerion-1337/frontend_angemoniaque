@@ -8,6 +8,7 @@ export const FIELDS = {
     ['rarity', 'Rareté', 'rarity'], ['locomotion', 'Déplacement', 'loco'],
     ['mountable', 'Peut servir de monture', 'check'], ['speed', 'Vitesse (monture)', 'number'], ['carry', 'Portage (monture)', 'number'],
     ['size', 'Taille (1 à 3 : +1 vue / portée par niveau pour son cavalier)', 'number'],
+    ['model', 'Design 3D', 'look'], ['icon', 'Icône', 'look'],
     ['data', 'Comportement (JSON : {"behavior":"...","loot":[...]})', 'json']
   ],
   item: [

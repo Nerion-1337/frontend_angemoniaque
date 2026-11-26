@@ -2,7 +2,7 @@
 title: Onglet Monstres : liste des types + fiche (caractéristiques groupées, capacités, équipement, réapparition, instances sur les cartes)
 slug: monster-details-ui
 status: done
-updated: 2026-11-25
+updated: 2026-11-26
 files:
   - src/components/Panels.jsx
   - src/admin/MonsterDetails.jsx
@@ -13,6 +13,7 @@ files:
   - src/admin/MiniMap.jsx
   - src/admin/index.jsx
   - src/styles.css
+  - src/admin/Appearance.jsx
 symbols:
   - src/admin/monsterDetails.js:SLOTS
   - src/admin/monsterDetails.js:pickFilter
@@ -21,6 +22,7 @@ symbols:
 tests:
   - test/monsterDetails.test.js
   - test/monsterRespawn.test.js
+  - test/creatures.test.js
 ---
 ## Purpose
 Onglet admin « Monstres » : liste des types, puis fiche à 4 onglets — Caractéristiques, Capacité (sorts actifs/passifs),
@@ -41,6 +43,7 @@ Spécificités (quantités max, parties du corps équipables), Liste (instances 
 - Réapparition et objet divin porté : réglés sur CHAQUE monstre posé (« Sur les cartes » → Sélectionner → `RespawnPanel` sur la ligne de l'instance), plus sur le type ; objet divin porté = famille (une pièce à la fois, plafond et détenus affichés) ; un sauvage n'a pas ce panneau. Le tableau des monstres posés résume la réapparition et la pièce portée.
 - Créatures en jeu (`Panels.jsx:MountGear`) : mêmes emplacements ; seuls les objets du sac du bon type (`GROUP`) sont proposés.
 
+- Groupe « Apparence » (champs `model` / `icon`, type 'look') : composant Appearance (design 3D + icône) ; vide → null (automatique).
 ## Gotchas
 - `SLOTS` = 7 valeurs alignées sur le CHECK `monster_equips.slot` du back : modifier les deux ensemble.
 - Mettre à jour l'état de création avec `setNw({ ...nw, mapId })` (la forme updater mal appelée a corrompu l'état).

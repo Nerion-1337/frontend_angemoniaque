@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, Crosshair, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost } from 'lucide-react'; import CreatureIcon from './CreatureIcon';
 import { GROUP } from '../lib/equipment';
 import { Tabs, useTab } from './Tabs';
 import { fxSummary } from '../admin/spellFx.js';
@@ -68,7 +68,7 @@ export function MountsPanel() {
     {m && !m.length && !spellOnly.length && <p className="empty">Aucune créature.</p>}
     {m?.map(x => { const st = x.stats ?? {}, ctl = ctlOf(x.summon_id), loco = (x.locomotion ?? []).map(l => LOCO_FR[l] ?? l).join(' · ') || [x.flying && 'volante', x.aquatic && 'aquatique'].filter(Boolean).join(' · ') || 'terrestre';
       return <div key={x.cm_id} className={`item mount${x.active ? ' riding' : x.summon_id ? ' called' : ''}`}>
-      <div className="head"><b>{x.name}</b><span className="pill">{x.active ? 'Montée' : x.summon_id ? (ctl ? 'Invoquée · contrôlée' : 'Invoquée') : 'Au repos'}</span></div>
+      <div className="head"><span className="row"><CreatureIcon c={x} size={34} /><b>{x.name}</b></span><span className="pill">{x.active ? 'Montée' : x.summon_id ? (ctl ? 'Invoquée · contrôlée' : 'Invoquée') : 'Au repos'}</span></div>
       <small>{loco} · {x.can_ride ? 'peut être montée' : 'ne se monte pas'}</small>
       <KV items={[['Vie', `${x.hp_current}/${st.hp_max ?? x.hp_max}`], ['Énergie', `${x.energy_current}/${st.energy_max ?? x.energy_max}`], ['Régén.', `+${st.recovery ?? x.recovery}/h`], ['Taille', `${x.size ?? 1} (+${x.flying ? 6 : x.size ?? 1} vue / portée montée)`], ['Force', st.strength ?? x.strength], ['Agilité', st.agility ?? x.agility], ['Armure', `${st.armor ?? x.armor}/${st.magic_armor ?? 0}`]]} />
       {x.capacities.length > 0 && <><h5>Capacités</h5><div className="chips">{x.capacities.map(c => <span key={c.id} className="chip" title={fxSummary(c.effects)}>{c.name} · ⚡{c.energy_cost}</span>)}</div>

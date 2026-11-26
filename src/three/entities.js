@@ -1,4 +1,4 @@
-import * as THREE from 'three'; import { hash } from '../lib/relief';
+import * as THREE from 'three'; import { buildCreature } from './creatures.js'; import { designFor } from '../lib/creatureCatalog.js'; import { hash } from '../lib/relief';
 const M = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.75, metalness: 0, ...o });
 const stone = () => M(0x8a867f, { roughness: 0.95 }), mesh = (g, m, x = 0, y = 0, z = 0) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); o.castShadow = o.receiveShadow = true; return o; };
 function label(text, color = '#fff') { const c = document.createElement('canvas'); c.width = 256; c.height = 64; const g = c.getContext('2d'); g.font = '600 30px "Alegreya Sans", system-ui, sans-serif'; g.textAlign = 'center'; g.lineWidth = 6; g.strokeStyle = 'rgba(8,8,16,.85)'; g.strokeText(text, 128, 40); g.fillStyle = color; g.fillText(text, 128, 40);
@@ -88,34 +88,6 @@ function person(race, me, rankIn) {
   return g;
 }
 export { person, capital };
-const BEAST = { 'Léviathan': [0x1d5878, 0x2bd0ff], Balrog: [0x3a0f08, 0xff5a1f], Minotaure: [0x5b3b24, 0xffc060] };
-const PALETTE = [[0x5b4a3a, 0xffc060], [0x3a4a2e, 0x9cff6a], [0x463a5a, 0xc89bff], [0x2e4a58, 0x6fe0ff], [0x5a2e2e, 0xff6a5a], [0x4a4a52, 0xf0f0ff], [0x6a5a32, 0xfff08a]];
-const nameHash = n => [...(n ?? '')].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
-/** Créature générée : corps, tête à museau, pattes effilées, queue, cornes ou oreilles, yeux luisants ; teinte et proportions tirées du nom ;
- *  volante : ailes membraneuses qui battent (pattes repliées). Les trois grands monstres gardent leurs couleurs. */
-function beast(name, flying) {
-  const hsh = nameHash(name), [col, glow] = BEAST[name] ?? PALETTE[hsh % PALETTE.length], boss = !!BEAST[name];
-  const g = new THREE.Group(), skin = M(col, { roughness: 0.6 }), dark = M(new THREE.Color(col).multiplyScalar(0.6).getHex(), { roughness: 0.7 }), eyeM = M(glow, { emissive: glow, emissiveIntensity: 5 });
-  const long = 1.2 + (hsh % 5) * 0.12, bulk = 0.9 + ((hsh >> 3) % 4) * 0.08;
-  const body = mesh(new THREE.SphereGeometry(0.42, 22, 16), skin, 0, 0.72, 0); body.scale.set(bulk, 0.82, long); g.add(body);
-  const belly = mesh(new THREE.SphereGeometry(0.34, 18, 12), dark, 0, 0.6, 0.02); belly.scale.set(bulk * 0.95, 0.7, long * 0.9); g.add(belly);
-  const head = new THREE.Group(); head.position.set(0, 1.02, 0.42 * long + 0.12); g.add(head);
-  head.add(mesh(new THREE.SphereGeometry(0.22, 18, 14), skin), mesh(new THREE.ConeGeometry(0.13, 0.26, 12).rotateX(Math.PI / 2), dark, 0, -0.04, 0.22));
-  for (const s of [-1, 1]) { head.add(mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeM, s * 0.1, 0.06, 0.16));
-    if (hsh % 2 || boss) { const h = mesh(new THREE.ConeGeometry(0.05, 0.36, 10), M(0xe9e2cf, { roughness: 0.4 }), s * 0.14, 0.2, -0.02); h.rotation.z = -s * 0.6; h.rotation.x = -0.3; head.add(h); }
-    else { const e = mesh(new THREE.ConeGeometry(0.06, 0.16, 6), skin, s * 0.13, 0.17, -0.05); e.rotation.z = -s * 0.35; head.add(e); } }
-  const legs = [];
-  for (const [x, z] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) { const leg = new THREE.Group(); leg.position.set(x * 0.24 * bulk, 0.58, z * 0.3 * long); leg.add(mesh(new THREE.CylinderGeometry(0.1, 0.07, 0.6, 10), skin, 0, -0.3, 0), mesh(new THREE.SphereGeometry(0.08, 10, 8), dark, 0, -0.58, 0.03)); g.add(leg); legs.push(leg); }
-  const tail = mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(0, 0.78, -0.4 * long), new THREE.Vector3(0, 0.7, -0.62 * long), new THREE.Vector3(0, 0.5, -0.8 * long), new THREE.Vector3(0, 0.58, -0.98 * long)]), 18, 0.05, 8), skin); g.add(tail);
-  let wings = [];
-  if (flying) { legs.forEach(l => { l.rotation.x = 0.9; l.position.y = 0.66; });
-    wings = [-1, 1].map(s => { const w = new THREE.Group(); w.position.set(s * 0.3 * bulk, 0.92, 0); const m = mesh(new THREE.SphereGeometry(0.7, 18, 10), M(new THREE.Color(col).lerp(new THREE.Color(glow), 0.25).getHex(), { roughness: 0.6, side: THREE.DoubleSide }), s * 0.62, 0, 0); m.scale.set(1, 0.05, 0.55); w.add(m); g.add(w); return w; }); }
-  g.add(new THREE.PointLight(glow, boss ? 3 : 1.2, boss ? 4 : 2.5).translateY(1.1).translateZ(0.5));
-  const ph = (hsh % 100) / 16;
-  g.userData.tick = t => { const b = Math.sin(t * 1.4 + ph); body.scale.y = 0.82 + b * 0.015; head.rotation.y = Math.sin(t * 0.5 + ph) * 0.18; tail.rotation.y = Math.sin(t * 1.1 + ph) * 0.25;
-    wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * (0.2 + Math.sin(t * 4 + ph) * 0.45); }); };
-  g.scale.setScalar(boss ? 1.7 : 0.95 + ((hsh >> 5) % 4) * 0.1); return g;
-}
 /** Hôtel de ville selon la race de la capitale (data.race) :
  *  humain = hôtel de ville de pierre, toits d'ardoise, beffroi à horloge, bannières ; démon = bastion d'obsidienne à pointes,
  *  coulées de lave, braseros ; ange = sanctuaire de marbre blanc à colonnes, dôme d'or, anneaux de lumière en lévitation. */
@@ -174,26 +146,25 @@ function building(e) {
   else g.add(mesh(new THREE.BoxGeometry(0.98, 1, 0.98), stone(), 0, 0.5, 0));       // mur
   return g;
 }
-function mountModel(flying) {
-  const g = new THREE.Group(), col = flying ? 0xa3201c : 0xe9e6dc, body = mesh(new THREE.SphereGeometry(0.34, 18, 14), M(col, { roughness: 0.5 }), 0, 0.5, 0); body.scale.set(0.9, 0.8, 1.5); g.add(body);
-  const neck = mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.45, 8), M(col), 0, 0.82, 0.42); neck.rotation.x = 0.6; g.add(neck, mesh(new THREE.SphereGeometry(0.13, 14, 12), M(col), 0, 1.05, 0.6));
-  // Seules les ailes battent : on garde leurs références (le cavalier, ajouté ensuite comme enfant, ne doit pas pivoter avec elles).
-  if (flying) { const wings = [-1, 1].map(s => { const w = mesh(new THREE.SphereGeometry(0.5, 16, 10), M(0xc4302a, { roughness: 0.6, emissive: 0x5a0c08, emissiveIntensity: 0.4 }), s * 0.55, 0.78, -0.05); w.scale.set(1, 0.06, 0.55); w.rotation.z = s * 0.25; g.add(w); return w; });
-    g.userData.wings = wings; g.userData.tick = t => wings.forEach((w, i) => { w.rotation.z = (i ? -1 : 1) * (0.25 + Math.sin(t * 5) * 0.28); }); }
-  else for (const [x, z] of [[-.16, .3], [.16, .3], [-.16, -.3], [.16, -.3]]) g.add(mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.45, 6), M(col), x, 0.22, z));
-  return g;
+/** Créature d'un monstre / d'une invocation / d'une monture : design choisi en admin (`model`), sinon trouvé par le nom ou tiré
+ *  dans son milieu (lib/creatureCatalog.designFor), ramené à une emprise d'environ une case (×1,3 pour les grandes créatures). */
+export function creature(e) {
+  const D = designFor({ model: e.model, name: e.name, loco: e.locomotion, flying: e.flying }), inner = buildCreature(D), box = new THREE.Box3().setFromObject(inner), sz = box.getSize(new THREE.Vector3());
+  // Emprise : longueur / hauteur (l'envergure des ailes peut déborder) ; monture : selle à hauteur de cavalier (~0,62).
+  const fit = e.mount ? 0.62 / Math.max(0.2, inner.userData.saddle?.y ?? 0.6) : (Number(e.size) >= 2 ? 1.6 : 1.25) / Math.max(sz.z, sz.y * 0.8, 0.01);
+  const k = Math.min(e.mount ? 2.5 : 1.6, fit), g = new THREE.Group(); inner.scale.multiplyScalar(k); g.add(inner);
+  g.userData = { tick: inner.userData.tick, height: inner.userData.height * k, saddle: (inner.userData.saddle ?? new THREE.Vector3(0, 0.6, 0)).clone().multiplyScalar(k), design: D.key }; return g;
 }
-function golem() {
-  const g = new THREE.Group(), st = M(0x5d6b7a, { roughness: 0.9 }); g.add(mesh(new THREE.BoxGeometry(0.62, 0.7, 0.4), st, 0, 0.7, 0), mesh(new THREE.BoxGeometry(0.36, 0.3, 0.32), st, 0, 1.18, 0));
-  for (const s of [-1, 1]) { g.add(mesh(new THREE.BoxGeometry(0.2, 0.7, 0.22), st, s * 0.45, 0.65, 0), mesh(new THREE.BoxGeometry(0.22, 0.5, 0.26), st, s * 0.17, 0.25, 0), mesh(new THREE.SphereGeometry(0.035, 8, 8), M(0x5fe8ff, { emissive: 0x5fe8ff, emissiveIntensity: 5 }), s * 0.08, 1.2, 0.17)); }
-  g.add(new THREE.PointLight(0x5fe8ff, 1.5, 3).translateY(1.2)); return g;
+/** Cavalier sur sa monture : posé sur la selle du design, hors de l'échelle de la créature ; chacun garde sa propre animation
+ *  (les battements d'ailes de la monture ne font jamais pivoter le cavalier). */
+export function mounted(mount, rider) {
+  const g = new THREE.Group(), mt = mount.userData.tick, rt = rider.userData.tick; g.add(mount); rider.position.copy(mount.userData.saddle).add(new THREE.Vector3(0, -0.36, 0)); g.add(rider);
+  g.userData = { tick: t => { mt?.(t); rt?.(t); }, height: Math.max(mount.userData.height, mount.userData.saddle.y + 1.2), rider }; return g;
 }
 const RACE_COL = { human: '#e8c89a', demon: '#ff8a70', angel: '#cfeaff', nephilim: '#e2b8ff' };
-export { mountModel };
 export function makeEntity(e, me) {
-  let g = e.kind === 'monster' ? beast(e.name, e.flying) : e.kind === 'building' ? building(e) : e.kind === 'summon' ? (/golem/i.test(e.name ?? '') ? golem() : beast(e.name, e.flying)) : person(e.race, me, e.rank);
-  if (e.kind === 'character' && e.mount_name) { const m = mountModel(e.mount_flying), rider = g, mt = m.userData.tick, rt = rider.userData.tick; rider.position.y = 0.42; m.add(rider);
-    m.userData.tick = t => { mt?.(t); rt?.(t); }; g = m; }   // monture + cavalier animés chacun de leur côté
-  const h = e.mount_name ? 2.2 : e.kind === 'summon' ? 1.9 : e.kind === 'monster' ? 3.3 : e.kind === 'building' ? (e.building_kind === 'capital' ? 3.9 : 2.9) : 1.75;
+  let g = e.kind === 'monster' || e.kind === 'summon' ? creature(e) : e.kind === 'building' ? building(e) : person(e.race, me, e.rank);
+  if (e.kind === 'character' && e.mount_name) g = mounted(creature({ mount: true, model: e.mount_model, name: e.mount_name, flying: e.mount_flying, locomotion: e.mount_loco, size: e.mount_size }), g);
+  const h = g.userData.height ? g.userData.height + 0.4 : e.mount_name ? 2.2 : e.kind === 'summon' ? 1.9 : e.kind === 'monster' ? 3.3 : e.kind === 'building' ? (e.building_kind === 'capital' ? 3.9 : 2.9) : 1.75;
   const wrap = new THREE.Group(); wrap.add(g); wrap.userData.tick = g.userData.tick; const l = label(e.name ?? '', e.kind === 'character' ? RACE_COL[e.race] ?? '#fff' : e.kind === 'monster' ? '#ff9a8a' : e.kind === 'summon' ? '#8fe9ff' : '#f0d28a'); l.position.y = h; wrap.add(l); return wrap;
 }
