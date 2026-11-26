@@ -24,11 +24,12 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   const rt = new THREE.WebGLRenderTarget(W(), H(), { samples: 4, type: THREE.HalfFloatType }), comp = new EffectComposer(r, rt), bloom = new UnrealBloomPass(new THREE.Vector2(W(), H()), 0.3, 0.6, 0.92);
   comp.addPass(new RenderPass(scene, cam)); comp.addPass(bloom); comp.addPass(new OutputPass());
   // Étalonnage final (après la sortie sRGB) : vignette douce ; carte adoucie (demande joueur : éléments trop clairs) —
-  // réglage choisi par le joueur : contraste −5 % autour d’un gris moyen, luminosité 100 %, saturation neutre, halo 0,15.
-  const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, vig: { value: 0.32 }, sat: { value: 1.0 }, con: { value: 0.95 }, bri: { value: 1.0 } },
+  // réglage choisi par le joueur : contraste −5 % autour d’un gris moyen, luminosité 100 %, saturation neutre, halo 0,15 ;
+  // `gam` < 1 relève les tons moyens pour compenser l'exposition abaissée (blancs détaillés au lieu de brûlés).
+  const grade = new ShaderPass({ uniforms: { tDiffuse: { value: null }, vig: { value: 0.32 }, sat: { value: 1.0 }, con: { value: 0.95 }, bri: { value: 1.0 }, gam: { value: 0.88 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
-    fragmentShader: `uniform sampler2D tDiffuse; uniform float vig, sat, con, bri; varying vec2 vUv;
-      void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = mix(vec3(l), c.rgb, sat); c.rgb = ((c.rgb - 0.45) * con + 0.45) * bri;
+    fragmentShader: `uniform sampler2D tDiffuse; uniform float vig, sat, con, bri, gam; varying vec2 vUv;
+      void main(){ vec4 c = texture2D(tDiffuse, vUv); float l = dot(c.rgb, vec3(0.299, 0.587, 0.114)); c.rgb = mix(vec3(l), c.rgb, sat); c.rgb = pow(max(c.rgb, 0.0), vec3(gam)); c.rgb = ((c.rgb - 0.45) * con + 0.45) * bri;
         vec2 d = vUv - 0.5; c.rgb *= 1.0 - vig * smoothstep(0.35, 0.85, length(d * vec2(1.25, 1.0))); gl_FragColor = c; }` });
   comp.addPass(grade);
 
@@ -44,7 +45,7 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
     // La direction de la lumière reste haute (>= 34°) même à l'aube/au crépuscule/la nuit : le sol est toujours lisible. Seule l'ambiance (teinte, intensité) suit l'heure.
     sun.userData.dir = new THREE.Vector3().setFromSphericalCoords(1, THREE.MathUtils.degToRad(90 - Math.max(elev, 34)), THREE.MathUtils.degToRad(150));
     sun.intensity = L(1.7, 3.1, day) * (1 - warm * 0.15); sun.color.set(day < 0.45 ? 0xa9c0ff : warm > 0.3 ? 0xffc890 : 0xfff1d6);
-    hemi.intensity = L(1.0, 0.95, day); hemi.color.set(day < 0.45 ? 0x8ea3e6 : 0xdfeeff); hemi.groundColor.set(day < 0.45 ? 0x353c5c : 0x6b5a45); r.toneMappingExposure = L(1.25, 1.3, day);
+    hemi.intensity = L(1.0, 0.95, day); hemi.color.set(day < 0.45 ? 0x8ea3e6 : 0xdfeeff); hemi.groundColor.set(day < 0.45 ? 0x353c5c : 0x6b5a45); r.toneMappingExposure = L(1.05, 1.1, day);   // assez bas pour garder le détail des blancs ; tons moyens relevés par `gam` (étalonnage)
     fog.color.copy(NIGHT).lerp(DUSK, S(elev, -4, 6)).lerp(DAY, S(elev, 8, 28)); fog.density = 0.009 + (1 - day) * 0.003; bloom.strength = 0.15 + (1 - day) * 0.07; if (last) buildTerrain();
   }
 
@@ -71,7 +72,9 @@ export function createScene(el, { onClick = () => {}, onHover = () => {}, orbit 
   const FLORA_FX = { pissenlit_tempete: [0xf2e04a, 0], tresle_six_feuilles: [0x5fd06a, 1], lavande_crepusculaire: [0x8a63d8, 2], chardon_sang: [0xc02a3a, 2], rose_sables: [0xe8c9a0, 1], nenuphar_spectres: [0x7fe0c0, 1], gingembre_marees: [0xe0a050, 2] };
   for (const r of [...RESOURCES2, ...RESOURCES3]) if (r.look?.k === 'plant') FLORA_FX[r.id] = [r.look.c, r.look.shape];
   const FGEO = [new THREE.SphereGeometry(0.07, 8, 6).translate(0, 0.22, 0), new THREE.CylinderGeometry(0.16, 0.16, 0.02, 8).translate(0, 0.02, 0), new THREE.ConeGeometry(0.05, 0.3, 5).translate(0, 0.15, 0)], flora = {};
-  for (const k in FLORA_FX) flora[k] = IM(FGEO[FLORA_FX[k][1]], std(FLORA_FX[k][0], { emissive: FLORA_FX[k][0], emissiveIntensity: 0.25 }), 6000);
+  // plantes : émission faible et clarté plafonnée à 0,45 (sinon, vues d'en haut au soleil, ex. pissenlits jaunes, elles virent au blanc sans relief)
+  const soft = c => { const x = new THREE.Color(c), l = x.getHSL({}, THREE.SRGBColorSpace).l; return l > 0.45 ? x.setHSL(x.getHSL({}, THREE.SRGBColorSpace).h, x.getHSL({}, THREE.SRGBColorSpace).s, 0.45, THREE.SRGBColorSpace) : x; };   // clarté perçue (sRGB) plafonnée
+  for (const k in FLORA_FX) { const c = soft(FLORA_FX[k][0]); flora[k] = IM(FGEO[FLORA_FX[k][1]], std(c, { emissive: c, emissiveIntensity: 0.08 }), 6000); }
   [trunk, pine1, pine2, oak, spires, boulders, grass].forEach(m => m.material.color.set(0xffffff));      // teintes appliquées par instance
   const ALL = [trunk, pine1, pine2, oak, grass, boulders, spires, ...Object.values(ores), ...Object.values(flora)];
   // Yggdrasil : l'arbre unique de 8 cases (4x2), dessiné une seule fois
