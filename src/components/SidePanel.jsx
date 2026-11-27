@@ -92,7 +92,7 @@ function Inventory({ close }) {
         <button className="primary" disabled={me.xp < u.nextCost} onClick={() => act(() => api(`/characters/${me.id}/upgrade/${u.stat}`, undefined, 'POST'))}>+1 ({u.nextCost} XP)</button></div>)}</div>}</Modal>;
 }
 export default function SidePanel() {
-  const { me } = useSelector(s => s.game), d = useDispatch(), refresh = useRefreshMe(), [modal, setModal] = useState(null), [chars] = useData('/characters', [me?.id]), [hist] = useData(`/characters/${me?.id}/history`, [me?.xp, me?.energy_current]); if (!me) return null;
+  const { me } = useSelector(s => s.game), d = useDispatch(), refresh = useRefreshMe(), [modal, setModal] = useState(null), [chars] = useData('/characters', [me?.id]), [hist] = useData(me?.id ? `/characters/${me.id}/history` : null, [me?.id, me?.xp, me?.energy_current]); if (!me) return null;
   const pick = e => { const f = e.target.files[0]; if (!f) return; const img = new Image(); img.onload = async () => { const c = document.createElement('canvas'); c.width = c.height = 128; c.getContext('2d').drawImage(img, 0, 0, 128, 128); await api(`/characters/${me.id}/portrait`, { data: c.toDataURL('image/jpeg', .8) }); refresh(); }; img.src = URL.createObjectURL(f); };
   return <aside className={`glass portrait race-${me.race}`}><button className="ring" aria-label="Ouvrir l'inventaire" onClick={() => setModal('inv')}><img alt="" src={me.portrait ?? DEFAULT} /></button>
     <label className="chg">Changer l'image (2 Mo max)<input type="file" accept="image/*" hidden onChange={pick} /></label>
