@@ -36,7 +36,7 @@ function RankUp({ me, after }) {
 }
 const DLABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération', see: 'Vision', range: 'Portée', strength: 'Force', agility: 'Agilité', armor: 'Armure physique', magic_armor: 'Armure magique' };
 const sg = v => (v > 0 ? `+${v}` : `${v}`);
-const KIND_FR = { item: 'objet', buff: 'effet', mount: 'monture', building: 'bâtiment', height: 'hauteur' };
+const KIND_FR = { item: 'équipement', buff: 'effet', spell: 'sort', pact: 'pacte', faith: 'foi', mount: 'monture', building: 'bâtiment', height: 'hauteur' };
 /** Détail d'une caractéristique au survol : base, puis chaque objet / sort / pacte / monture qui l'ajoute ou la retire. */
 export function StatDetail({ keys, B, note }) {
   const rows = keys.map(k => [k, B[k]]).filter(([, b]) => b);
@@ -88,7 +88,7 @@ function Inventory({ close }) {
           {it ? <><b>{it.name}</b><small>{statLine(it) || TYPE[it.slot] || ''}</small></> : <span className="free">{i + 1}</span>}</button>; })}</div></div></div></>}
     {tab === 'up' && <RankUp me={me} after={() => { loadUp(); refresh(); }} />}
     {tab === 'up' && <div className="upgrades"><small>Le coût en XP suit les paliers de la table (×1, ×2, ×3). Chaque amélioration donne +1.</small>
-      {up?.filter(u => !u.needsDivine || me.hasDivine).map(u => <div key={u.stat} className="item row2"><div><b>{LABEL[u.stat]}</b> <span className="pill">{u.value}</span> <span className="pill">Palier ×{u.tier}</span><br /><small>{u.untilNextTier} amélioration(s) avant le palier suivant · {u.count} effectuée(s)</small></div>
+      {up?.filter(u => !u.needsDivine || me.hasDivine).map(u => <div key={u.stat} className="item row2"><div><b>{LABEL[u.stat]}</b> <span className="pill">{u.value}</span> <span className="pill">Palier {u.tier}{u.tiers ? ` / ${u.tiers}` : ''}</span><br /><small>{u.tiers && u.tier >= u.tiers ? 'Dernier palier' : `${u.untilNextTier} amélioration(s) avant le palier suivant`} · {u.count} effectuée(s)</small></div>
         <button className="primary" disabled={me.xp < u.nextCost} onClick={() => act(() => api(`/characters/${me.id}/upgrade/${u.stat}`, undefined, 'POST'))}>+1 ({u.nextCost} XP)</button></div>)}</div>}</Modal>;
 }
 export default function SidePanel() {

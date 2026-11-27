@@ -25,6 +25,7 @@ tests:
 Classement des joueurs et interfaces de la foi et des pactes réglés en admin (back : card `faith-pact`).
 
 ## Business rules
+- Pactes (migration 45) : les deux côtés voient « Bonus D h · réactivable C h après la fin » et l'état (bonus actif puis recharge) ; l'Ange / Démon voit `used/max` par composition (pleines désactivées) et, après un changement, le sélecteur verrouillé « Changement possible dans … » (48 h). Admin `PactTab` : colonne « Attributions max » (vide = illimité, `tierBody.max_assign`).
 - Site public : onglet « Classement » (`#classement`) après « Annonces & forum », avec ou sans compte ; tableau #, pseudo, rang, race, guilde ; 25 par page, pagination.
 - En jeu : bouton « Classement » de la barre d'accès (bas à droite) ; s'ouvre sur la page du joueur, sa ligne surlignée, « Vous êtes Nᵉ ».
 - Fiche joueur (`PlayerCard` : pseudo, rang · race · guilde) dans les demandes de pacte (reçues, envoyées), les pactes conclus, les dieux et les fidèles.

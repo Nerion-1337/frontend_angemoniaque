@@ -6,8 +6,8 @@ import { Plus, Save, Trash2 } from 'lucide-react';
 import { Ad } from '../store/admin.js'; import { api } from '../lib/api.js'; import { confirmDel, Empty } from './ui.jsx';
 import { RACE_LABEL } from './players.js';
 import { STAT_LABEL, tierBody, tierExample } from './faithPact.js';
-const FIELDS = [['name', 'Nom (vu par l\'Humain)', 'text'], ['xp_hour', 'XP / h (Ange·Démon)'], ['gold_hour', 'Or / h (Ange·Démon)'], ['percent', '% transféré'], ['duration_h', 'Durée du bonus (h)'], ['cooldown_h', 'Délai avant réactivation (h)']];
-const blank = { name: '', xp_hour: 1, gold_hour: 1, percent: 10, duration_h: 1, cooldown_h: 0 };
+const FIELDS = [['name', 'Nom (vu par l\'Humain)', 'text'], ['xp_hour', 'XP / h (Ange·Démon)'], ['gold_hour', 'Or / h (Ange·Démon)'], ['percent', '% transféré'], ['duration_h', 'Durée du bonus (h)'], ['cooldown_h', 'Délai avant réactivation (h, après la fin du bonus)'], ['max_assign', 'Attributions max par Ange·Démon (vide = illimité)']];
+const blank = { name: '', xp_hour: 1, gold_hour: 1, percent: 10, duration_h: 1, cooldown_h: 0, max_assign: '' };
 
 export default function PactTab() {
   const d = useDispatch(), [p, setP] = useState(null), [tiers, setTiers] = useState([]), [nw, setNw] = useState(blank), [lim, setLim] = useState([]);
@@ -23,11 +23,13 @@ export default function PactTab() {
   const addTier = () => api('/admin/content/pact-tiers', tierBody(nw), 'POST').then(() => { setNw(blank); ok('Composition ajoutée')(); }).catch(err);
   const saveLim = r => api(`/admin/content/pact-limits/${r.id}`, { maxPacts: r.max_pacts === '' || r.max_pacts == null ? null : Math.max(0, Math.trunc(Number(r.max_pacts)) || 0) }, 'PUT').then(ok(`${r.name} : enregistré`)).catch(err);
   const ut = (id, k, v) => setTiers(tiers.map(t => (t.id === id ? { ...t, [k]: v } : t)));
-  const input = (t, k, type, set) => <input type={type ?? 'number'} min="0" step={k.endsWith('_h') ? '0.5' : '1'} value={t[k] ?? ''} onChange={e => set(k, e.target.value)} style={{ width: type === 'text' ? '10em' : '6em' }} />;
+  const input = (t, k, type, set) => <input type={type ?? 'number'} min={k === 'max_assign' ? '1' : '0'} placeholder={k === 'max_assign' ? '∞' : undefined} step={k.endsWith('_h') ? '0.5' : '1'} value={t[k] ?? ''} onChange={e => set(k, e.target.value)} style={{ width: type === 'text' ? '10em' : '6em' }} />;
   return <section>
     <p className="note">Un pacte lie un Humain à un Ange ou un Démon. L'Ange / le Démon choisit pour chaque pacte une composition : elle lui rapporte de l'XP et de l'or chaque heure ;
       quand l'Humain l'active, le pourcentage de chaque caractéristique cochée (arrondi au supérieur) passe de l'Ange / Démon à l'Humain pendant la durée du bonus.
-      Impossible si les PV de l'Ange / Démon ne suffisent pas. L'Humain ne voit que le nom de la composition.</p>
+      Impossible si les PV de l'Ange / Démon ne suffisent pas. Le délai de réactivation commence à la fin du bonus ; un même pacte ne se cumule pas (deux pactes différents oui).
+      L'Humain voit le nom, la durée et le délai de sa composition. « Attributions max » : combien de pactes d'un même Ange / Démon peuvent porter cette composition.
+      Un pacte ne change de composition qu'une fois toutes les 48 h.</p>
     <div className="apanel"><h4>Caractéristiques transférées</h4><div className="chips">{p.all.map(s => <label key={s} className={`chip${p.stats.includes(s) ? ' on' : ''}`}>
       <input type="checkbox" checked={p.stats.includes(s)} onChange={() => toggle(s)} /> {STAT_LABEL[s] ?? s}</label>)}</div>
       <div className="actions"><span className="grow" /><button className="primary sm" onClick={saveStats}><Save size={13} /> Enregistrer</button></div></div>

@@ -10,7 +10,8 @@ test('coût de bénédiction proportionnel arrondi au supérieur (miroir du back
   expect(blessingCost({ max: 5, maxH: 10, cost: 10 }, 3, 4)).toBe(3); expect(blessingCost({ max: 5, maxH: 10, cost: 10 }, 5, 10)).toBe(10);
 });
 test('composition : bornes, exemple arrondi au supérieur', () => {
-  expect(tierBody({ name: ' Fort ', xp_hour: '5', gold_hour: '5', percent: '130', duration_h: '0', cooldown_h: '-1' })).toEqual({ name: 'Fort', xp_hour: 5, gold_hour: 5, percent: 100, duration_h: 1, cooldown_h: 0 });
+  expect(tierBody({ name: ' Fort ', xp_hour: '5', gold_hour: '5', percent: '130', duration_h: '0', cooldown_h: '-1' })).toEqual({ name: 'Fort', xp_hour: 5, gold_hour: 5, percent: 100, duration_h: 1, cooldown_h: 0, max_assign: null });
+  expect(tierBody({ name: 'F', max_assign: '2' }).max_assign).toBe(2); expect(tierBody({ name: 'F', max_assign: '0' }).max_assign).toBe(1);
   expect(tierExample({ percent: 30 })).toBe('6 pour 20'); expect(tierExample({ percent: 12 })).toBe('3 pour 20');
 });
 test('#classement : page publique (avec ou sans compte)', () => {

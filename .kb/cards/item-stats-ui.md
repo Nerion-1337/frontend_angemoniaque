@@ -33,6 +33,7 @@ bâtiment, sort et joueur connaissent l'armure magique.
 - Sac : `bagUsed / bagMax` emplacements ; les ressources s'affichent en piles (nom ×quantité / taille de pile) après les objets ; emplacement au-delà de la taille en rouge ; un parchemin de sac sélectionné propose « Utiliser » (+N, jusqu'à M ; grisé au maximum).
 - Admin Objets : parchemin (`scroll`) → champs « Agrandit le sac de » / « jusqu'à » (`data = { kind: 'bag', add, max }`) ; les autres parchemins gardent leur data.
 - Admin « Améliorations » (`StatCostsTab`, `statCosts.js`) : une carte par caractéristique améliorable (base, par palier, ×1/×2/×3, aperçu des coûts) ; ajout parmi les caractéristiques restantes ; retrait confirmé.
+- Paliers : « + Palier » ajoute un multiplicateur (max 20), × sur un palier le retire (au moins 1) ; aperçu = 1er point de chaque palier + XP jusqu'au dernier ; corps envoyé `multis`. Jeu : « Palier n / total », « Dernier palier ». Survol : type de chaque apport (équipement, sort, pacte, foi…).
 - Objets : champ « XP par utilisation » (`xp_use` ; arme : chaque coup porté, parchemin : à l'utilisation). Sorts : « XP par lancer » (`xpUse`).
 - Arme : « Portée (cases) » ; si portée > 1, bloc « Puissance selon la distance » : % à la case 1, case de 100 %, % à la dernière case, phrase de résumé (`itemBody` : case X ≤ portée sinon null, % bornés 0..100, vide = 100, envoyés seulement avec une case X) ; l'inventaire affiche « Portée N (a % → 100 % à X → b % à N) ». Carte de case : ligne portée (distance, hauteur, à portée ou non, puissance, hors d'atteinte).
 

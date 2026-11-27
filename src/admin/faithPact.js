@@ -10,6 +10,7 @@ export const faithBody = f => ({
 export const blessingCost = (b, v, h) => Math.ceil(b.cost * (v / b.max) * (h / b.maxH) - 1e-9);
 /** Corps d'une composition de pacte. */
 export const tierBody = t => ({ name: String(t.name ?? '').trim(), xp_hour: int(t.xp_hour), gold_hour: int(t.gold_hour), percent: Math.min(100, int(t.percent, 1)),
-  duration_h: Math.max(1, Number(t.duration_h) || 1), cooldown_h: Math.max(0, Number(t.cooldown_h) || 0) });
+  duration_h: Math.max(1, Number(t.duration_h) || 1), cooldown_h: Math.max(0, Number(t.cooldown_h) || 0),
+  max_assign: t.max_assign === '' || t.max_assign == null ? null : Math.max(1, Math.trunc(Number(t.max_assign)) || 1) });   // vide = illimité
 /** Exemple lisible d'une composition : ce que l'Humain reçoit pour une caractéristique de 20 (arrondi au supérieur). */
 export const tierExample = t => `${Math.ceil(20 * (Number(t.percent) || 0) / 100)} pour 20`;

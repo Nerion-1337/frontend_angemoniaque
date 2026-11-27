@@ -787,3 +787,5 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .ranking th{color:var(--mute);font-weight:500}.ranking td:first-child{color:var(--mute);width:3.5em}.ranking tr.me td{background:color-mix(in srgb,var(--halo) 14%,transparent)}
 .pcard{display:inline-flex;flex-direction:column;gap:1px;min-width:0}.pcard small{color:var(--mute)}
 .ftable{display:grid;gap:6px}.ftable .cell input{width:100%}
+.pactinfo{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 160px;margin-left:12px}
+.admin .costcard .tierx{min-height:0;padding:0 4px;margin-left:4px;border:0;background:none;color:var(--mute);font-size:13px;line-height:1;cursor:pointer}.admin .costcard .tierx:hover{color:var(--danger,#e5545a)}

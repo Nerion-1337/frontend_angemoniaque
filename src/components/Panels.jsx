@@ -10,7 +10,7 @@ const KV = ({ items }) => <div className="kv">{items.map(([k, v]) => <span key={
 export const STAT_FR = { strength: 'Force', agility: 'Agilité', armor: 'Armure', magic_armor: 'Armure magique', see: 'Vision', range: 'Portée', recovery: 'Régénération', hp_max: 'PV max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max' };
 /** Coût d'une bénédiction (miroir de back/game/faithPact.ts:blessingCost) : au prorata, arrondi au supérieur. */
 export const blessCost = (b, v, h) => Math.ceil(b.cost * (v / b.max) * (h / b.maxH) - 1e-9);
-const tierInfo = t => `${t.name} — vous rapporte ${t.xp_hour} XP et ${t.gold_hour} or / h ; transfère ${t.percent} % de vos caractéristiques à l'Humain pendant ${Number(t.duration_h)} h, puis ${Number(t.cooldown_h)} h d'attente`;
+const tierInfo = t => `${t.name} — vous rapporte ${t.xp_hour} XP et ${t.gold_hour} or / h ; transfère ${t.percent} % de vos caractéristiques à l'Humain pendant ${Number(t.duration_h)} h, réactivable ${Number(t.cooldown_h)} h après la fin${t.max_assign ? ` ; attribuable ${t.max_assign} fois (${t.used} utilisée${t.used > 1 ? 's' : ''})` : ''} ; changement de composition : une fois toutes les 48 h`;
 /** Bénédiction d'un fidèle par le dieu : caractéristique, valeur (≤ max), durée (1 h à max) ; coût en énergie divine affiché. */
 function Bless({ x, bl, me, run, reload }) {
   const keys = Object.keys(bl), [st, setSt] = useState(x.request_choice && bl[x.request_choice] ? x.request_choice : keys[0]), b = bl[st];
@@ -41,14 +41,17 @@ export function FaithPanel() {
     </>}
     {tab === 'pacts' && <>
     <h4>Pactes conclus ({pacts?.active.length ?? 0})</h4>
-    <small>{human ? 'Activer un pacte vous transfère, pour une durée limitée, une part des caractéristiques de l\'être lié (selon la force du pacte qu\'il a choisie) ; il les perd pendant ce temps.' : 'Choisissez pour chaque pacte sa composition (survolez pour le détail) : plus elle vous rapporte, plus elle transfère de vos caractéristiques à l\'Humain quand il l\'active.'}</small>
+    <small>{human ? 'Activer un pacte vous transfère, pour une durée limitée, une part des caractéristiques de l\'être lié (selon la force du pacte qu\'il a choisie) ; il les perd pendant ce temps.' : 'Choisissez pour chaque pacte sa composition (survolez pour le détail) : plus elle vous rapporte, plus elle transfère de vos caractéristiques à l\'Humain quand il l\'active. Une composition ne change qu\'une fois toutes les 48 h par pacte.'}</small>
     {!pacts?.active.length && <p className="empty">Aucun pacte conclu. Envoyez une demande depuis l'onglet « Demandes ».</p>}
     {pacts?.active.map(p => { const cur = pacts.tiers.find(t => t.id === p.tier_id); return <div key={p.id} className="item row2"><PlayerCard p={p} /><span className="row">
+      <span className="pactinfo">{p.tier_id && <small title="Le délai de réactivation commence à la fin du bonus">Bonus {Number(p.duration_h)} h · réactivable {Number(p.cooldown_h)} h après la fin</small>}
+        {p.bonus_left_s > 0 ? <small className="note">Bonus actif : encore {fmtWait(p.bonus_left_s)}{Number(p.cooldown_h) > 0 ? `, puis ${Number(p.cooldown_h)} h de recharge` : ''}</small> : p.ready_in_s > 0 ? <small className="err">Recharge : encore {fmtWait(p.ready_in_s)}</small> : null}
+        {!human && p.tier_change_in_s > 0 && <small>Changement de composition dans {fmtWait(p.tier_change_in_s)}</small>}</span>
       {human ? <><span className="pill">Pacte {p.tier_name ?? '— (à choisir par l\'être lié)'}</span>
-          {p.bonus_left_s > 0 ? <small className="note">Bonus actif : encore {fmtWait(p.bonus_left_s)}</small> : p.ready_in_s > 0 ? <small className="err">Recharge : encore {fmtWait(p.ready_in_s)}</small> : null}
           <button disabled={!p.tier_id || p.bonus_left_s > 0 || p.ready_in_s > 0} onClick={() => run(() => api(`/pacts/${p.id}/activate`, { characterId: me.id }), r => { reload(); d(A.toast(`Bonus de pacte actif (${r?.hours ?? ''} h)`)); })}>Activer le bonus</button></>
-        : <select title={cur ? tierInfo(cur) : 'Choisir une composition'} value={p.tier_id ?? ''} onChange={e => run(() => api(`/pacts/${p.id}/tier`, { characterId: me.id, tierId: Number(e.target.value) }), reload)}>
-            {!p.tier_id && <option value="">— Composition —</option>}{pacts.tiers.map(t => <option key={t.id} value={t.id} title={tierInfo(t)}>{t.name} · {t.xp_hour} XP / {t.gold_hour} or · {t.percent} %</option>)}</select>}
+        : <><select title={cur ? tierInfo(cur) : 'Choisir une composition'} disabled={p.tier_change_in_s > 0} value={p.tier_id ?? ''} onChange={e => run(() => api(`/pacts/${p.id}/tier`, { characterId: me.id, tierId: Number(e.target.value) }), reload)}>
+            {!p.tier_id && <option value="">— Composition —</option>}{pacts.tiers.map(t => <option key={t.id} value={t.id} title={tierInfo(t)} disabled={t.full && t.id !== p.tier_id}>{t.name} · {t.xp_hour} XP / {t.gold_hour} or · {t.percent} %{t.max_assign ? ` · ${t.used}/${t.max_assign}` : ''}</option>)}</select>
+</>}
       <button className="danger" onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Résilier</button></span></div>; })}
     </>}
     {tab === 'faith' && <>
@@ -72,7 +75,7 @@ export function FaithPanel() {
 
 const LOCO_FR = { land: 'terrestre', air: 'volante', water: 'aquatique' };
 /** Délai restant lisible (secondes → « 1 h 05 » / « 12 min »). */
-export const fmtWait = s => { const h = Math.floor(s / 3600), m = Math.ceil((s % 3600) / 60); return h ? `${h} h${m ? ` ${String(m).padStart(2, '0')}` : ''}` : `${Math.max(1, m)} min`; };
+export const fmtWait = s => { const t = Math.ceil(s / 60), h = Math.floor(t / 60), m = t % 60; return h ? `${h} h${m ? ` ${String(m).padStart(2, '0')}` : ''}` : `${Math.max(1, m)} min`; };   // minutes arrondies au total (jamais « 47 h 60 »)
 /** Invocations (créées par un sort) : contrôler, renvoyer, et MONTER dessus si leur type est montable (case voisine du héros) ;
  *  montée, elle porte le héros : ses déplacements et ses capacités consomment son énergie (migration 43). */
 export function MountsPanel() {
