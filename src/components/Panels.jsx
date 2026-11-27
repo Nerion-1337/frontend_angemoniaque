@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost, Crosshair } from 'lucide-react'; import CreatureIcon from './CreatureIcon'; import { RankingTable, PlayerCard, RACE_NAME } from './Ranking';
 import { Tabs, useTab } from './Tabs';
 import { fxSummary } from '../lib/spellFx.js';
-import Modal from './Modal'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
+import Modal from './Modal'; import { Rarity } from './Rarity'; import Confirm from './Confirm'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
 /** Fenêtre de jeu centrée (comme l'Hôtel de ville ou l'inventaire) : Échap ou clic hors de la fenêtre pour fermer. */
 export const Panel = ({ title, wide, children }) => { const d = useDispatch(), close = () => d(A.setPanel(null));
   return <Modal onClose={close} className={'panel' + (wide ? ' wide' : '')} label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={close}><X size={14} /></button></header><div className="pbody">{children}</div></Modal>; };
 const KV = ({ items }) => <div className="kv">{items.map(([k, v]) => <span key={k}>{k} <b>{v}</b></span>)}</div>;
 
-export const STAT_FR = { strength: 'Force', agility: 'Agilité', armor: 'Armure', magic_armor: 'Armure magique', see: 'Vision', range: 'Portée', recovery: 'Régénération', hp_max: 'PV max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max' };
+export const STAT_FR = { strength: 'Force', agility: 'Agilité', armor: 'Armure', magic_armor: 'Armure magique', see: 'Vision', range: 'Portée à distance', recovery: 'Régénération', hp_max: 'PV max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max' };
 /** Coût d'une bénédiction (miroir de back/game/faithPact.ts:blessingCost) : au prorata, arrondi au supérieur. */
 export const blessCost = (b, v, h) => Math.ceil(b.cost * (v / b.max) * (h / b.maxH) - 1e-9);
 const tierInfo = t => `${t.name} — vous rapporte ${t.xp_hour} XP et ${t.gold_hour} or / h ; transfère ${t.percent} % de vos caractéristiques à l'Humain pendant ${Number(t.duration_h)} h, réactivable ${Number(t.cooldown_h)} h après la fin${t.max_assign ? ` ; attribuable ${t.max_assign} fois (${t.used} utilisée${t.used > 1 ? 's' : ''})` : ''} ; changement de composition : une fois toutes les 48 h`;
@@ -27,7 +27,10 @@ export function FaithPanel() {
   const human = me.race === 'human', isGod = me.rank.current_rank >= 5;
   const [tab, setTab] = useTab('faith', ['pacts', 'requests', 'faith', ...(isGod ? ['altar'] : [])]);
   const nReq = (pacts?.incoming.length ?? 0) + (pacts?.outgoing.length ?? 0), pr = f?.prayers, bl = f?.blessings ?? {};
+  const [ask, setAsk] = useState(null);   // composition à confirmer avant attribution (verrouillée ensuite 48 h)
   return <Panel title="Pactes & Fidèles" wide>
+    {ask && <Confirm msg={`Attribuer la composition « ${ask.t.name} » au pacte avec ${ask.p.pseudo} ? ${tierInfo(ask.t)}. Vous ne pourrez plus la changer pendant 48 h.`} ok="Attribuer"
+      onOk={() => { const { p, t } = ask; setAsk(null); run(() => api(`/pacts/${p.id}/tier`, { characterId: me.id, tierId: t.id }), reload); }} onCancel={() => setAsk(null)} />}
     <Tabs label="Pactes et fidèles" value={tab} onChange={setTab} tabs={[['pacts', 'Pactes', Handshake, pacts?.active.length], ['requests', 'Demandes', Inbox, pacts?.incoming.length || null], ['faith', 'Foi', Flame], ...(isGod ? [['altar', 'Autel', Crown, f?.asGod.filter(x => x.status === 'pending' || x.request_choice).length || null]] : [])]} />
     {tab === 'requests' && <>
     <h4>Demander un pacte {pacts && <small>({pacts.limit.used} / {pacts.limit.max} pacte{pacts.limit.max > 1 ? 's' : ''} selon votre rang)</small>}</h4>
@@ -49,7 +52,7 @@ export function FaithPanel() {
         {!human && p.tier_change_in_s > 0 && <small>Changement de composition dans {fmtWait(p.tier_change_in_s)}</small>}</span>
       {human ? <><span className="pill">Pacte {p.tier_name ?? '— (à choisir par l\'être lié)'}</span>
           <button disabled={!p.tier_id || p.bonus_left_s > 0 || p.ready_in_s > 0} onClick={() => run(() => api(`/pacts/${p.id}/activate`, { characterId: me.id }), r => { reload(); d(A.toast(`Bonus de pacte actif (${r?.hours ?? ''} h)`)); })}>Activer le bonus</button></>
-        : <><select title={cur ? tierInfo(cur) : 'Choisir une composition'} disabled={p.tier_change_in_s > 0} value={p.tier_id ?? ''} onChange={e => run(() => api(`/pacts/${p.id}/tier`, { characterId: me.id, tierId: Number(e.target.value) }), reload)}>
+        : <><select title={cur ? tierInfo(cur) : 'Choisir une composition'} disabled={p.tier_change_in_s > 0} value={p.tier_id ?? ''} onChange={e => { const t = pacts.tiers.find(x => x.id === Number(e.target.value)); if (t) setAsk({ p, t }); }}>
             {!p.tier_id && <option value="">— Composition —</option>}{pacts.tiers.map(t => <option key={t.id} value={t.id} title={tierInfo(t)} disabled={t.full && t.id !== p.tier_id}>{t.name} · {t.xp_hour} XP / {t.gold_hour} or · {t.percent} %{t.max_assign ? ` · ${t.used}/${t.max_assign}` : ''}</option>)}</select>
 </>}
       <button className="danger" onClick={() => run(() => api(`/pacts/${p.id}/${me.id}`, undefined, 'DELETE'), reload)}>Résilier</button></span></div>; })}
@@ -118,7 +121,7 @@ export function ActionsPanel() {
   const occ = (x, y) => entities.find(e => e.x === x && e.y === y && !(e.char_id === me.id && me.actor.kind === 'hero')), blocked = (x, y) => occ(x, y) || terrain(x, y).kind === 'deep';
   const free = OFFS.filter(o => o[0] || o[1]).map(o => ({ x: P.x + o[0], y: P.y + o[1] })).find(c => !blocked(c.x, c.y)) ?? { x: P.x + 1, y: P.y }; const [sel, setSel] = useState(free); useEffect(() => setSel(free), [P.x, P.y]);
   const blk = occ(sel.x, sel.y) || (terrain(sel.x, sel.y).kind === 'deep' && { name: 'terrain infranchissable' }), dist = e => Math.max(Math.abs(e.x - P.x), Math.abs(e.y - P.y)), after = () => { refresh(); loadSp(); };
-  const targets = entities.filter(e => ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && dist(e) <= Math.max(2, me.range_eff)), bldgs = entities.filter(e => e.kind === 'building' && dist(e) <= 1);
+  const targets = entities.filter(e => ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && dist(e) <= Math.max(2, me.attack_range ?? me.range_eff)), bldgs = entities.filter(e => e.kind === 'building' && dist(e) <= 1);
   const [hits, setHits] = useState({}); useEffect(() => { targets.forEach(e => api(`/combat/preview/${me.id}/${e.x}/${e.y}`).then(r => setHits(h => ({ ...h, [`${e.x},${e.y}`]: r.hitChance }))).catch(() => {})); }, [entities.length, P.x, P.y]);
   const attack = e => run(async () => { const r = await api('/combat/attack', { characterId: me.id, targetCharacterId: e.char_id, targetMonsterId: e.monster_id, targetSummonId: e.summon_id }); d(A.toast(r.missed ? `Raté ! (${r.hitChance}%)` : `Touché : -${r.dmg} PV${r.killed ? ' — vaincu !' : ''}`)); }, after);
   const [tab, setTab] = useTab('actions', ['spells', 'build', 'gather', 'combat']);
@@ -141,7 +144,7 @@ export function ActionsPanel() {
     {sp?.spells.map(s => { const wait = s.cooldown_left_s > 0, off = wait || (s.kind === 'summon' && (!!blk || sp.active >= sp.maxSummons)) || (s.kind === 'attack' && !occ(sel.x, sel.y));
       const cast = ride => run(() => api('/spells/cast', { characterId: me.id, spellId: s.id, x: sel.x, y: sel.y, ...(ride ? { ride: true } : {}) }), after), cost = <>⚡{s.energy_cost}{s.divine_energy_cost > 0 && ` ✦${s.divine_energy_cost}`}</>;
       const canRide = s.summon_mountable && me.actor.kind === 'hero' && !me.mount;   // invocation montable : monter dessus dès le lancer
-      return <div key={s.id} className="item row2"><div><b>{s.name}</b>{s.source && s.source !== 'appris' && <small> · {s.source}</small>}<br /><small>{fxSummary(s.effects) || s.description}</small>
+      return <div key={s.id} className="item row2"><div><b>{s.name}</b><Rarity r={s.rarity} />{s.source && s.source !== 'appris' && <small> · {s.source}</small>}<br /><small>{fxSummary(s.effects) || s.description}</small>
         {Number(s.cooldown_h) > 0 && <><br /><small className={wait ? 'err' : 'note'}>{wait ? `Recharge : encore ${fmtWait(s.cooldown_left_s)}` : `Délai de relance : ${fmtWait(Number(s.cooldown_h) * 3600)}`}</small></>}
         {wait && !(Number(s.cooldown_h) > 0) && <><br /><small className="err">Invocation morte : encore {fmtWait(s.cooldown_left_s)}</small></>}</div>
         <span className="row"><button disabled={off} onClick={() => cast(false)}>Lancer {cost}</button>{canRide && <button className="primary" disabled={off} onClick={() => cast(true)}>Lancer et monter {cost}</button>}</span></div>; })}

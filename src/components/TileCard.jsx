@@ -24,22 +24,24 @@ function InfoModal({ cell, close }) {
 }
 export default function TileCard() {
   const { hover, selected, me } = useSelector(s => s.game), d = useDispatch(), refresh = useRefreshMe(), mapId = me?.actor.pos.map_id;
-  const hc = useCell(!selected && hover, mapId), sc = useCell(selected, mapId, `&characterId=${me?.id}`); /* + ce qui manque à CE personnage pour récolter */ const buildKind = useRef(null), [building, setBuilding] = useState(false), [kind, setKind] = useState('wall'), [prev, setPrev] = useState(null), [info, setInfo] = useState(null);
-  useEffect(() => { setBuilding(false); }, [selected?.x, selected?.y]);
+  const hc = useCell(!selected && hover, mapId), sc = useCell(selected, mapId, `&characterId=${me?.id}`); /* + ce qui manque à CE personnage pour récolter */ const buildKind = useRef(null), [layer, setLayer] = useState(0), [building, setBuilding] = useState(false), [kind, setKind] = useState('wall'), [prev, setPrev] = useState(null), [info, setInfo] = useState(null);
+  useEffect(() => { setBuilding(false); setLayer(0); }, [selected?.x, selected?.y]);
+  // jusqu'à deux entités par case (une au sol, une dans les airs, migration 46) : `layer` = celle choisie
+  const ents = sc?.entities ?? (sc?.entity ? [sc.entity] : []), cur = ents[Math.min(layer, ents.length - 1)] ?? null;
   useEffect(() => { if (mapId) api(`/map/${mapId}/tile-types`).then(setTileCosts).catch(() => setTileCosts([])); }, [mapId]);   // coûts admin « Cases » du monde
-  useEffect(() => { const e = sc?.entity; setPrev(null); if (selected && e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id) api(`/combat/preview/${me.id}/${selected.x}/${selected.y}`).then(setPrev).catch(() => {}); }, [sc]);
+  useEffect(() => { const e = cur; setPrev(null); if (selected && e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id) api(`/combat/preview/${me.id}/${selected.x}/${selected.y}?air=${e.air ? 1 : 0}`).then(setPrev).catch(() => {}); }, [sc, layer]);
   if (!me) return null; const P = me.actor.pos, hero = me.actor.kind === 'hero', mount = hero ? me.mount : null, loco = mount ?? (hero ? null : me.actor.loco), fly = !!loco?.flying, aq = !!loco?.aquatic, land = loco ? loco.terrestrial ?? !aq : true,   /* créature contrôlée : sa locomotion (volante = 1/case) */ pe = (t, o = {}) => pathEnergy(P, t, { flying: fly, aquatic: aq, terrestrial: land, ...o }), kinds = Object.keys(me.scrolls ?? {}).filter(k => k !== 'ship' && me.scrolls[k] > 0),
     E = (mv, ac = 0) => mv === Infinity ? '∞' : mount && mv ? `⚡${mv} monture${ac ? ` + ⚡${ac}` : ''}` : `⚡${mv + ac}`;   // seuls les déplacements paient la monture
   if (selected) {
-    const e = sc?.entity, t = { x: selected.x, y: selected.y }, dist = Math.max(Math.abs(t.x - P.x), Math.abs(t.y - P.y)), range = me.range_eff, attackable = e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && !(e.kind !== 'monster' && (inSafeZone(P.map_id, P.x, P.y) || inSafeZone(P.map_id, t.x, t.y))), res = sc?.terrain;
-    const acts = []; if (!e && (t.x !== P.x || t.y !== P.y)) acts.push(['go', 'S\'y rendre', pe(t), 0]);
+    const e = cur, t = { x: selected.x, y: selected.y }, dist = Math.max(Math.abs(t.x - P.x), Math.abs(t.y - P.y)), range = me.attack_range ?? me.range_eff, attackable = e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && !(e.kind !== 'monster' && (inSafeZone(P.map_id, P.x, P.y) || inSafeZone(P.map_id, t.x, t.y))), res = sc?.terrain;
+    const acts = [], myLayerFree = !ents.some(x => x.kind === 'building' || !!x.air === fly); if (myLayerFree && (t.x !== P.x || t.y !== P.y)) acts.push(['go', 'S\'y rendre', pe(t), 0]);
     if (e && dist > 1 && e.char_id !== me.id) acts.push(['approach', `S'approcher à côté de ${e.name}`, pe(t, { stopAt: 1 }), 0]);
     if (attackable) { acts.push(['attack', `Attaquer ${e.name}`, pe(t, { stopAt: range }), 5]); }
     const ownMount = e?.kind === 'summon' && hero && !mount && me.summons.find(x => x.id === e.summon_id && x.mountable && !x.ridden);   // son invocation montable : monter dessus depuis la case voisine
     if (ownMount) acts.push(['ride', `Monter sur ${e.name}`, dist > 1 ? pe(t, { stopAt: 1 }) : 0, 0]);
     if (e?.kind === 'building') acts.push(['interact', e.building_kind === 'door' ? `Franchir ${e.name}` : `Interagir avec ${e.name} (ou l'activer)`, 0, 0]);
-    const dep = sc?.deposit, miss = sc?.harvestMissing, canTry = !e && (res?.resource || dep) && !(res?.kind === 'deep' && !fly && !aq), noTool = canTry && miss?.length > 0;   // pas équipé : pas d'action de récolte
-    if (canTry && !noTool) acts.push(['harvest', dep ? `Récolter ${dep.resource} (gisement ${dep.stock}/${dep.stockMax})` : `Récolter ${res.resource}`, pe(t), 4]); if (!e && kinds.length) acts.push(['build', 'Poser un élément', pe(t, { stopAt: 1 }), 10]);
+    const dep = sc?.deposit, miss = sc?.harvestMissing, canTry = hero && !ents.some(x => !x.air) && (res?.resource || dep) && !(res?.kind === 'deep' && !fly && !aq), noTool = canTry && miss?.length > 0;   // pas équipé : pas d'action de récolte
+    if (canTry && !noTool) acts.push(['harvest', dep ? `Récolter ${dep.resource} (gisement ${dep.stock}/${dep.stockMax})` : `Récolter ${res.resource}`, pe(t), 4]); if (!ents.length && kinds.length) acts.push(['build', 'Poser un élément', pe(t, { stopAt: 1 }), 10]);
     acts.push(['info', 'Plus d\'informations (état de forme & équipement)', 0, 0]);
     const ids = { characterId: me.id, targetCharacterId: e?.char_id, targetMonsterId: e?.monster_id, targetSummonId: e?.summon_id };
     const run = async act => { try {
@@ -66,6 +68,7 @@ export default function TileCard() {
       {noTool ? <div className="note tc-need" tabIndex={0} aria-label={`Il manque : ${miss.join(' ; ')}`}><Ban size={14} /> Vous n'êtes pas équipé pour récolter {dep?.resource ?? res?.resource}
           <div className="bd" role="tooltip"><b>Pour récolter, il faut :</b>{miss.map((m, i) => <div key={i} className="bdl neg"><span>{m}</span></div>)}{miss.length > 1 && <small className="bdnote">Une seule de ces options suffit.</small>}</div></div>
         : sc?.harvestNeeds && <div className="note">Récolte : nécessite {sc.harvestNeeds}</div>}
+      {ents.length > 1 && <div className="tc-layers" role="tablist" aria-label="Éléments sur la case">{ents.map((x, i) => <button key={i} role="tab" aria-selected={i === layer} className={i === layer ? 'on' : ''} onClick={() => setLayer(i)}>{x.air ? 'Dans les airs' : 'Au sol'} : {x.name}</button>)}</div>}
       <div className="tc-ent"><Entity e={e} /></div>
       {e && dist === 1 && !attackable && e.kind !== 'building' && <div className="note"><Ban size={14} /> Case occupée (vous êtes juste à côté).</div>}
       {prev?.hitChance != null && <div className="tc-hit"><Dices size={14} /> Toucher <b>{prev.hitChance}%</b><span className="tc-bar"><i style={{ width: `${prev.hitChance}%` }} /></span><small>esquive {prev.dodge}%</small></div>}

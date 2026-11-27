@@ -13,7 +13,7 @@ import { RARITIES, RARITY_LABEL, USABLE_KINDS, USABLE_LABEL, usableBadge } from 
 import { itemBody, familyLabel, ITEM_STATS, statsLine } from './divine.js';
 import Divine, { Families } from './Divine.jsx'; import { ShopFields, shopLabel } from './shop.jsx';
 
-const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, map_world: '', was_map: false, xp_use: '', reach: '', full_power_at: '', power_start: '', power_end: '' };
+const blank = { name: '', slot: '', rarity: 'commun', price: '', armor: '', strength_bonus: '', agility_bonus: '', durability: '', weapon_damage: '', magic_armor: '', quantity_max: '', req_strength: '', usable_by: [], ranged: false, divine_family: '', shop: false, shop_stock: '', shop_races: [], bonuses: {}, two_handed: false, bag_add: '', bag_max: '', was_bag: false, map_world: '', was_map: false, xp_use: '', reach: '', full_power_at: '', power_start: '', power_end: '' };
 
 export default function ItemsTab() {
   const d = useDispatch();
@@ -97,7 +97,8 @@ export default function ItemsTab() {
           <div className="cell"><small>… jusqu'à (capacité max du sac)</small><input type="number" min="1" value={f.bag_max} placeholder="ex. 30" onChange={e => setF(x => ({ ...x, bag_max: e.target.value }))} /></div>
           <div className="cell"><small>Ouvre la carte des ressources du monde</small><select value={f.map_world} onChange={e => setF(x => ({ ...x, map_world: e.target.value }))}>
             <option value="">— non</option>{Object.entries(WORLDS).map(([id, n]) => <option key={id} value={id}>{n}</option>)}</select></div></>}
-        {f.slot === 'weapon' && <><div className="cell"><small>Portée (cases ; 1 = corps à corps)</small><input type="number" min="1" max="20" value={f.reach} placeholder="1" onChange={e => num('reach', e.target.value)} /></div>
+        {f.slot === 'weapon' && <><div className="cell"><small>{f.ranged ? 'Portée de l\'arme à distance (s\'ajoute à la portée du personnage, hauteur comprise)' : 'Portée de mêlée (cases ; épée 1, lance 2 ; ni la hauteur ni la portée du personnage ne s\'ajoutent)'}</small><input type="number" min="1" max="20" value={f.reach} placeholder="1" onChange={e => num('reach', e.target.value)} /></div>
+          <div className="cell"><label className="check"><input type="checkbox" checked={!!f.ranged} onChange={e => setF(x => ({ ...x, ranged: e.target.checked }))} /> Arme à distance (arc, arbalète…) : profite de la portée du personnage et de la hauteur</label></div>
           {Number(f.reach) > 1 && <div className="cell span2 powercurve"><small>Puissance selon la distance (grande portée)</small>
             <div className="pc-row"><label><small>Case 1</small><input type="number" min="0" max="100" value={f.power_start ?? ''} placeholder="100" onChange={e => num('power_start', e.target.value)} /> %</label>
               <label><small>100 % à la case</small><input type="number" min="1" max={Number(f.reach)} value={f.full_power_at ?? ''} placeholder="—" onChange={e => num('full_power_at', e.target.value)} /></label>

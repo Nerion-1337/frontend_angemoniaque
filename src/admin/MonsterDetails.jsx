@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import Pick from './Pick.jsx'; import { confirmDel, Search, matches, Empty } from './ui.jsx'; import MiniMap from './MiniMap.jsx';
 import { Plus, Save, Trash2 } from 'lucide-react';
-import { BodyParts, RespawnPanel } from './MonsterParts.jsx'; import { ElementSpells } from './SpellFx.jsx';
+import { BodyParts } from './MonsterParts.jsx'; import { ElementSpells } from './SpellFx.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 import { RARITIES, RARITY_LABEL } from './rarity.js';
 import { SLOT_LABEL, MONSTER_GROUPS, LOCO, toggleLoco, locoLabel, respawnSummary, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
@@ -19,6 +19,15 @@ import Appearance from './Appearance.jsx';
 // Réapparition et objet divin porté : réglés sur chaque monstre posé (onglet « Sur les cartes »), plus sur le type (migration 35).
 const TABS = [['data', 'Caractéristiques'], ['caps', 'Capacités'], ['spec', 'Équipement et quantité'], ['list', 'Sur les cartes']];
 const EMPTY = () => Object.fromEntries(FIELDS.monster.map(([k, , t]) => [k, t === 'check' ? false : '']));
+/** XP de CE monstre posé (copiée du type au placement, réglable ici) : au tueur et à chaque coup porté. */
+function InstXp({ row, onSaved }) {
+  const d = useDispatch(), [f, setF] = useState({ xp_reward: row.xp_reward ?? 0, xp_hit: row.xp_hit ?? 0 });
+  const save = async () => { try { const b = { xp_reward: Math.max(0, Math.trunc(Number(f.xp_reward) || 0)), xp_hit: Math.max(0, Math.trunc(Number(f.xp_hit) || 0)) };
+    await api(`/admin/content/monsters/${row.id}`, b, 'PUT'); onSaved(b); d(Ad.ok('XP du monstre enregistrée')); } catch (e) { d(Ad.msg(e.message)); } };
+  return <div className="form"><div className="cell"><small>XP donnée au tueur</small><input type="number" min="0" value={f.xp_reward} onChange={e => setF({ ...f, xp_reward: e.target.value })} /></div>
+    <div className="cell"><small>XP à chaque coup porté (touché)</small><input type="number" min="0" value={f.xp_hit} onChange={e => setF({ ...f, xp_hit: e.target.value })} /></div>
+    <button className="sm primary" onClick={save}>Enregistrer l'XP</button></div>;
+}
 export default function MonsterDetails() {
   const d = useDispatch();
   const [monsters, setMonsters] = useState([]), [cats, setCats] = useState(null), [status, setStatus] = useState(null);
@@ -261,8 +270,6 @@ export default function MonsterDetails() {
           </div>}
           {lMode === 'edit' && <>
             <button className="sm danger" onClick={removeInst}>Retirer de la map</button>
-            {instRow && !instSel?.spawned && <><h4>Réapparition et objet divin porté (ce monstre)</h4>
-              <RespawnPanel key={instRow.id} monster={instRow} cats={cats} onSaved={() => { refresh(); selectInst(instRow.id); }} /></>}
             {instSel?.spawned && <p className="note">Monstre sauvage (règle d'apparition) : il disparaît à sa mort.</p>}
             <h4>Butin (donné au tueur, or compris)</h4>
             {iLoot.map(l => <span key={l.id} className="tag"><b>{lootTag(l)}</b> · {l.drop_rate} %
@@ -280,6 +287,7 @@ export default function MonsterDetails() {
               <div className="cell"><small>Chance (%)</small><input type="number" min="0" max="100" value={nl.dropRate} onChange={e => setNl({ ...nl, dropRate: e.target.value })} /></div>
               <button className="sm" onClick={addLoot}>+ Ajouter au butin</button>
             </div>
+            {instRow && <InstXp key={instRow.id} row={instRow} onSaved={v => setInstRow({ ...instRow, ...v })} />}
             {iGrid.length === 0 && <p className="note">Aucune partie du corps n'est cochée en <b>Spécificités</b> pour ce type : ce monstre ne peut porter aucun équipement
               (cochez au moins une partie sur ce type pour autoriser l'équipement).</p>}
             {iGrid.length > 0 && <h4>Équipement porté (parties équipables : {iGrid.map(s => SLOT_LABEL[s]).join(', ')})</h4>}

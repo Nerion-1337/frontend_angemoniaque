@@ -1,4 +1,5 @@
 // Hôtel de ville / capitale de faction : un onglet à la fois — Boutique (objets), Sorts, Marché (acheter / vendre), Coffre.
+import { Rarity, rarClass } from './Rarity';
 import { useState } from 'react'; import { useSelector, useDispatch } from 'react-redux';
 import { Store, ShoppingBag, Package, PlusCircle, Sparkles, X, Coins, ArrowRight, ArrowLeft, Check, Tag, Map as MapIco, Landmark, Flame, Feather } from 'lucide-react';
 import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import Modal from './Modal'; import { api } from '../lib/api'; import { useRefreshMe } from './GameCanvas';
@@ -41,7 +42,7 @@ export default function Capital() {
       <p className="cap-hint">Réserve de la faction : outils de récolte, armes, armures et parchemins de base.</p>
       {shop && !shop.items.length && <Empty>La réserve est vide.</Empty>}
       <div className="cap-grid">{shop?.items.map(i => { const poor = me.gold < i.price, out = i.stock <= 0;
-        return <article key={i.id} className={`cap-card${out ? ' out' : ''}`}><b>{i.name}</b><small>{itemStat(i)}</small>
+        return <article key={i.id} className={`cap-card ${rarClass(i.rarity)}${out ? ' out' : ''}`}><b>{i.name}<Rarity r={i.rarity} /></b><small>{itemStat(i)}</small>
           <div className="cap-foot"><span className={`stock${out ? ' none' : ''}`}>{out ? 'Épuisé' : `Stock ${i.stock}`}</span>
             <button className="primary sm" disabled={out || poor} title={poor ? 'Or insuffisant' : ''} onClick={() => act(() => api('/shop/buy', { characterId: me.id, itemId: i.id }), `${i.name} acheté`)}><Coins size={13} /> {i.price}</button></div></article>; })}</div>
     </section>}
@@ -50,7 +51,7 @@ export default function Capital() {
       <p className="cap-hint">Sorts de base enseignés par la faction.</p>
       {shop && !shop.spells.length && <Empty>Aucun sort enseigné ici.</Empty>}
       <div className="cap-grid">{shop?.spells.map(sp => { const has = known?.spells.some(k => k.id === sp.id), poor = me.gold < sp.price;
-        return <article key={sp.id} className={`cap-card${has ? ' owned' : ''}`}><b>{sp.name}</b><small>{sp.description}</small>
+        return <article key={sp.id} className={`cap-card ${rarClass(sp.rarity)}${has ? ' owned' : ''}`}><b>{sp.name}<Rarity r={sp.rarity} /></b><small>{sp.description}</small>
           <div className="cap-foot"><span className="stock">⚡ {sp.energy_cost}{sp.divine_energy_cost > 0 && <span className="divcost"> ✦ {sp.divine_energy_cost}</span>}</span>
             {has ? <span className="pill ok"><Check size={13} /> Appris</span>
               : <button className="primary sm" disabled={poor} title={poor ? 'Or insuffisant' : ''} onClick={() => act(() => api('/shop/learn', { characterId: me.id, spellId: sp.id }), `${sp.name} appris`)}><Coins size={13} /> {sp.price}</button>}</div></article>; })}</div>

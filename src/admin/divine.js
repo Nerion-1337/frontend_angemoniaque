@@ -27,8 +27,8 @@ export const itemBody = f => {
   // dernière case ; sans case X, 100 % partout. Pourcentages bornés 0..100 (vide = 100).
   if (f.slot === 'weapon') { const reach = Math.max(1, Math.trunc(Number(f.reach) || 1)), full = Math.trunc(Number(f.full_power_at) || 0);
     const pct = v => (v === '' || v == null || Number.isNaN(Number(v)) ? 100 : Math.max(0, Math.min(100, Math.trunc(Number(v)))));
-    b.reach = reach; b.full_power_at = reach > 1 && full >= 1 && full <= reach ? full : null;
-    if (b.full_power_at) { b.power_start = pct(f.power_start); b.power_end = pct(f.power_end); } } else delete b.reach;
+    b.reach = reach; b.ranged = !!f.ranged; b.full_power_at = reach > 1 && full >= 1 && full <= reach ? full : null;
+    if (b.full_power_at) { b.power_start = pct(f.power_start); b.power_end = pct(f.power_end); } } else { delete b.reach; delete b.ranged; }
   b.divine_family = b.rarity === 'divin' && f.divine_family ? f.divine_family : null;
   b.shop = !!f.shop; b.shop_races = f.shop ? [...(f.shop_races ?? [])] : [];
   if (f.shop_stock !== '' && f.shop_stock != null && !Number.isNaN(Number(f.shop_stock))) b.shop_stock = Math.max(0, Math.trunc(Number(f.shop_stock)));

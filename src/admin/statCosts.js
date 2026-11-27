@@ -1,5 +1,5 @@
 // Helpers purs de la section admin « Améliorations » (testés dans test/statCosts.test.js). Miroir de back/src/game/rules.ts:statUpgradeCost.
-export const STAT_LABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération', see: 'Vision', range: 'Portée',
+export const STAT_LABEL = { hp_max: 'Vie max', energy_max: 'Énergie max', divine_energy_max: 'Énergie divine max', recovery: 'Régénération', see: 'Vision', range: 'Portée (armes à distance)',
   strength: 'Force', agility: 'Agilité', armor: 'Armure physique', magic_armor: 'Armure magique' };
 /** Multiplicateurs par palier : `multis` (nombre libre), sinon l'ancien format multi_1..3. */
 export const multisOf = r => (r.multis?.length ? r.multis : [r.multi_1 ?? 1, r.multi_2 ?? 2, r.multi_3 ?? 3]).map(Number);

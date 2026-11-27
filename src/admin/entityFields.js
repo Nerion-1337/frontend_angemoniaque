@@ -3,8 +3,8 @@ export const FIELDS = {
   monster: [
     ['name', 'Nom'], ['hp_max', 'PV max', 'number'], ['hp_current', 'PV', 'number'], ['recovery', 'Régén/h', 'number'],
     ['energy_max', 'Énergie max', 'number'], ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
-    ['armor', 'Armure', 'number'], ['magic_armor', 'Armure magique', 'number'], ['range', 'Portée', 'number'], ['see', 'Portée de vue', 'number'],
-    ['rank', 'Rang (écart de rang avec le joueur : bonus / malus d\'XP)', 'number'], ['xp_reward', 'XP donnée au tueur (une fois)', 'number'], ['gold_current', 'Or', 'number'],
+    ['armor', 'Armure', 'number'], ['magic_armor', 'Armure magique', 'number'], ['range', 'Portée d\'attaque (cases)', 'number'], ['see', 'Portée de vue', 'number'],
+    ['rank', 'Rang (écart de rang avec le joueur : bonus / malus d\'XP)', 'number'], ['xp_reward', 'XP donnée au tueur (une fois)', 'number'], ['xp_hit', 'XP gagnée par le joueur à chaque coup porté (touché)', 'number'], ['gold_current', 'Or', 'number'],
     ['rarity', 'Rareté', 'rarity'], ['locomotion', 'Déplacement', 'loco'],
     ['mountable', 'Montable : invoqué, son propriétaire peut monter dessus', 'check'],
     ['size', 'Taille (1 à 3 : +1 vue / portée par niveau pour son cavalier, s\'il est terrestre ou aquatique ; volant : +6)', 'number'],
@@ -24,7 +24,7 @@ export const FIELDS = {
     ['name', 'Nom'], ['kind', 'Type (wall/tower/factory/totem/...)'], ['invulnerable', 'Invulnérable', 'check'],
     ['structure', 'Points de vie (structure)', 'number'], ['armor', 'Armure de la structure', 'number'], ['size', 'Taille (cases)', 'number'],
     ['occupiable', 'Case occupable (un personnage peut s\'y tenir)', 'check'],
-    ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_magic_armor', 'Bonus armure magique (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée (occupant)', 'number'],
+    ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_magic_armor', 'Bonus armure magique (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée à distance (occupant ; armes à distance seulement)', 'number'],
     ['prerequisites', 'Prérequis (JSON : {"rank":3,"building":2})', 'json'],
     ['data', 'Passifs/collecte/production (JSON : {"passive":{"defense":5},"production":{"lorien":2},"storage":{"lorien":50}})', 'json']
   ],
@@ -35,6 +35,8 @@ export const FIELDS = {
     ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
     ['energy_max', 'Énergie max', 'number'], ['divine_energy_max', 'Énergie divine max', 'number'],
     ['prereq_xp', 'XP requis (prérequis)', 'number'],
+    ['xp_hit_player', 'XP quand il frappe un autre joueur (coup touché)', 'number'], ['xp_dodge', 'XP quand il esquive l\'attaque d\'un joueur', 'number'],
+    ['train_energy', 'Entraînement : coût en énergie', 'number'], ['train_xp', 'Entraînement : XP gagnée (0 = pas d\'entraînement)', 'number'],
     ['multipliers', 'Multiplicateurs (JSON : {"strength":1.5,"hp_max":2})', 'json']
   ],
   race: [
