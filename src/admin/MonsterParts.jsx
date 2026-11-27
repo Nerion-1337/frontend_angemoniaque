@@ -1,7 +1,12 @@
-// Fiche monstre : emplacements équipables du type (silhouette cliquable).
-import { Check } from 'lucide-react';
+// Fiche monstre : emplacements équipables du type (silhouette cliquable) et réapparition d'un monstre posé (par monstre, migration 35).
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { Ad } from '../store/admin.js';
+import { api } from '../lib/api.js';
+import { Check, Plus, Save } from 'lucide-react';
+import Pick from './Pick.jsx';
 import { Empty } from './ui.jsx';
-import { SLOTS, SLOT_LABEL, SLOT_SHORT, SLOT_POS } from './monsterDetails.js';
+import { SLOTS, SLOT_LABEL, SLOT_SHORT, SLOT_POS, LIMIT_KIND, respawnDraft, respawnBody } from './monsterDetails.js';
 
 /** Silhouette : chaque partie est un bouton à bascule (cochée = équipable) ; la liste en dessous dit la même chose en texte. */
 export function BodyParts({ slots, toggle }) {
@@ -22,5 +27,32 @@ export function BodyParts({ slots, toggle }) {
       <p className="note">Mêmes emplacements qu'un personnage : deux armes, deux bracelets, deux bagues. Cliquez un emplacement sur la silhouette pour l'autoriser ou le retirer.
         L'équipement des monstres posés (onglet « Sur les cartes ») n'est possible que sur ces emplacements, avec les objets du bon type.</p>
     </div>
+  </div>;
+}
+
+/** Réapparition d'UN monstre posé : recréé ou non, délai, conditions sur les éléments limités (objets divins compris).
+ *  L'objet divin porté vient du type (copié au placement) et n'est plus réglé ici (demande du 2026-11-27 : doublon des conditions). */
+export function RespawnPanel({ monster, cats, onSaved }) {
+  const d = useDispatch(), [r, setR] = useState(() => respawnDraft(monster)), [nl, setNl] = useState({ kind: 'item', ref: '', max: 1 });
+  const lists = { item: cats?.items ?? [], spell: cats?.spells ?? [], resource: cats?.resources ?? [] };
+  const nameOf = l => lists[l.kind].find(o => String(o.id) === String(l.ref))?.name ?? `n°${l.ref}`;
+  const save = async () => { try { await api(`/admin/content/monsters/${monster.id}`, respawnBody(r), 'PUT'); d(Ad.ok('Réapparition enregistrée')); onSaved(); } catch (e) { d(Ad.msg(e.message)); } };
+  return <div className="respawn">
+    <label className="check"><input type="checkbox" checked={r.respawn} onChange={e => setR({ ...r, respawn: e.target.checked })} /> <b>Recréé après sa mort</b></label>
+    {!r.respawn ? <p className="note">Une fois tué, il disparaît de la carte (le type reste au catalogue et peut être reposé). Les monstres sauvages (règles d'apparition) suivent leurs propres règles.</p> : <>
+      <div className="form"><div className="cell"><small>Délai avant réapparition (heures, 0 = aussitôt)</small><input type="number" min="0" value={r.delayH} onChange={e => setR({ ...r, delayH: e.target.value })} /></div></div>
+      <h5>Conditions (éléments limités)</h5>
+      <p className="note">Tant qu'au moins le nombre indiqué d'exemplaires est chez les joueurs (objets : sac, coffre et équipés ; sorts : appris ; ressources : stocks),
+        le monstre ne réapparaît pas. Revérifié chaque heure : il réapparaît dès que ce n'est plus le cas.</p>
+      <div className="row add">
+        <select value={nl.kind} onChange={e => setNl({ ...nl, kind: e.target.value, ref: '' })}>{Object.entries(LIMIT_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
+        <Pick options={lists[nl.kind]} value={nl.ref} onPick={v => setNl({ ...nl, ref: v })} labelOf={o => o.name} placeholder={`— ${LIMIT_KIND[nl.kind]} —`} />
+        <label className="inlabel"><small>bloque à</small><input type="number" min="1" className="nb" value={nl.max} onChange={e => setNl({ ...nl, max: e.target.value })} /></label>
+        <button className="sm" disabled={!nl.ref} onClick={() => { setR({ ...r, limits: [...r.limits.filter(l => !(l.kind === nl.kind && String(l.ref) === String(nl.ref))), { ...nl }] }); setNl({ ...nl, ref: '' }); }}><Plus size={14} /> Ajouter</button>
+      </div>
+      {r.limits.length ? <div className="chips">{r.limits.map(l => <span key={`${l.kind}:${l.ref}`} className="chip on">{LIMIT_KIND[l.kind]} « {nameOf(l)} » : bloque à {l.max}
+        <button className="x-in" onClick={() => setR({ ...r, limits: r.limits.filter(x => x !== l) })}>×</button></span>)}</div> : <Empty>Aucune condition.</Empty>}
+    </>}
+    <div className="actions"><span className="grow" /><button className="primary" onClick={save}><Save size={14} /> Enregistrer la réapparition</button></div>
   </div>;
 }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'; import { api } from '../lib/api';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import Pick from './Pick.jsx'; import { confirmDel, Search, matches, Empty } from './ui.jsx'; import MiniMap from './MiniMap.jsx';
 import { Plus, Save, Trash2 } from 'lucide-react';
-import { BodyParts } from './MonsterParts.jsx'; import { ElementSpells } from './SpellFx.jsx';
+import { BodyParts, RespawnPanel } from './MonsterParts.jsx'; import { ElementSpells } from './SpellFx.jsx';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 import { RARITIES, RARITY_LABEL } from './rarity.js';
 import { SLOT_LABEL, MONSTER_GROUPS, LOCO, toggleLoco, locoLabel, respawnSummary, spellLabel, capLabel, equipLabel, capsToMaxCaps, placeBody, linkedLabel, respawnIn } from './monsterDetails.js';
@@ -270,6 +270,8 @@ export default function MonsterDetails() {
           </div>}
           {lMode === 'edit' && <>
             <button className="sm danger" onClick={removeInst}>Retirer de la map</button>
+            {instRow && !instSel?.spawned && <><h4>Réapparition (ce monstre)</h4>
+              <RespawnPanel key={instRow.id} monster={instRow} cats={cats} onSaved={() => { refresh(); selectInst(instRow.id); }} /></>}
             {instSel?.spawned && <p className="note">Monstre sauvage (règle d'apparition) : il disparaît à sa mort.</p>}
             <h4>Butin (donné au tueur, or compris)</h4>
             {iLoot.map(l => <span key={l.id} className="tag"><b>{lootTag(l)}</b> · {l.drop_rate} %

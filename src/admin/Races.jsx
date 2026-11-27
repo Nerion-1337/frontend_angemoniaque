@@ -1,11 +1,13 @@
 import { Fragment, useEffect, useState } from 'react'; import { api } from '../lib/api';
-import XpRank from './XpRank.jsx';
+import XpRank from './XpRank.jsx'; import CombatXp from './CombatXp.jsx'; import { COMBAT_KEYS, rankCombatValue } from './combatXp.js';
 import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js';
 import { FIELDS, jsonOr, jsonText } from './entityFields.js';
 import { confirmDel } from './ui.jsx'; import { RaceRules, rulesDraft, rulesBody, rulesLabel } from './raceRules.jsx'; import StartKit from './StartKit.jsx'; import RankReq from './RankReq.jsx'; import { reqSummary } from './rankReq.js'; import { kitSummary, kitDraft } from './startKit.js';
 /** Races (stats de base) + arbre des rangs : paliers d'évolution, prérequis, multiplicateurs de caractéristiques. */
 export default function Races() {
   const d = useDispatch(), [cat, setCat] = useState(null), [kitFor, setKitFor] = useState(null), [reqFor, setReqFor] = useState(null), maps = cat?.maps ?? [], [races, setRaces] = useState(null), [sel, setSel] = useState(null), [raceDraft, setRaceDraft] = useState(null), [rank, setRank] = useState(null);
+  const [gen, setGen] = useState(null);   // valeurs générales (XP de combat / entraînement) : indication sur les rangs
+  useEffect(() => { api("/admin/content/combat-xp").then(setGen).catch(() => {}); }, []);
   const load = () => api('/admin/content/races').then(setRaces).catch(e => d(Ad.msg(e.message)));
   useEffect(() => { load(); }, []);
   useEffect(() => { api('/admin/catalog').then(setCat).catch(() => {}); }, []);   // corps de bloc : l'effet ne retourne jamais la Promise du loader (crash unmount « destroy is not a function »)
@@ -19,10 +21,11 @@ export default function Races() {
     try { await api(raceDraft.id ? `/admin/content/races/${raceDraft.id}` : '/admin/content/races', body, raceDraft.id ? 'PUT' : 'POST');
       d(Ad.ok('Enregistré')); setRaceDraft(null); load(); } catch (e) { d(Ad.msg(e.message)); }
   };
-  const openRank = (r, s) => setRank({ id: s?.id ?? null, values: { race: s?.race ?? r.key, name: s?.name ?? '', current_rank: s?.current_rank ?? 1, max_population_percent: s?.max_population_percent ?? 100, gain_xp_hour: s?.gain_xp_hour ?? 1, hp_max: s?.hp_max, recovery: s?.recovery, see: s?.see, strength: s?.strength, agility: s?.agility, energy_max: s?.energy_max, divine_energy_max: s?.divine_energy_max, prereq_xp: s?.prereq_xp, multipliers: jsonText(s?.multipliers ?? null), evolution: s?.evolution ?? '' } });
+  const openRank = (r, s) => setRank({ id: s?.id ?? null, values: { race: s?.race ?? r.key, name: s?.name ?? '', current_rank: s?.current_rank ?? 1, max_population_percent: s?.max_population_percent ?? 100, gain_xp_hour: s?.gain_xp_hour ?? 1, hp_max: s?.hp_max, recovery: s?.recovery, see: s?.see, strength: s?.strength, agility: s?.agility, energy_max: s?.energy_max, divine_energy_max: s?.divine_energy_max, prereq_xp: s?.prereq_xp, xp_hit_player: s?.xp_hit_player ?? '', xp_dodge: s?.xp_dodge ?? '', train_energy: s?.train_energy ?? '', train_xp: s?.train_xp ?? '', multipliers: jsonText(s?.multipliers ?? null), evolution: s?.evolution ?? '' } });
   const saveRank = async () => {
     const v = rank.values, body = {};
     for (const [k, , t] of FIELDS.rank) {
+      if (COMBAT_KEYS.includes(k)) { if (rank.id || v[k] !== '') body[k] = rankCombatValue(v[k]); continue; }   // vide = valeur générale (null)
       if (v[k] === undefined || v[k] === '') continue;
       if (k === 'multipliers') { const m = jsonOr(v[k], undefined); if (m === undefined && v[k]) { d(Ad.msg('JSON invalide : multipliers')); return; } if (v[k]) body.multipliers = m; continue; }
       body[k] = t === 'number' ? Number(v[k]) : v[k];
@@ -33,6 +36,7 @@ export default function Races() {
   const delRank = async s => { if (!confirmDel(`le palier « ${s.name} »`)) return; try { await api(`/admin/content/ranks/${s.id}`, undefined, 'DELETE'); d(Ad.ok('Palier supprimé')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   return <section>
     <XpRank />
+    <CombatXp onSaved={setGen} />
     <div className="headrow"><span className="grow" /><button className="sm" onClick={newRace}>+ Race</button></div>
     {races?.map(r => <div key={r.id} className="race apanel">
       <div className="headrow"><b>{r.name}</b><small>({r.key}){r.active ? '' : ' · inactive'} · {rulesLabel(r)}</small>
@@ -78,7 +82,7 @@ export default function Races() {
         t === 'json' ? <div key={k} className="cell span-all"><small>{label}</small><textarea rows="4" className="mono" value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })} /></div>
           : k === 'race'
             ? <div key={k} className="cell"><small>{label}</small><select value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })}>{races.map(x => <option key={x.key} value={x.key}>{x.key}</option>)}</select></div>
-            : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })} disabled={!rank.id && false} /></div>)}
+            : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} placeholder={COMBAT_KEYS.includes(k) && gen ? `générale : ${gen[k]}` : undefined} value={rank.values[k] ?? ''} onChange={e => setRank({ ...rank, values: { ...rank.values, [k]: e.target.value } })} disabled={!rank.id && false} /></div>)}
         <div className="row"><button onClick={saveRank}>{rank.id ? 'Enregistrer' : 'Créer'}</button>
           <button className="sm" onClick={() => setRank(null)}>Annuler</button></div>
       </div>

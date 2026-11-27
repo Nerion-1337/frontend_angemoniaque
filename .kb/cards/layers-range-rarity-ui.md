@@ -15,10 +15,15 @@ files:
   - src/admin/entityFields.js
   - src/admin/MonsterDetails.jsx
   - src/admin/MonsterParts.jsx
+  - src/admin/CombatXp.jsx
+  - src/admin/combatXp.js
+  - src/admin/Races.jsx
+  - src/admin/monsterDetails.js
 symbols:
   - 
 tests:
   - test/rangedRarity.test.js
+  - test/combatXp.test.js
 ---
 ## Purpose
 Interface du lot du 2026-11-27 (migration 46).
@@ -30,10 +35,12 @@ Interface du lot du 2026-11-27 (migration 46).
 - Classement : ligne teintée de la couleur de race (pseudo, pastille, liseré), miniature d'avatar (`/api/ranking/portrait/<pseudo>`), clic = agrandi ; sans avatar : initiale.
 - Pacte : choisir une composition ouvre une confirmation (`Confirm`) avant l'appel (verrou 48 h rappelé).
 - Entraînement : carte en tête de l'onglet Amélioration si le rang a `train_xp` > 0.
-- Admin monstre posé : plus de section « Réapparition et objet divin porté » ; XP au tueur et XP au coup réglables en fin de butin (`InstXp`). Admin rangs : XP coup joueur, XP esquive, entraînement (énergie, XP) ; types de monstre : XP au coup.
+- Admin monstre posé : section « Réapparition (ce monstre) » (recréé, délai, conditions sur les éléments limités) SANS la partie « Objet divin porté » (doublon des conditions ; la famille reste celle copiée du type) ; XP au tueur et XP au coup réglables en fin de butin (`InstXp`).
+- Admin : types de monstre (groupe « Rang et récompenses ») et structures : « XP à chaque coup porté » ; Races & Rangs : panneau des valeurs générales (`CombatXp`, `combatXp.js`) et, par rang, champs vides = valeur générale (envoyés `null`, indication « générale : N »).
+- Fiche de case : une structure non invulnérable, pas à soi, hors zone sacrée, s'attaque (`targetBuildingId`) ; points de structure affichés.
 
 ## Gotchas
 - `Rarity.jsx` duplique les libellés de `admin/rarity.js` : garder les deux listes alignées.
 
 ## Tests
-`test/rangedRarity.test.js` (itemBody.ranged, rarClass).
+`test/rangedRarity.test.js` (itemBody.ranged, rarClass) ; `test/combatXp.test.js` (valeurs générales, vide = null).

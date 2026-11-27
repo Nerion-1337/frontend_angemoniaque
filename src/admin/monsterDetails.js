@@ -48,7 +48,7 @@ export const MONSTER_GROUPS = [
   ['Identité', ['name']],
   ['Vie et énergie', ['hp_max', 'hp_current', 'recovery', 'energy_max']],
   ['Combat', ['strength', 'agility', 'armor', 'magic_armor', 'range', 'see']],
-  ['Rang et récompenses', ['rank', 'xp_reward', 'gold_current']],
+  ['Rang et récompenses', ['rank', 'xp_reward', 'xp_hit', 'gold_current']],
   ['Rareté et déplacement', ['rarity', 'locomotion']],
   ['Invocation et monte', ['mountable', 'size', 'resummon_delay_h']],
   ['Apparence', ['model', 'icon']],

@@ -22,7 +22,7 @@ export const FIELDS = {
   ],
   building: [
     ['name', 'Nom'], ['kind', 'Type (wall/tower/factory/totem/...)'], ['invulnerable', 'Invulnérable', 'check'],
-    ['structure', 'Points de vie (structure)', 'number'], ['armor', 'Armure de la structure', 'number'], ['size', 'Taille (cases)', 'number'],
+    ['structure', 'Points de vie (structure)', 'number'], ['xp_hit', 'XP gagnée par le joueur à chaque coup porté (structure non invulnérable)', 'number'], ['armor', 'Armure de la structure', 'number'], ['size', 'Taille (cases)', 'number'],
     ['occupiable', 'Case occupable (un personnage peut s\'y tenir)', 'check'],
     ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_magic_armor', 'Bonus armure magique (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée à distance (occupant ; armes à distance seulement)', 'number'],
     ['prerequisites', 'Prérequis (JSON : {"rank":3,"building":2})', 'json'],
@@ -35,8 +35,8 @@ export const FIELDS = {
     ['strength', 'Force', 'number'], ['agility', 'Agilité', 'number'],
     ['energy_max', 'Énergie max', 'number'], ['divine_energy_max', 'Énergie divine max', 'number'],
     ['prereq_xp', 'XP requis (prérequis)', 'number'],
-    ['xp_hit_player', 'XP quand il frappe un autre joueur (coup touché)', 'number'], ['xp_dodge', 'XP quand il esquive l\'attaque d\'un joueur', 'number'],
-    ['train_energy', 'Entraînement : coût en énergie', 'number'], ['train_xp', 'Entraînement : XP gagnée (0 = pas d\'entraînement)', 'number'],
+    ['xp_hit_player', 'XP quand il frappe un autre joueur (vide = valeur générale)', 'number'], ['xp_dodge', 'XP quand il esquive l\'attaque d\'un joueur (vide = valeur générale)', 'number'],
+    ['train_energy', 'Entraînement : coût en énergie (vide = valeur générale)', 'number'], ['train_xp', 'Entraînement : XP gagnée (vide = valeur générale ; 0 = pas d\'entraînement)', 'number'],
     ['multipliers', 'Multiplicateurs (JSON : {"strength":1.5,"hp_max":2})', 'json']
   ],
   race: [
