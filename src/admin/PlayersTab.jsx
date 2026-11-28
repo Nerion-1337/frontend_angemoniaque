@@ -46,7 +46,7 @@ export default function PlayersTab() {
   </section>;
 }
 
-const TABS = [['stats', 'Caractéristiques'], ['items', 'Objets'], ['spells', 'Sorts'], ['buildings', 'Bâtiments'], ['divine', 'Objets divins']];
+const TABS = [['stats', 'Caractéristiques'], ['items', 'Objets'], ['spells', 'Sorts'], ['buildings', 'Structures'], ['divine', 'Objets divins']];
 /** Fiche d'un joueur : onglets d'édition. */
 function PlayerSheet({ id, close, onSaved }) {
   const d = useDispatch(), [p, setP] = useState(null), [tab, setTab] = useState('stats'), [form, setForm] = useState({}), [cat, setCat] = useState(null), [free, setFree] = useState([]);
@@ -111,10 +111,10 @@ function PlayerSheet({ id, close, onSaved }) {
     </>}
 
 
-    {tab === 'buildings' && (p.buildings.length ? <div className="tablewrap"><table><thead><tr><th>Bâtiment</th><th>Type</th><th>Structure</th><th>Position</th><th /></tr></thead><tbody>
+    {tab === 'buildings' && (p.buildings.length ? <div className="tablewrap"><table><thead><tr><th>Structure</th><th>Type</th><th>Structure</th><th>Position</th><th /></tr></thead><tbody>
       {p.buildings.map(b => <tr key={b.id}><td><b>{b.name}</b> <small>n°{b.id}</small></td><td>{b.kind}</td><td>{b.structure}</td><td>{posLabel(b)}</td>
-        <td><button className="sm danger" title="Détruire" onClick={delWith(`le bâtiment « ${b.name} »`, `/admin/players/${id}/buildings/${b.id}`, 'Bâtiment supprimé')}><Trash2 size={13} /></button></td></tr>)}
-    </tbody></table></div> : <Empty>Aucun bâtiment.</Empty>)}
+        <td><button className="sm danger" title="Détruire" onClick={delWith(`la structure « ${b.name} »`, `/admin/players/${id}/buildings/${b.id}`, 'Structure supprimée')}><Trash2 size={13} /></button></td></tr>)}
+    </tbody></table></div> : <Empty>Aucune structure.</Empty>)}
 
     {tab === 'divine' && <>
       <div className="row add"><Pick options={free} value={nd} onPick={setNd} labelOf={o => `${o.item_name ?? o.kind} · n°${o.id}${o.guardian ? ` (gardé par ${o.guardian})` : ''}`} placeholder="— Exemplaire libre —" />

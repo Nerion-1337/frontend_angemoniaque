@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost, Crosshair } from 'lucide-react'; import CreatureIcon from './CreatureIcon'; import { RankingTable, PlayerCard, RACE_NAME } from './Ranking';
-import { Tabs, useTab } from './Tabs';
+import { Tabs, useTab } from './Tabs'; import { fmtWait } from '../lib/time';
 import { fxSummary } from '../lib/spellFx.js';
-import Modal from './Modal'; import { Rarity } from './Rarity'; import Confirm from './Confirm'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
+import Modal from './Modal'; import DoorModal from './DoorModal'; import { Rarity } from './Rarity'; import Confirm from './Confirm'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
 /** Fenêtre de jeu centrée (comme l'Hôtel de ville ou l'inventaire) : Échap ou clic hors de la fenêtre pour fermer. */
 export const Panel = ({ title, wide, children }) => { const d = useDispatch(), close = () => d(A.setPanel(null));
   return <Modal onClose={close} className={'panel' + (wide ? ' wide' : '')} label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={close}><X size={14} /></button></header><div className="pbody">{children}</div></Modal>; };
@@ -34,8 +34,8 @@ export function FaithPanel() {
     <Tabs label="Pactes et fidèles" value={tab} onChange={setTab} tabs={[['pacts', 'Pactes', Handshake, pacts?.active.length], ['requests', 'Demandes', Inbox, pacts?.incoming.length || null], ['faith', 'Foi', Flame], ...(isGod ? [['altar', 'Autel', Crown, f?.asGod.filter(x => x.status === 'pending' || x.request_choice).length || null]] : [])]} />
     {tab === 'requests' && <>
     <h4>Demander un pacte {pacts && <small>({pacts.limit.used} / {pacts.limit.max} pacte{pacts.limit.max > 1 ? 's' : ''} selon votre rang)</small>}</h4>
-    <small>{human ? 'Nommez l\'Ange ou le Démon avec qui vous voulez vous lier' : 'Nommez l\'Humain avec qui vous voulez vous lier'} : l'autre partie doit accepter pour que le pacte soit conclu.</small>
-    <div className="row"><input placeholder={human ? 'Nom de l\'Ange ou du Démon' : 'Nom de l\'Humain'} value={q} onChange={e => setQ(e.target.value)} /><button className="primary" disabled={!q.trim()} onClick={() => run(() => api('/pacts/request', { characterId: me.id, targetPseudo: q.trim() }), () => { setQ(''); reload(); })}>Demander</button></div>
+    <small>{human ? `Nommez l'Ange, le Démon${pacts?.patron ? '' : ' ou le demi-dieu'} avec qui vous voulez vous lier${pacts?.patron ? ' — ou, demi-dieu, un Humain de rang inférieur' : ''}` : 'Nommez l\'Humain avec qui vous voulez vous lier'} : l'autre partie doit accepter pour que le pacte soit conclu.</small>
+    <div className="row"><input placeholder={human ? 'Nom du personnage' : 'Nom de l\'Humain'} value={q} onChange={e => setQ(e.target.value)} /><button className="primary" disabled={!q.trim()} onClick={() => run(() => api('/pacts/request', { characterId: me.id, targetPseudo: q.trim() }), () => { setQ(''); reload(); })}>Demander</button></div>
     {nReq === 0 && <p className="empty">Aucune demande en cours.</p>}
     {pacts?.incoming.length > 0 && <h4>Demandes reçues ({pacts.incoming.length})</h4>}
     {pacts?.incoming.map(p => <div key={p.id} className="item row2"><span className="row"><PlayerCard p={p} /><small>souhaite conclure un pacte avec vous</small></span><span className="row"><button className="primary" onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: true }), () => { reload(); d(A.toast('Pacte conclu')); })}>Accepter</button><button onClick={() => run(() => api(`/pacts/${p.id}/answer`, { characterId: me.id, accept: false }), reload)}>Refuser</button></span></div>)}
@@ -46,12 +46,14 @@ export function FaithPanel() {
     <h4>Pactes conclus ({pacts?.active.length ?? 0})</h4>
     <small>{human ? 'Activer un pacte vous transfère, pour une durée limitée, une part des caractéristiques de l\'être lié (selon la force du pacte qu\'il a choisie) ; il les perd pendant ce temps.' : 'Choisissez pour chaque pacte sa composition (survolez pour le détail) : plus elle vous rapporte, plus elle transfère de vos caractéristiques à l\'Humain quand il l\'active. Une composition ne change qu\'une fois toutes les 48 h par pacte.'}</small>
     {!pacts?.active.length && <p className="empty">Aucun pacte conclu. Envoyez une demande depuis l'onglet « Demandes ».</p>}
-    {pacts?.active.map(p => { const cur = pacts.tiers.find(t => t.id === p.tier_id); return <div key={p.id} className="item row2"><PlayerCard p={p} /><span className="row">
+    {pacts?.patron && human && <small> Demi-dieu : vous choisissez la composition des pactes que vous proposez ; leurs bonus ne valent que tant que les portes du monde des Hommes sont toutes détruites.</small>}
+    {pacts?.active.map(p => { const cur = pacts.tiers.find(t => t.id === p.tier_id), mine = p.i_propose; return <div key={p.id} className="item row2"><PlayerCard p={p} /><span className="row">
       <span className="pactinfo">{p.tier_id && <small title="Le délai de réactivation commence à la fin du bonus">Bonus {Number(p.duration_h)} h · réactivable {Number(p.cooldown_h)} h après la fin</small>}
         {p.bonus_left_s > 0 ? <small className="note">Bonus actif : encore {fmtWait(p.bonus_left_s)}{Number(p.cooldown_h) > 0 ? `, puis ${Number(p.cooldown_h)} h de recharge` : ''}</small> : p.ready_in_s > 0 ? <small className="err">Recharge : encore {fmtWait(p.ready_in_s)}</small> : null}
-        {!human && p.tier_change_in_s > 0 && <small>Changement de composition dans {fmtWait(p.tier_change_in_s)}</small>}</span>
-      {human ? <><span className="pill">Pacte {p.tier_name ?? '— (à choisir par l\'être lié)'}</span>
-          <button disabled={!p.tier_id || p.bonus_left_s > 0 || p.ready_in_s > 0} onClick={() => run(() => api(`/pacts/${p.id}/activate`, { characterId: me.id }), r => { reload(); d(A.toast(`Bonus de pacte actif (${r?.hours ?? ''} h)`)); })}>Activer le bonus</button></>
+        {mine && p.tier_change_in_s > 0 && <small>Changement de composition dans {fmtWait(p.tier_change_in_s)}</small>}
+        {p.suspended && <small className="err" title={p.suspended}>Pacte suspendu : {p.suspended}</small>}</span>
+      {!mine ? <><span className="pill">Pacte {p.tier_name ?? '— (à choisir par l\'être lié)'}</span>
+          <button disabled={!p.tier_id || p.bonus_left_s > 0 || p.ready_in_s > 0 || !!p.suspended} onClick={() => run(() => api(`/pacts/${p.id}/activate`, { characterId: me.id }), r => { reload(); d(A.toast(`Bonus de pacte actif (${r?.hours ?? ''} h)`)); })}>Activer le bonus</button></>
         : <><select title={cur ? tierInfo(cur) : 'Choisir une composition'} disabled={p.tier_change_in_s > 0} value={p.tier_id ?? ''} onChange={e => { const t = pacts.tiers.find(x => x.id === Number(e.target.value)); if (t) setAsk({ p, t }); }}>
             {!p.tier_id && <option value="">— Composition —</option>}{pacts.tiers.map(t => <option key={t.id} value={t.id} title={tierInfo(t)} disabled={t.full && t.id !== p.tier_id}>{t.name} · {t.xp_hour} XP / {t.gold_hour} or · {t.percent} %{t.max_assign ? ` · ${t.used}/${t.max_assign}` : ''}</option>)}</select>
 </>}
@@ -78,7 +80,7 @@ export function FaithPanel() {
 
 const LOCO_FR = { land: 'terrestre', air: 'volante', water: 'aquatique' };
 /** Délai restant lisible (secondes → « 1 h 05 » / « 12 min »). */
-export const fmtWait = s => { const t = Math.ceil(s / 60), h = Math.floor(t / 60), m = t % 60; return h ? `${h} h${m ? ` ${String(m).padStart(2, '0')}` : ''}` : `${Math.max(1, m)} min`; };   // minutes arrondies au total (jamais « 47 h 60 »)
+export { fmtWait };   // lib/time.js
 /** Invocations (créées par un sort) : contrôler, renvoyer, et MONTER dessus si leur type est montable (case voisine du héros) ;
  *  montée, elle porte le héros : ses déplacements et ses capacités consomment son énergie (migration 43). */
 export function MountsPanel() {
@@ -124,8 +126,9 @@ export function ActionsPanel() {
   const targets = entities.filter(e => ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && dist(e) <= Math.max(2, me.attack_range ?? me.range_eff)), bldgs = entities.filter(e => e.kind === 'building' && dist(e) <= 1);
   const [hits, setHits] = useState({}); useEffect(() => { targets.forEach(e => api(`/combat/preview/${me.id}/${e.x}/${e.y}`).then(r => setHits(h => ({ ...h, [`${e.x},${e.y}`]: r.hitChance }))).catch(() => {})); }, [entities.length, P.x, P.y]);
   const attack = e => run(async () => { const r = await api('/combat/attack', { characterId: me.id, targetCharacterId: e.char_id, targetMonsterId: e.monster_id, targetSummonId: e.summon_id }); d(A.toast(r.missed ? `Raté ! (${r.hitChance}%)` : `Touché : -${r.dmg} PV${r.killed ? ' — vaincu !' : ''}`)); }, after);
-  const [tab, setTab] = useTab('actions', ['spells', 'build', 'gather', 'combat']);
+  const [tab, setTab] = useTab('actions', ['spells', 'build', 'gather', 'combat']), [door, setDoor] = useState(null);
   return <Panel title="Actions autour du personnage" wide>
+    {door && <DoorModal id={door} me={me} toast={m => d(A.toast(m))} close={() => setDoor(null)} done={() => { setDoor(null); refresh(); }} />}
     <Tabs label="Actions" value={tab} onChange={setTab} tabs={[['spells', 'Sorts', Sparkles, sp?.spells.length], ['build', 'Construire', Hammer], ['gather', 'Récolte & bâtiments', Pickaxe, bldgs.length || null], ['combat', 'Combat', Swords, targets.length || null]]} />
     {(tab === 'spells' || tab === 'build') && <>
     <h4><Castle size={14} /> Case adjacente ciblée</h4><small>Les cases occupées sont interdites pour bâtir ou invoquer.</small>
@@ -151,7 +154,7 @@ export function ActionsPanel() {
     </>}
     {tab === 'gather' && <>
     <h4><Pickaxe size={14} /> Bâtiments adjacents & récolte</h4>{!bldgs.length && <p className="empty">Aucun bâtiment sur une case voisine.</p>}
-    {bldgs.map(b => <div key={b.building_id} className="item row2"><span>{b.name}</span><button onClick={() => run(async () => { const r = await api(`/buildings/${b.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') await api('/divine/door', { characterId: me.id, buildingId: r.id }); else if (r.kind === 'capital') d(A.setPanel('capital')); else d(A.toast(r.name)); }, refresh)}>Interagir ⚡0</button></div>)}
+    {bldgs.map(b => <div key={b.building_id} className="item row2"><span>{b.name}</span><button onClick={() => run(async () => { const r = await api(`/buildings/${b.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') setDoor(r.id); else if (r.kind === 'capital') d(A.setPanel('capital')); else d(A.toast(r.name)); }, refresh)}>Interagir ⚡0</button></div>)}
     <button className="wide" onClick={() => run(() => api('/actions/gather', { characterId: me.id }), refresh)}>Récolter la ressource sous vos pieds — ⚡4</button>
     </>}
     {tab === 'combat' && <>

@@ -1,5 +1,5 @@
 // Helpers purs de la section « Parchemins » (testés dans test/scrolls.test.js).
-export const TARGET_LABEL = { item: 'Objet', spell: 'Sort', building: 'Bâtiment' };
+export const TARGET_LABEL = { item: 'Objet', spell: 'Sort', building: 'Structure' };
 /** Brouillon du formulaire depuis une recette de l'API (null = nouvelle recette). */
 export const recipeDraft = r => ({
   newScrollName: '', scrollItemId: r?.scroll_item_id ?? '',

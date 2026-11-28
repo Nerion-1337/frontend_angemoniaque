@@ -39,3 +39,10 @@ export const groupSummary = g => {
   return p.length ? `${p.join(', ')}${g.consume ? ' (consommés)' : ''}` : 'sans condition';
 };
 export const activationSummary = a => (a?.groups ?? []).map((g, i) => `${(a.groups.length > 1) ? `option ${i + 1} : ` : ''}${groupSummary(g)}`).join(' — ou — ');
+
+/** Réapparition d'une structure (migration 48) : brouillon et corps PUT (délai décimal ≥ 0, conditions sans référence retirées). */
+export const structureRespawnDraft = b => ({ respawn: !!b?.respawn, delayH: b?.respawn_delay_h ?? 0, limits: [...(b?.respawn_limits ?? [])] });
+export const structureRespawnBody = r => ({
+  respawn: !!r.respawn, respawn_delay_h: Math.max(0, Number(r.delayH) || 0),
+  respawn_limits: r.limits.filter(l => l.ref !== '' && l.ref != null).map(l => ({ kind: l.kind, ref: l.kind === 'resource' ? String(l.ref) : Number(l.ref), max: Math.max(1, Math.trunc(Number(l.max) || 1)) })),
+});

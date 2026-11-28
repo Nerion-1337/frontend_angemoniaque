@@ -4,8 +4,8 @@ import { Plus, Save, Trash2 } from 'lucide-react';
 import { FIELDS, jsonOr, jsonText, URL_KIND } from './entityFields.js';
 import { RuleForms, RulesList } from './EntityRules.jsx';
 import { BuildingExtras, BuildingSpells, ActivationEditor } from './BuildingExtras.jsx'; import { buildingBody, buildingDraft } from './building.js';
-import { Search, matches, Empty, confirmDel } from './ui.jsx';
-/** Éditeur générique d'entités (bâtiments) : liste filtrable à gauche + fiche à droite (caractéristiques, règles transverses). */
+import { Search, matches, Empty, confirmDel } from './ui.jsx'; import { RespawnPanel } from './MonsterParts.jsx';
+/** Éditeur générique d'entités (structures) : liste filtrable à gauche + fiche à droite (caractéristiques, règles transverses). */
 export default function Entities({ kind }) {
   const d = useDispatch(), [rows, setRows] = useState(null), [sel, setSel] = useState(null), [draft, setDraft] = useState(null), [tab, setTab] = useState('data'), [q, setQ] = useState(''), [dirty, setDirty] = useState(false);
   const url = URL_KIND[kind], [cat, setCat] = useState({});
@@ -18,6 +18,7 @@ export default function Entities({ kind }) {
     const body = {};
     for (const [k, , t] of FIELDS[kind]) {
       if (t === 'check') { body[k] = !!draft[k]; continue; }
+      if (t === 'opts') { body[k] = draft[k] || null; continue; }
       if (draft[k] === undefined || draft[k] === '') continue;
       if (t === 'json') { const v = jsonOr(draft[k], undefined); if (v === undefined) { d(Ad.msg(`JSON invalide : ${k}`)); return; } body[k] = v; }
       else if (t === 'number') body[k] = Number(draft[k]);
@@ -47,11 +48,15 @@ export default function Entities({ kind }) {
         {sel?.id && <div className="tabs">{['data', 'rules'].map(t => <button key={t} className={tab === t ? 'on' : ''} onClick={() => setTab(t)}>{t === 'data' ? 'Caractéristiques' : 'Règles transverses'}</button>)}</div>}
         {tab === 'data' && <div className="form">{F.map(([k, label, t]) =>
           t === 'check' ? <label key={k} className="sm check"><input type="checkbox" checked={!!draft[k]} onChange={e => set(k, e.target.checked)} /> {label}</label>
+            : t === 'opts' ? <div key={k} className="cell"><small>{label}</small><select value={draft[k] ?? ''} onChange={e => set(k, e.target.value)}>{F.find(f => f[0] === k)[3].map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></div>
             : t === 'json' ? <div key={k} className="cell span-all"><small>{label}</small><textarea className="mono" rows="4" value={typeof draft[k] === 'string' ? draft[k] : jsonText(draft[k] ?? null)} onChange={e => set(k, e.target.value)} /></div>
               : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>)}</div>}
         {tab === 'data' && kind === 'building' && <BuildingExtras draft={draft} set={set} resources={cat.resources ?? []} />}
         {tab === 'data' && kind === 'building' && <ActivationEditor groups={draft.activationGroups} set={v => set('activationGroups', v)} cat={cat} />}
         {tab === 'data' && kind === 'building' && sel?.id && <BuildingSpells id={sel.id} />}
+        {tab === 'data' && kind === 'building' && sel?.id && <div className="bldextras"><h5>Réapparition (cette structure)</h5>
+          {sel.destroyed_at && <p className="note">Détruite le {new Date(sel.destroyed_at).toLocaleString('fr-FR')}{sel.respawn_blockers?.length ? ` — bloquée : ${sel.respawn_blockers.join(', ')}` : ''}.</p>}
+          <RespawnPanel key={sel.id} kind="building" monster={sel} cats={cat} onSaved={() => open(sel.id, true)} /></div>}
         {tab === 'rules' && sel?.id && <div><RuleForms kind={kind} id={sel.id} onSaved={() => open(sel.id, true)} /><RulesList kind={kind} id={sel.id} extra={sel} onSaved={() => open(sel.id, true)} /></div>}
         {sel?.position && <p className="note">Position sur carte : {sel.position.map_id}:{sel.position.coord_x},{sel.position.coord_y}</p>}
         <div className="actions sticky">

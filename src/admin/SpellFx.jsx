@@ -50,13 +50,13 @@ export function SpellEffects({ fx, set }) {
         {fx.sumKind === 'item' && <label className="inlabel"><small>×</small><input type="number" min="1" max="99" className="nb" value={fx.sumQty} onChange={e => u('sumQty', e.target.value)} /></label>}
         <label className="inlabel"><small>durée</small><input type="number" min="0" className="nb" value={fx.sumH} onChange={e => u('sumH', e.target.value)} /><small>h (0 = permanent)</small></label></div>}
       {fx.sumOn && <p className="note">Monstre : invocation de combat contrôlable près du lanceur (limite d'invocations) ; s'il est montable, le lanceur peut monter dessus. Objet : dans son sac.
-        Bâtiment : copie posée près de lui, à lui. Temporaire : retiré à l'échéance (tick horaire).</p>}
+        Structure : copie posée près de lui, à lui. Temporaire : retiré à l'échéance (tick horaire).</p>}
       <p className="note">« Rendre / retirer » agit sur la valeur actuelle sans dépasser le maximum ; « max » change la capacité. Aperçu : {fxSummary(fxBody(fx)) || '—'}</p>
     </>}
   </div>;
 }
 
-/** Sorts liés à UN élément (fiche objet, bâtiment) avec leur mode d'application. */
+/** Sorts liés à UN élément (fiche objet, structure) avec leur mode d'application. */
 export function ElementSpells({ kind, refId }) {
   const d = useDispatch(), cat = useSummonables(), [rows, setRows] = useState(null), [n, setN] = useState({ spellId: '', mode: LINK_MODES[kind][0][0] });
   const load = () => api(`/admin/content/element-spells?kind=${kind}&refId=${refId}`).then(setRows).catch(e => d(Ad.msg(e.message)));

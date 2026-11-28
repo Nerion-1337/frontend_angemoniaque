@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js
 import { Users, Castle, Sword, MessageSquare, RefreshCw, Hourglass } from 'lucide-react';
 import { Search, matches, Empty } from './ui.jsx'; import { RACE_LABEL } from './players.js';
 /** Pilotage : compteurs, répartition par race, simulation du tick, journal d'audit filtrable. */
-const KPI = { characters: ['Personnages', Users], buildings: ['Bâtiments', Castle], items: ['Objets', Sword], messages: ['Messages', MessageSquare] };
+const KPI = { characters: ['Personnages', Users], buildings: ['Structures', Castle], items: ['Objets', Sword], messages: ['Messages', MessageSquare] };
 const ago = t => { const s = Math.round((Date.now() - new Date(t)) / 1000); if (s < 60) return 'à l’instant'; if (s < 3600) return `il y a ${Math.floor(s / 60)} min`; if (s < 86400) return `il y a ${Math.floor(s / 3600)} h`; return new Date(t).toLocaleDateString(); };
 export default function Dashboard() {
   const d = useDispatch(), [st, setSt] = useState(null), [audit, setAudit] = useState(null), [busy, setBusy] = useState(false), [q, setQ] = useState(''), [limit, setLimit] = useState(10);

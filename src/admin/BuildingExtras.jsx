@@ -22,7 +22,7 @@ export function BuildingExtras({ draft, set, resources }) {
     {draft.occupiable && <><h5>Occupant de la case — peut être attaqué</h5>
       <div className="row">{[['melee', 'Au corps à corps'], ['ranged', 'À distance'], ['spell', 'Par sort']].map(([k, l]) =>
         <label key={k} className="check"><input type="checkbox" checked={oa[k] !== false} onChange={e => set('occupant_attack', { ...oa, [k]: e.target.checked })} /> {l}</label>)}</div>
-      <p className="note">L'occupant reçoit les bonus d'armure, de vue et de portée du bâtiment.</p></>}
+      <p className="note">L'occupant reçoit les bonus d'armure, de vue et de portée de la structure.</p></>}
     <h5>Extraction / production (par heure, pour le propriétaire)</h5>
     <div className="row add"><Pick options={resources ?? []} value={res.id} onPick={v => setRes({ ...res, id: v })} labelOf={o => o.name} placeholder="— Ressource —" />
       <input type="number" min="1" className="nb" value={res.qty} onChange={e => setRes({ ...res, qty: e.target.value })} /><small>/ h</small>
@@ -47,12 +47,12 @@ export function BuildingSpells({ id }) {
       <button className="sm" disabled={!n.spellId} onClick={add}><Plus size={14} /> Lier</button></div>
     {rows && !rows.length ? <Empty>Aucun sort.</Empty> : <div className="chips">{(rows ?? []).map(r => <span key={r.id} className="chip on">{r.name} · {r.mode === 'passive' ? 'continu' : 'à la demande'}{fxSummary(r.effects) && <small> · {fxSummary(r.effects)}</small>}
       <button className="x-in" onClick={() => del(r)}>×</button></span>)}</div>}
-    <p className="note">En continu : les effets partent de la case du bâtiment (zone = entités dans le rayon, camp relatif au propriétaire ; sinon l'occupant). Les effets se règlent dans l'onglet Sorts.</p>
+    <p className="note">En continu : les effets partent de la case de la structure (zone = entités dans le rayon, camp relatif au propriétaire ; sinon l'occupant). Les effets se règlent dans l'onglet Sorts.</p>
   </div>;
 }
 
 /** Conditions d'activation (lot E) : options alternatives ; dans une option, tout ce qui est renseigné est exigé. */
-const ACT_NOTE = <>Portail : conditions pour le franchir (remplacent l'objet divin historique). Autre bâtiment : conditions pour déclencher ses sorts « à activer »
+const ACT_NOTE = <>Portail : conditions pour le franchir (remplacent l'objet divin historique). Autre structure : conditions pour déclencher ses sorts « à activer »
   au profit de l'activateur. Il suffit de remplir UNE option ; dans une option, tout ce qui est renseigné est exigé. Aucune option : comportement historique.</>;
 /** Groupes de conditions alternatifs (bâtiments ; aussi conditions de récolte des ressources, avec `title` / `note` / `itemHint`). */
 export function ActivationEditor({ groups, set, cat, title = 'Activation de la capacité', note = ACT_NOTE, itemHint = '— Objet (sac) —', consumeLabel = "Consommés à l'activation (objets, ressources, or ; objets divins rendus)" }) {

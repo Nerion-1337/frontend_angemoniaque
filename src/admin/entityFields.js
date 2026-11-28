@@ -25,6 +25,11 @@ export const FIELDS = {
     ['structure', 'Points de vie (structure)', 'number'], ['xp_hit', 'XP gagnée par le joueur à chaque coup porté (structure non invulnérable)', 'number'], ['armor', 'Armure de la structure', 'number'], ['size', 'Taille (cases)', 'number'],
     ['occupiable', 'Case occupable (un personnage peut s\'y tenir)', 'check'],
     ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_magic_armor', 'Bonus armure magique (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée à distance (occupant ; armes à distance seulement)', 'number'],
+    ['peace_radius', 'Zone de paix (cases autour ; 0 = aucune) : personne ne peut y attaquer ni y être attaqué — corps à corps, distance, sort, monstre', 'number'],
+    ['nobuild_radius', 'Zone sans construction (cases autour ; 0 = aucune)', 'number'],
+    ['realm', 'Porte : monde de la porte', 'opts', [['', '— (pas une porte des mondes)'], ['human', 'Hommes'], ['demon', 'Démons'], ['angel', 'Anges'], ['dead', 'Royaume des Morts (ramène chez soi)']]],
+    ['leads_to', 'Porte : mène vers le monde des', 'opts', [['', '—'], ['human', 'Hommes'], ['demon', 'Démons'], ['angel', 'Anges']]],
+    ['open_h_per_item', 'Porte : heures d\'ouverture par objet divin (arcane / artefact / relique) utilisé pour l\'activer', 'number'],
     ['prerequisites', 'Prérequis (JSON : {"rank":3,"building":2})', 'json'],
     ['data', 'Passifs/collecte/production (JSON : {"passive":{"defense":5},"production":{"lorien":2},"storage":{"lorien":50}})', 'json']
   ],

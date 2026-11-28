@@ -6,7 +6,7 @@ import { api } from '../lib/api.js';
 import { Check, Plus, Save } from 'lucide-react';
 import Pick from './Pick.jsx';
 import { Empty } from './ui.jsx';
-import { SLOTS, SLOT_LABEL, SLOT_SHORT, SLOT_POS, LIMIT_KIND, respawnDraft, respawnBody } from './monsterDetails.js';
+import { SLOTS, SLOT_LABEL, SLOT_SHORT, SLOT_POS, LIMIT_KIND, respawnDraft, respawnBody } from './monsterDetails.js'; import { structureRespawnDraft, structureRespawnBody } from './building.js';
 
 /** Silhouette : chaque partie est un bouton à bascule (cochée = équipable) ; la liste en dessous dit la même chose en texte. */
 export function BodyParts({ slots, toggle }) {
@@ -32,18 +32,19 @@ export function BodyParts({ slots, toggle }) {
 
 /** Réapparition d'UN monstre posé : recréé ou non, délai, conditions sur les éléments limités (objets divins compris).
  *  L'objet divin porté vient du type (copié au placement) et n'est plus réglé ici (demande du 2026-11-27 : doublon des conditions). */
-export function RespawnPanel({ monster, cats, onSaved }) {
-  const d = useDispatch(), [r, setR] = useState(() => respawnDraft(monster)), [nl, setNl] = useState({ kind: 'item', ref: '', max: 1 });
+/** Aussi pour une structure (migration 48) : `kind="building"` (délai décimal, détruite au lieu de tuée, PUT /admin/content/buildings). */
+export function RespawnPanel({ monster, cats, onSaved, kind = 'monster' }) {
+  const B = kind === 'building', d = useDispatch(), [r, setR] = useState(() => (B ? structureRespawnDraft(monster) : respawnDraft(monster))), [nl, setNl] = useState({ kind: 'item', ref: '', max: 1 });
   const lists = { item: cats?.items ?? [], spell: cats?.spells ?? [], resource: cats?.resources ?? [] };
   const nameOf = l => lists[l.kind].find(o => String(o.id) === String(l.ref))?.name ?? `n°${l.ref}`;
-  const save = async () => { try { await api(`/admin/content/monsters/${monster.id}`, respawnBody(r), 'PUT'); d(Ad.ok('Réapparition enregistrée')); onSaved(); } catch (e) { d(Ad.msg(e.message)); } };
+  const save = async () => { try { await api(`/admin/content/${B ? 'buildings' : 'monsters'}/${monster.id}`, B ? structureRespawnBody(r) : respawnBody(r), 'PUT'); d(Ad.ok('Réapparition enregistrée')); onSaved(); } catch (e) { d(Ad.msg(e.message)); } };
   return <div className="respawn">
-    <label className="check"><input type="checkbox" checked={r.respawn} onChange={e => setR({ ...r, respawn: e.target.checked })} /> <b>Recréé après sa mort</b></label>
-    {!r.respawn ? <p className="note">Une fois tué, il disparaît de la carte (le type reste au catalogue et peut être reposé). Les monstres sauvages (règles d'apparition) suivent leurs propres règles.</p> : <>
-      <div className="form"><div className="cell"><small>Délai avant réapparition (heures, 0 = aussitôt)</small><input type="number" min="0" value={r.delayH} onChange={e => setR({ ...r, delayH: e.target.value })} /></div></div>
+    <label className="check"><input type="checkbox" checked={r.respawn} onChange={e => setR({ ...r, respawn: e.target.checked })} /> <b>{B ? 'Reconstruite après sa destruction' : 'Recréé après sa mort'}</b></label>
+    {!r.respawn ? <p className="note">{B ? 'Une fois détruite, elle disparaît de la carte (sa fiche reste et peut être reposée).' : 'Une fois tué, il disparaît de la carte (le type reste au catalogue et peut être reposé). Les monstres sauvages (règles d\'apparition) suivent leurs propres règles.'}</p> : <>
+      <div className="form"><div className="cell"><small>{B ? 'Délai avant reconstruction (heures, 0 = au tick suivant)' : 'Délai avant réapparition (heures, 0 = aussitôt)'}</small><input type="number" min="0" value={r.delayH} onChange={e => setR({ ...r, delayH: e.target.value })} /></div></div>
       <h5>Conditions (éléments limités)</h5>
       <p className="note">Tant qu'au moins le nombre indiqué d'exemplaires est chez les joueurs (objets : sac, coffre et équipés ; sorts : appris ; ressources : stocks),
-        le monstre ne réapparaît pas. Revérifié chaque heure : il réapparaît dès que ce n'est plus le cas.</p>
+        {B ? 'la structure n\'est pas reconstruite. Revérifié chaque heure : elle revient sur sa dernière case dès que ce n\'est plus le cas.' : 'le monstre ne réapparaît pas. Revérifié chaque heure : il réapparaît dès que ce n\'est plus le cas.'}</p>
       <div className="row add">
         <select value={nl.kind} onChange={e => setNl({ ...nl, kind: e.target.value, ref: '' })}>{Object.entries(LIMIT_KIND).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select>
         <Pick options={lists[nl.kind]} value={nl.ref} onPick={v => setNl({ ...nl, ref: v })} labelOf={o => o.name} placeholder={`— ${LIMIT_KIND[nl.kind]} —`} />

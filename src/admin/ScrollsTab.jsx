@@ -27,7 +27,7 @@ export default function ScrollsTab() {
   const del = async r => { if (!confirmDel(`la recette du parchemin « ${r.scroll_name} »`)) return; try { await api(`/admin/content/recipes/${r.id}`, undefined, 'DELETE'); d(Ad.ok('Recette supprimée')); load(); } catch (e) { d(Ad.msg(e.message)); } };
   const view = (rows ?? []).filter(r => matches(q, r.scroll_name, r.target_name));
   return <section>
-    <p className="note">Un parchemin dans le sac + les ressources de sa recette permettent au joueur de fabriquer l'objet, d'apprendre le sort ou de bâtir le bâtiment lié
+    <p className="note">Un parchemin dans le sac + les ressources de sa recette permettent au joueur de fabriquer l'objet, d'apprendre le sort ou de bâtir la structure liée
       (panneau « Actions », section Fabrication). Pour rendre un objet ou un sort obtenable SEULEMENT ainsi, retire-le de la boutique dans son onglet.</p>
     <div className="filterrow"><Search value={q} onChange={setQ} /><small>{view.length} parchemin(s)</small><span className="grow" />
       <button className="sm" onClick={() => open(null)}><Plus size={14} /> Nouveau parchemin</button></div>
@@ -47,7 +47,7 @@ export default function ScrollsTab() {
         <div className="cell span-all">
           <label className="check"><input type="checkbox" checked={f.consumeScroll} onChange={e => setF({ ...f, consumeScroll: e.target.checked })} /> Parchemin consommé à la fabrication</label>
           <label className="check"><input type="checkbox" checked={f.atCapital} onChange={e => setF({ ...f, atCapital: e.target.checked })} /> Fabrication seulement à l'hôtel de ville</label>
-          {f.targetKind === 'building' && <p className="note">Le bâtiment fabriqué est une copie du modèle (structure, données), posée sur une case adjacente libre et appartenant au joueur.</p>}
+          {f.targetKind === 'building' && <p className="note">La structure fabriquée est une copie du modèle (structure, données), posée sur une case adjacente libre et appartenant au joueur.</p>}
         </div>
       </div>
       <h4>Ressources consommées</h4>
