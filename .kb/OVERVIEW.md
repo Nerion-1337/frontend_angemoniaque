@@ -15,7 +15,7 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - build : `npm run build`
 - kb : backend d'embedding `hash` (offline) dans `.kb/config.json`
 
-## Features (36)
+## Features (37)
 - **admin-dashboard** [done] (.kb/cards/admin-dashboard.md) Admin dashboard (Étape 2 phase 1) : shell + éditeurs d'entités génériques — Back-office d'administration (`src/admin/`, route `#admin`) : application plein écran à sections (Pilotage, Joueurs, Races & Rangs, Monstres (dont les types montables), Objets, Sorts, Parchemins, Case — files: src/admin/index.jsx, src/admin/Dashboard.jsx, src/admin/Entities.jsx, src/admin/EntityRules.jsx (+6)
 - **admin-login-nav** [done] (.kb/cards/admin-login-nav.md) Connexion admin : redirection vers l'interface admin (#admin) — Après une connexion ou une inscription réussie, un compte admin arrive directement sur `#admin` ; un joueur reste sur la sélection de personnage. — files: src/lib/postAuth.js, src/components/Login.jsx, test/postAuth.test.js
 - **admin-players-divine-ui** [done] (.kb/cards/admin-players-divine-ui.md) Admin « Joueurs » (liste paginée, fiche) et objets divins dans l'onglet Objets ; préfixe CSS admin — Section admin « Joueurs » (liste paginée par race, fiche éditable) et rareté « Divin » de l'onglet Objets gérée comme les autres objets, avec familles divines et exemplaires uniques. — files: src/admin/PlayersTab.jsx, src/admin/players.js, src/admin/ItemsTab.jsx, src/admin/Divine.jsx (+1)
@@ -50,8 +50,9 @@ _Généré par `kb overview` — ne pas éditer ici ; notes manuelles dans `.kb/
 - **spell-fx-ui** [done] (.kb/cards/spell-fx-ui.md) Onglet Sorts : éditeur des effets (moteur de sorts) et liens ; sorts liés en jeu — Onglet admin « Sorts » : éditeur des effets du moteur de sorts et gestion des liens du sort ; en jeu, le panneau Actions indique la provenance et le résumé des effets de chaque sort lançable. — files: src/admin/SpellFx.jsx, src/admin/ItemsTab.jsx, src/admin/MonsterDetails.jsx, src/lib/spellFx.js
 - **story-page** [done] (.kb/cards/story-page.md) Page L histoire : le jeu raconté — Page « L'histoire » (#histoire) : le jeu et ses mécanismes racontés en chronique, accessible sans compte depuis l'accueil. — files: src/components/Story.jsx
 - **struct-activation-ui** [done] (.kb/cards/struct-activation-ui.md) Fenêtre de structure (éléments d'activation), onglet Interactions, attaques grisées en zone de paix, Hôtel de ville filtré, admin des éléments — Interface du lot du 2026-11-28 (suite, migration 49). — files: src/components/StructureModal.jsx, src/lib/peace.js, src/lib/usePeaceZones.js, src/lib/shopFilter.js (+9)
+- **struct-types-ui** [done] (.kb/cards/struct-types-ui.md) Admin Structures (Types / Sur les cartes, valeurs individuelles), coffre en or, apparence 3D des structures — Interface du lot du 2026-11-28 (3, migration 50). — files: src/admin/Entities.jsx, src/admin/building.js, src/admin/BuildingExtras.jsx, src/admin/entityFields.js (+4)
 - **terrain-map-3d** [done] (.kb/cards/terrain-map-3d.md) 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions — Rendu client du monde : miroir exact du modèle du back (carte 1 dessinée, monde 2 par zones, carte 3 générée), règles d'énergie et de l'invocation montée pour les estimations, scène 3D, carte de case, — files: src/lib/terrain.js, src/lib/humanMap.js, src/lib/resources.js, src/lib/energy.js (+11)
 - **world2-angel-demon** [done] (.kb/cards/world2-angel-demon.md) Monde Anges & Démons (UI) : sol par zone, ressources visibles, eau teintée, légende — Rendu du monde 2 (Anges & Démons), copie exacte de la logique du back : ce qui est dessiné sur une case est ce qu'on y récolte. — files: src/lib/world2.js, src/lib/resources2.js, src/lib/angelDemonMap.js, src/lib/relief.js (+3)
 
 ## File map
-- … 158 autres fichiers (utiliser `kb search`)
+- … 159 autres fichiers (utiliser `kb search`)

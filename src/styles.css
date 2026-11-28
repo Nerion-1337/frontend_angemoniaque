@@ -810,3 +810,9 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .cap-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
 .cap-filters select{min-width:10em}
 .actel{flex-wrap:wrap;gap:6px;align-items:center}
+
+/* Structures : types et structures posées (2026-11-28) ; coffre en or */
+.sm.indiv{padding:1px 6px;font-size:.78em;margin-left:4px}
+.fromtype{color:var(--mute);font-size:.8em;margin-left:4px}
+.cap-filters{margin:14px 0 12px}
+.cap-chestgold{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}

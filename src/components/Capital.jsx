@@ -24,7 +24,7 @@ function Filters({ f, set }) {
 export default function Capital() {
   const { me } = useSelector(s => s.game), d = useDispatch(), run = useDo(), refresh = useRefreshMe();
   const [shop, ls] = useData(`/shop?characterId=${me.id}`), [mk, lm] = useData(`/market/${me.id}`), [ch, lc] = useData(`/chest/${me.id}`), [known, lk] = useData(`/spells/${me.id}`), [inv, li] = useData(`/inventory/${me.id}`);
-  const [price, setPrice] = useState(150), [sell, setSell] = useState('');
+  const [price, setPrice] = useState(150), [sell, setSell] = useState(''), [gold, setGold] = useState('');
   const all = () => { ls(); lm(); lc(); li(); lk(); refresh(); }, act = (f, ok, then) => run(f, () => { all(); then?.(); if (ok) d(A.toast(ok)); });
   const bag = inv?.items.filter(i => !i.equipped_slot && !i.in_chest) ?? [];
   const th = capTheme(me.race), Emblem = th.Icon, world = me.actor?.pos?.map_id ?? 1, hasMap = (me.map_worlds ?? []).includes(world);
@@ -79,7 +79,12 @@ export default function Capital() {
     {tab === 'chest' && <section className="cap-pane">
       <div className="cap-chesthead"><div><b>Coffre personnel</b><small>{ch?.used ?? ch?.items.length ?? 0} / {ch?.size ?? '…'} emplacements</small></div>
         <span className="cap-meter"><i style={{ '--p': ch ? (100 * (ch.used ?? ch.items.length)) / Math.max(1, ch.size) : 0 }} /></span>
-        <button disabled={!ch || me.gold < ch.nextCost} onClick={() => act(() => api('/chest/expand', { characterId: me.id }), 'Coffre agrandi')}><PlusCircle size={14} /> +1 espace — {ch?.nextCost ?? '…'} or</button></div>{filters}
+        <button disabled={!ch || me.gold < ch.nextCost} onClick={() => act(() => api('/chest/expand', { characterId: me.id }), 'Coffre agrandi')}><PlusCircle size={14} /> +1 espace — {ch?.nextCost ?? '…'} or</button></div>
+      {ch && <div className="cap-chestgold" role="group" aria-label="Or du coffre"><Coins size={16} /><span>Or au coffre : <b>{ch.gold}</b> / {ch.goldCap}</span>
+        <input type="number" min="1" placeholder="Montant" value={gold} onChange={e => setGold(e.target.value)} aria-label="Montant d'or" style={{ width: '8em' }} />
+        <button className="sm" disabled={!(Number(gold) > 0) || Number(gold) > me.gold || ch.gold + Number(gold) > ch.goldCap} onClick={() => act(() => api('/chest/gold', { characterId: me.id, amount: Math.trunc(Number(gold)) }), 'Or déposé', () => setGold(''))}>Déposer <ArrowRight size={13} /></button>
+        <button className="sm" disabled={!(Number(gold) > 0) || Number(gold) > ch.gold} onClick={() => act(() => api('/chest/gold', { characterId: me.id, amount: -Math.trunc(Number(gold)) }), 'Or retiré', () => setGold(''))}><ArrowLeft size={13} /> Retirer</button></div>}
+      {filters}
       <div className="cap-cols">
         <div><h4>Coffre</h4>{ch && !ch.items.length && !ch.resources?.length && <Empty>Votre coffre est vide.</Empty>}
           {sumRes(ch?.resources).filter(x => ok({ cat: 'ressource' })).map(x => <div key={x.id} className="cap-row res"><span>{x.name} <small>×{x.qty}</small></span><button className="sm" onClick={() => moveRes(x.id, 'bag')}><ArrowLeft size={13} /> Sac</button></div>)}

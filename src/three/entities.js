@@ -135,8 +135,8 @@ function capital(race) {
   g.userData.race = race ?? 'human'; g.userData.tick = tick; return g;
 }
 function building(e) {
-  const g = new THREE.Group(), k = e.building_kind;
-  if (k === 'capital') { const c = capital(e.building_race); g.add(c); g.userData.tick = c.userData.tick; g.scale.setScalar(1.1); }
+  const g = new THREE.Group(), m = e.building_model, k = m ? m.split('_')[0] : e.building_kind;   // apparence choisie en admin (migration 50), sinon le type de construction
+  if (k === 'capital') { const c = capital(m?.split('_')[1] ?? e.building_race); g.add(c); g.userData.tick = c.userData.tick; g.scale.setScalar(1.1); }
   else if (k === 'door') { for (const s of [-1, 1]) g.add(mesh(new THREE.BoxGeometry(0.28, 2.2, 0.4), stone(), s * 0.5, 1.1, 0)); g.add(mesh(new THREE.BoxGeometry(1.3, 0.3, 0.45), stone(), 0, 2.25, 0));
     const p = mesh(new THREE.PlaneGeometry(0.75, 2), new THREE.MeshBasicMaterial({ color: 0xa87bff, transparent: true, opacity: 0.55, side: THREE.DoubleSide }), 0, 1.1, 0); p.castShadow = false; g.add(p); g.add(new THREE.PointLight(0xa87bff, 4, 5).translateY(1.2));
     g.userData.tick = t => { p.material.opacity = 0.45 + Math.sin(t * 2) * 0.12; }; }

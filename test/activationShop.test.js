@@ -29,8 +29,8 @@ describe('Activation des structures, filtres, zones de paix', () => {
   test('zones de paix : attaquant ou cible dedans → raison ; la structure elle-même hors de sa zone ; sorts offensifs', () => {
     const z = [{ id: 9, name: 'Tour', x: 10, y: 10, r: 2 }];
     expect(peaceAt(z, 12, 12)?.name).toBe('Tour'); expect(peaceAt(z, 13, 10)).toBeNull(); expect(peaceAt(z, 10, 10, 9)).toBeNull();
-    expect(peaceBlock(z, { x: 20, y: 20 }, { x: 11, y: 10 })).toBe('Zone de paix de Tour : aucune attaque possible');
-    expect(peaceBlock(z, { x: 13, y: 10 }, { x: 10, y: 10 }, 9)).toBeNull(); expect(peaceBlock(z, { x: 11, y: 11 }, { x: 30, y: 30 })).toMatch(/Tour/);
+    expect(peaceBlock(z, { x: 20, y: 20 }, { x: 11, y: 10 })).toBe('Attaque annulée : la cible est dans la zone de non-combat de Tour');
+    expect(peaceBlock(z, { x: 13, y: 10 }, { x: 10, y: 10 }, 9)).toBeNull(); expect(peaceBlock(z, { x: 11, y: 11 }, { x: 30, y: 30 })).toBe('Attaque annulée : vous êtes dans la zone de non-combat de Tour');
     expect([harmfulFx({ kind: 'attack' }), harmfulFx({ effects: { damage: 5 } }), harmfulFx({ effects: { dot: { dmg: 1 } } }), harmfulFx({ kind: 'buff', effects: { heal: 4 } })]).toEqual([true, true, true, false]);
   });
   test('état d’activation lisible, porte activée définitivement', () => {

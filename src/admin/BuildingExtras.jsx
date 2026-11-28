@@ -17,8 +17,13 @@ export function BuildingExtras({ draft, set, resources }) {
   return <div className="bldextras">
     {draft.kind === 'capital' && <><h5>Coffre des joueurs de cette capitale</h5>
       <div className="row"><label className="inlabel">Taille de départ <input type="number" min="1" className="nb" placeholder="10" value={draft.chestStart ?? ''} onChange={e => set('chestStart', e.target.value)} /></label>
-        <label className="inlabel">Capacité maximale <input type="number" min="1" className="nb" placeholder="sans limite" value={draft.chestMax ?? ''} onChange={e => set('chestMax', e.target.value)} /></label></div>
-      <p className="note">La taille de départ s'applique aux personnages créés ensuite ; l'agrandissement (Hôtel de ville) s'arrête à la capacité maximale.</p></>}
+        <label className="inlabel">Capacité maximale <input type="number" min="1" className="nb" placeholder="sans limite" value={draft.chestMax ?? ''} onChange={e => set('chestMax', e.target.value)} /></label>
+        <label className="inlabel">Or par emplacement <input type="number" min="0" className="nb" placeholder="1000" value={draft.goldPerSlot ?? ''} onChange={e => set('goldPerSlot', e.target.value)} /></label>
+        <label className="inlabel">Coût d'un emplacement <input type="number" min="0" className="nb" placeholder="50" value={draft.slotCost ?? ''} onChange={e => set('slotCost', e.target.value)} /></label></div>
+      <p className="note">La taille de départ s'applique aux personnages créés ensuite ; l'agrandissement (Hôtel de ville) s'arrête à la capacité maximale.
+        Or stockable = emplacements × or par emplacement (10 × 1000 = 10 000 au départ). Un emplacement de plus coûte « coût » × emplacements actuels (50 × 10 = 500 or).</p>
+      {!draft.is_type && <div className="row"><label className="inlabel">Race rattachée <select value={draft.race ?? ''} onChange={e => set('race', e.target.value)}>
+        <option value="">—</option>{[['human', 'Hommes'], ['demon', 'Démons'], ['angel', 'Anges']].map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></label></div>}</>}
     {draft.occupiable && <><h5>Occupant de la case — peut être attaqué</h5>
       <div className="row">{[['melee', 'Au corps à corps'], ['ranged', 'À distance'], ['spell', 'Par sort']].map(([k, l]) =>
         <label key={k} className="check"><input type="checkbox" checked={oa[k] !== false} onChange={e => set('occupant_attack', { ...oa, [k]: e.target.checked })} /> {l}</label>)}</div>

@@ -1,3 +1,4 @@
+import { MODELS as MODELS_OPTS } from './building.js';
 /** Descripteurs de champs par type d'entité (panneaux d'admin) : [colonne, libellé, type?] (type: number|check|json). */
 export const FIELDS = {
   monster: [
@@ -21,7 +22,7 @@ export const FIELDS = {
     ['data', 'Effets / effets spéciaux (JSON : {"buffs":[...],"trigger":"...","effects":{}})', 'json']
   ],
   building: [
-    ['name', 'Nom'], ['kind', 'Type (wall/tower/factory/totem/...)'], ['invulnerable', 'Invulnérable', 'check'], ['visible', 'Visible sur la carte des joueurs', 'check'],
+    ['name', 'Nom'], ['kind', 'Type (wall/tower/factory/totem/...)'], ['invulnerable', 'Invulnérable', 'check'], ['visible', 'Visible sur la carte des joueurs', 'check'], ['model', 'Apparence', 'opts', MODELS_OPTS],
     ['structure', 'Points de vie (structure)', 'number'], ['xp_hit', 'XP gagnée par le joueur à chaque coup porté (structure non invulnérable)', 'number'], ['armor', 'Armure de la structure', 'number'], ['size', 'Taille (cases)', 'number'],
     ['occupiable', 'Case occupable (un personnage peut s\'y tenir)', 'check'],
     ['bonus_armor', 'Bonus armure (occupant)', 'number'], ['bonus_magic_armor', 'Bonus armure magique (occupant)', 'number'], ['bonus_see', 'Bonus vue (occupant)', 'number'], ['bonus_range', 'Bonus portée à distance (occupant ; armes à distance seulement)', 'number'],

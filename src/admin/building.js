@@ -12,11 +12,12 @@ export const buildingBody = (body, draft) => {
   if (Object.keys(prod).length) b.data.production = prod; else delete b.data.production;
   // Capitale : coffre de départ et capacité max des joueurs de sa race (vide = 10 / sans limite).
   const pos = v => (Number(v) > 0 ? Math.trunc(Number(v)) : null);
-  if (draft.kind === 'capital') for (const [k, v] of [['chestStart', pos(draft.chestStart)], ['chestMax', pos(draft.chestMax)]]) { if (v) b.data[k] = v; else delete b.data[k]; }
+  const zero = v => (v === '' || v == null || !(Number(v) >= 0) ? null : Math.trunc(Number(v)));   // 0 permis (or par emplacement, coût)
+  if (draft.kind === 'capital') for (const [k, v] of [['chestStart', pos(draft.chestStart)], ['chestMax', pos(draft.chestMax)], ['goldPerSlot', zero(draft.goldPerSlot)], ['slotCost', zero(draft.slotCost)], ['race', draft.race || null]]) { if (v != null) b.data[k] = v; else delete b.data[k]; }
   return b;
 };
 /** Brouillon depuis la fiche API : production isolée de `data`. */
-export const buildingDraft = det => ({ ...det, production: { ...(det?.data?.production ?? {}) }, chestStart: det?.data?.chestStart ?? '', chestMax: det?.data?.chestMax ?? '', activationGroups: (det?.activation?.groups ?? []).map(groupDraft), activations: (det?.activations ?? []).map(elementDraft) });
+export const buildingDraft = det => ({ ...det, production: { ...(det?.data?.production ?? {}) }, chestStart: det?.data?.chestStart ?? '', chestMax: det?.data?.chestMax ?? '', goldPerSlot: det?.data?.goldPerSlot ?? '', slotCost: det?.data?.slotCost ?? '', race: det?.data?.race ?? '', activationGroups: (det?.activation?.groups ?? []).map(groupDraft), activations: (det?.activations ?? []).map(elementDraft) });
 // Lot E : conditions d'activation (groupes alternatifs ; dans un groupe, tout ce qui est renseigné est exigé). Miroir de game/activation.ts.
 export const groupDraft = g => ({ items: [...(g?.items ?? [])], divineOn: !!g?.divine, divineFamily: g?.divine?.family ?? '', divineCount: g?.divine?.count ?? 1,
   spellId: g?.spellId ?? '', resources: { ...(g?.resources ?? {}) }, gold: g?.gold ?? 0, minRank: g?.minRank ?? 0, ranks: [...(g?.ranks ?? [])], consume: !!g?.consume });
@@ -56,3 +57,13 @@ export const activationsBody = list => list.filter(e => !['item', 'divine', 'spe
   kind: e.kind, ref: ['item', 'spell'].includes(e.kind) ? Number(e.ref) : e.kind === 'divine' ? String(e.ref) : null,
   qty: e.kind === 'spell' ? 1 : Math.max(1, Math.trunc(Number(e.qty)) || 1), hours: e.forever ? null : Math.max(0.1, Number(e.hours) || 0.1),
   consume: e.kind === 'gold' ? true : e.kind === 'spell' ? false : !!e.consume }));
+
+// Types de structures (migration 50), comme les monstres : TYPES (réglages globaux) et structures POSÉES (valeurs du type, sauf
+// celles individualisées). Liste « Types » = types et modèles sans position (parchemins) ; « Sur les cartes » = le reste.
+export const isTypeRow = r => !!r.is_type || (r.map_id == null && !r.home && !r.type_id && !r.destroyed_at);
+const same = (a, b) => (a == null || a === '' ? null : typeof a === 'object' ? JSON.stringify(a) : String(a)) === (b == null || b === '' ? null : typeof b === 'object' ? JSON.stringify(b) : String(b));
+/** Structure posée : seulement ce qui change par rapport à la fiche chargée (le reste continue de suivre le type). */
+export const changedOnly = (payload, det) => Object.fromEntries(Object.entries(payload).filter(([k, v]) => !same(v, det?.[k])));
+/** Apparences (rendu 3D) : NULL = selon le type de construction. */
+export const MODELS = [['', '— selon le type de construction —'], ['capital_human', 'Capitale des Hommes'], ['capital_demon', 'Capitale des Démons'], ['capital_angel', 'Capitale des Anges'],
+  ['door', 'Porte'], ['tower', 'Tour'], ['wall', 'Muraille'], ['factory', 'Atelier'], ['totem', 'Totem']];
