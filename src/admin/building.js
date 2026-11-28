@@ -4,6 +4,7 @@
 export const buildingBody = (body, draft) => {
   const b = { ...body };
   if (draft.activationGroups) b.activation = activationBody(draft.activationGroups);
+  if (draft.activations) b.activations = activationsBody(draft.activations);
   const oa = draft.occupant_attack ?? { melee: true, ranged: true, spell: true };
   b.occupant_attack = { melee: oa.melee !== false, ranged: oa.ranged !== false, spell: oa.spell !== false };
   const prod = Object.fromEntries(Object.entries(draft.production ?? {}).map(([k, q]) => [k, Math.max(1, Math.trunc(Number(q) || 1))]));
@@ -15,7 +16,7 @@ export const buildingBody = (body, draft) => {
   return b;
 };
 /** Brouillon depuis la fiche API : production isolée de `data`. */
-export const buildingDraft = det => ({ ...det, production: { ...(det?.data?.production ?? {}) }, chestStart: det?.data?.chestStart ?? '', chestMax: det?.data?.chestMax ?? '', activationGroups: (det?.activation?.groups ?? []).map(groupDraft) });
+export const buildingDraft = det => ({ ...det, production: { ...(det?.data?.production ?? {}) }, chestStart: det?.data?.chestStart ?? '', chestMax: det?.data?.chestMax ?? '', activationGroups: (det?.activation?.groups ?? []).map(groupDraft), activations: (det?.activations ?? []).map(elementDraft) });
 // Lot E : conditions d'activation (groupes alternatifs ; dans un groupe, tout ce qui est renseigné est exigé). Miroir de game/activation.ts.
 export const groupDraft = g => ({ items: [...(g?.items ?? [])], divineOn: !!g?.divine, divineFamily: g?.divine?.family ?? '', divineCount: g?.divine?.count ?? 1,
   spellId: g?.spellId ?? '', resources: { ...(g?.resources ?? {}) }, gold: g?.gold ?? 0, minRank: g?.minRank ?? 0, ranks: [...(g?.ranks ?? [])], consume: !!g?.consume });
@@ -46,3 +47,12 @@ export const structureRespawnBody = r => ({
   respawn: !!r.respawn, respawn_delay_h: Math.max(0, Number(r.delayH) || 0),
   respawn_limits: r.limits.filter(l => l.ref !== '' && l.ref != null).map(l => ({ kind: l.kind, ref: l.kind === 'resource' ? String(l.ref) : Number(l.ref), max: Math.max(1, Math.trunc(Number(l.max) || 1)) })),
 });
+
+// Éléments d'activation d'une structure (migration 49, miroir de game/structActivation.ts) : alternatives, chacune avec sa durée.
+export const ELEMENT_KIND = { item: 'Objet', divine: 'Objet divin', spell: 'Sort connu', gold: 'Or', xp: 'XP' };
+export const elementDraft = e => ({ kind: e?.kind ?? 'gold', ref: e?.ref ?? '', qty: e?.qty ?? 1, forever: e ? e.hours == null : false, hours: e?.hours ?? 24, consume: e?.consume ?? true });
+/** Corps : quantité entière ≥ 1, durée ≥ 0,1 h ou null (définitif), consommé seulement pour objet / objet divin / XP (or toujours payé, sort jamais). */
+export const activationsBody = list => list.filter(e => !['item', 'divine', 'spell'].includes(e.kind) || (e.ref !== '' && e.ref != null)).map(e => ({
+  kind: e.kind, ref: ['item', 'spell'].includes(e.kind) ? Number(e.ref) : e.kind === 'divine' ? String(e.ref) : null,
+  qty: e.kind === 'spell' ? 1 : Math.max(1, Math.trunc(Number(e.qty)) || 1), hours: e.forever ? null : Math.max(0.1, Number(e.hours) || 0.1),
+  consume: e.kind === 'gold' ? true : e.kind === 'spell' ? false : !!e.consume }));

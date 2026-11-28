@@ -804,3 +804,9 @@ input:-webkit-autofill,input:-webkit-autofill:focus,textarea:-webkit-autofill{-w
 .rk-zoom{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.7);display:grid;place-items:center;cursor:zoom-out}
 .rk-zoom figure{position:relative;margin:0;padding:14px;border-radius:18px;background:var(--glass2);border:2px solid var(--race,var(--line));cursor:default;text-align:center}
 .rk-zoom img{width:min(320px,80vw);height:min(320px,80vw);object-fit:cover;border-radius:12px;display:block;image-rendering:auto}.rk-zoom figcaption{margin-top:8px;color:var(--mute)}.rk-zoom .x{position:absolute;top:6px;right:6px}
+
+/* Lot du 2026-11-28 : zones de paix, filtres de l'Hôtel de ville, éléments d'activation */
+.peacenote{color:#9fe0c0;font-size:.88em;margin-top:6px}
+.cap-filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.cap-filters select{min-width:10em}
+.actel{flex-wrap:wrap;gap:6px;align-items:center}

@@ -56,5 +56,4 @@ export function terrain(x, y, mapId = WORLD) {
 }
 
 // ---------- Zone sacrée : aucun combat entre joueurs (personnages et invocations) autour de l'Hôtel de ville ----------
-export const SAFE_ZONES = [{ map: MAP_HUMAN, x: FEATURES.hotel.x, y: FEATURES.hotel.y, r: FEATURES.safeRadius }];
-export const inSafeZone = (mapId, x, y) => SAFE_ZONES.some(z => z.map === mapId && Math.max(Math.abs(x - z.x), Math.abs(y - z.y)) <= z.r);
+// Zone sacrée codée en dur retirée (2026-11-28) : zones de paix des structures, voir lib/peace.js.

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost, Crosshair } from 'lucide-react'; import CreatureIcon from './CreatureIcon'; import { RankingTable, PlayerCard, RACE_NAME } from './Ranking';
+import { useEffect, useMemo, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { X, Hammer, Sparkles, Castle, Swords, Pickaxe, Dices, ZoomIn, ZoomOut, Maximize, Handshake, Inbox, Flame, Crown, PawPrint, Ghost, Crosshair, DoorOpen } from 'lucide-react'; import CreatureIcon from './CreatureIcon'; import { RankingTable, PlayerCard, RACE_NAME } from './Ranking';
 import { Tabs, useTab } from './Tabs'; import { fmtWait } from '../lib/time';
 import { fxSummary } from '../lib/spellFx.js';
-import Modal from './Modal'; import DoorModal from './DoorModal'; import { Rarity } from './Rarity'; import Confirm from './Confirm'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain, SAFE_ZONES } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
+import Modal from './Modal'; import StructureModal from './StructureModal'; import { peaceBlock, harmfulFx } from '../lib/peace'; import usePeaceZones from '../lib/usePeaceZones'; import { Rarity } from './Rarity'; import Confirm from './Confirm'; import { api } from '../lib/api'; import { A } from '../store'; import { useData, useDo } from '../lib/hooks'; import { useRefreshMe } from './GameCanvas'; import { terrain } from '../lib/terrain'; import { COLORS } from '../lib/energy'; import MapLegend from './MapLegend'; import { RESOURCES } from '../lib/resources'; import { RESOURCES2 } from '../lib/resources2'; import { RESOURCES3 } from '../lib/resources3';
 /** Fenêtre de jeu centrée (comme l'Hôtel de ville ou l'inventaire) : Échap ou clic hors de la fenêtre pour fermer. */
 export const Panel = ({ title, wide, children }) => { const d = useDispatch(), close = () => d(A.setPanel(null));
   return <Modal onClose={close} className={'panel' + (wide ? ' wide' : '')} label={title}><header className="phead"><h3>{title}</h3><button className="x" aria-label="Fermer" onClick={close}><X size={14} /></button></header><div className="pbody">{children}</div></Modal>; };
@@ -126,10 +126,10 @@ export function ActionsPanel() {
   const targets = entities.filter(e => ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && dist(e) <= Math.max(2, me.attack_range ?? me.range_eff)), bldgs = entities.filter(e => e.kind === 'building' && dist(e) <= 1);
   const [hits, setHits] = useState({}); useEffect(() => { targets.forEach(e => api(`/combat/preview/${me.id}/${e.x}/${e.y}`).then(r => setHits(h => ({ ...h, [`${e.x},${e.y}`]: r.hitChance }))).catch(() => {})); }, [entities.length, P.x, P.y]);
   const attack = e => run(async () => { const r = await api('/combat/attack', { characterId: me.id, targetCharacterId: e.char_id, targetMonsterId: e.monster_id, targetSummonId: e.summon_id }); d(A.toast(r.missed ? `Raté ! (${r.hitChance}%)` : `Touché : -${r.dmg} PV${r.killed ? ' — vaincu !' : ''}`)); }, after);
-  const [tab, setTab] = useTab('actions', ['spells', 'build', 'gather', 'combat']), [door, setDoor] = useState(null);
+  const [tab, setTab] = useTab('actions', ['spells', 'build', 'interact', 'gather', 'combat']), [door, setDoor] = useState(null), zones = usePeaceZones(P.map_id);
   return <Panel title="Actions autour du personnage" wide>
-    {door && <DoorModal id={door} me={me} toast={m => d(A.toast(m))} close={() => setDoor(null)} done={() => { setDoor(null); refresh(); }} />}
-    <Tabs label="Actions" value={tab} onChange={setTab} tabs={[['spells', 'Sorts', Sparkles, sp?.spells.length], ['build', 'Construire', Hammer], ['gather', 'Récolte & bâtiments', Pickaxe, bldgs.length || null], ['combat', 'Combat', Swords, targets.length || null]]} />
+    {door && <StructureModal id={door} me={me} toast={m => d(A.toast(m))} close={() => setDoor(null)} done={() => { setDoor(null); refresh(); }} />}
+    <Tabs label="Actions" value={tab} onChange={setTab} tabs={[['spells', 'Sorts', Sparkles, sp?.spells.length], ['build', 'Construire', Hammer], ['interact', 'Interactions', DoorOpen, bldgs.length || null], ['gather', 'Récolte', Pickaxe], ['combat', 'Combat', Swords, targets.length || null]]} />
     {(tab === 'spells' || tab === 'build') && <>
     <h4><Castle size={14} /> Case adjacente ciblée</h4><small>Les cases occupées sont interdites pour bâtir ou invoquer.</small>
     <div className="grid33">{OFFS.map(([dx, dy, l]) => { const x = P.x + dx, y = P.y + dy; if (!dx && !dy) return <div key="c" className="cell you"><b>Vous</b><small>({x},{y})</small></div>; const b = occ(x, y) || terrain(x, y).kind === 'deep';
@@ -144,29 +144,34 @@ export function ActionsPanel() {
     {tab === 'spells' && <>
     <h4><Sparkles size={14} /> Sorts & invocations <span className="pill">{sp?.active ?? 0}/{sp?.maxSummons ?? 1} invoc.</span></h4>
     {sp && !sp.spells.length && <p className="empty">Aucun sort appris. Les sorts de base s'apprennent à la boutique de la capitale.</p>}
-    {sp?.spells.map(s => { const wait = s.cooldown_left_s > 0, off = wait || (s.kind === 'summon' && (!!blk || sp.active >= sp.maxSummons)) || (s.kind === 'attack' && !occ(sel.x, sel.y));
+    {sp?.spells.map(s => { const wait = s.cooldown_left_s > 0, calm = harmfulFx(s) ? peaceBlock(zones, P, sel) : null, off = wait || !!calm || (s.kind === 'summon' && (!!blk || sp.active >= sp.maxSummons)) || (s.kind === 'attack' && !occ(sel.x, sel.y));
       const cast = ride => run(() => api('/spells/cast', { characterId: me.id, spellId: s.id, x: sel.x, y: sel.y, ...(ride ? { ride: true } : {}) }), after), cost = <>⚡{s.energy_cost}{s.divine_energy_cost > 0 && ` ✦${s.divine_energy_cost}`}</>;
       const canRide = s.summon_mountable && me.actor.kind === 'hero' && !me.mount;   // invocation montable : monter dessus dès le lancer
       return <div key={s.id} className="item row2"><div><b>{s.name}</b><Rarity r={s.rarity} />{s.source && s.source !== 'appris' && <small> · {s.source}</small>}<br /><small>{fxSummary(s.effects) || s.description}</small>
         {Number(s.cooldown_h) > 0 && <><br /><small className={wait ? 'err' : 'note'}>{wait ? `Recharge : encore ${fmtWait(s.cooldown_left_s)}` : `Délai de relance : ${fmtWait(Number(s.cooldown_h) * 3600)}`}</small></>}
-        {wait && !(Number(s.cooldown_h) > 0) && <><br /><small className="err">Invocation morte : encore {fmtWait(s.cooldown_left_s)}</small></>}</div>
-        <span className="row"><button disabled={off} onClick={() => cast(false)}>Lancer {cost}</button>{canRide && <button className="primary" disabled={off} onClick={() => cast(true)}>Lancer et monter {cost}</button>}</span></div>; })}
+        {wait && !(Number(s.cooldown_h) > 0) && <><br /><small className="err">Invocation morte : encore {fmtWait(s.cooldown_left_s)}</small></>}
+        {calm && <><br /><small className="peacenote">🕊 {calm}</small></>}</div>
+        <span className="row"><button disabled={off} title={calm ?? undefined} onClick={() => cast(false)}>Lancer {cost}</button>{canRide && <button className="primary" disabled={off} onClick={() => cast(true)}>Lancer et monter {cost}</button>}</span></div>; })}
+    </>}
+    {tab === 'interact' && <>
+    <h4><DoorOpen size={14} /> Structures adjacentes</h4>{!bldgs.length && <p className="empty">Aucune structure sur une case voisine.</p>}
+    {bldgs.map(b => <div key={b.building_id} className="item row2"><span>{b.name}</span><button onClick={() => run(async () => { const r = await api(`/buildings/${b.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door' || r.activable) setDoor(r.id); else if (r.kind === 'capital') d(A.setPanel('capital')); else d(A.toast(r.name)); }, refresh)}>Interagir ⚡0</button></div>)}
     </>}
     {tab === 'gather' && <>
-    <h4><Pickaxe size={14} /> Bâtiments adjacents & récolte</h4>{!bldgs.length && <p className="empty">Aucun bâtiment sur une case voisine.</p>}
-    {bldgs.map(b => <div key={b.building_id} className="item row2"><span>{b.name}</span><button onClick={() => run(async () => { const r = await api(`/buildings/${b.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') setDoor(r.id); else if (r.kind === 'capital') d(A.setPanel('capital')); else d(A.toast(r.name)); }, refresh)}>Interagir ⚡0</button></div>)}
+    <h4><Pickaxe size={14} /> Récolte</h4>
     <button className="wide" onClick={() => run(() => api('/actions/gather', { characterId: me.id }), refresh)}>Récolter la ressource sous vos pieds — ⚡4</button>
     </>}
     {tab === 'combat' && <>
     <h4><Swords size={14} /> Cibles à portée d'attaque ({targets.length})</h4>{!targets.length && <small>Aucun adversaire à portée immédiate.</small>}
-    {targets.map(e => <div key={e.x + ',' + e.y} className="item row2"><span>{e.name} <small className="hit"><Dices size={12} /> {hits[`${e.x},${e.y}`] ?? '…'}%</small></span><span className="row"><button className="danger" onClick={() => attack(e)}>Attaquer ⚡5</button></span></div>)}</>}</Panel>;
+    {targets.map(e => <div key={e.x + ',' + e.y} className="item row2"><span>{e.name} <small className="hit"><Dices size={12} /> {hits[`${e.x},${e.y}`] ?? '…'}%</small></span><span className="row">{(() => { const no = peaceBlock(zones, P, e); return <button className="danger" disabled={!!no} title={no ?? undefined} onClick={() => attack(e)}>Attaquer ⚡5</button>; })()}</span></div>)}
+    {targets.some(e => peaceBlock(zones, P, e)) && <p className="note peacenote">🕊 {peaceBlock(zones, P, targets.find(e => peaceBlock(zones, P, e)))}</p>}</>}</Panel>;
 }
 
 /** Ressources présentes sur la carte : { id: nombre de cases } (carte des ressources, amélioration de l'Hôtel de ville). */
 export const mapResources = (mapId, w, h) => { const n = {}; for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) { const id = terrain(i, j, mapId).resourceId; if (id) n[id] = (n[id] ?? 0) + 1; } return n; };
 const RES_INFO = Object.fromEntries([...RESOURCES, ...RESOURCES2, ...RESOURCES3].map(r => [r.id, r]));
 export function WorldPanel() {
-  const { me } = useSelector(s => s.game), d = useDispatch(), P = me.actor.pos, [lm] = useData(`/map/${P.map_id}/landmarks`), cv = useRef(), base = useRef(), hl = useRef(), [view, setView] = useState({ z: 1, x: 0, y: 0 }), drag = useRef(null), S = 720;
+  const { me } = useSelector(s => s.game), d = useDispatch(), P = me.actor.pos, zones = usePeaceZones(P.map_id), [lm] = useData(`/map/${P.map_id}/landmarks`), cv = useRef(), base = useRef(), hl = useRef(), [view, setView] = useState({ z: 1, x: 0, y: 0 }), drag = useRef(null), S = 720;
   const [focus, setFocus] = useState(null), up = (me.map_worlds ?? []).includes(P.map_id);   // carte des ressources de CE monde (migration 38)
   const found = useMemo(() => (up ? Object.entries(mapResources(P.map_id, P.width, P.height)).sort((a, b) => b[1] - a[1]) : []), [up, P.map_id]);
   useEffect(() => { setFocus(null); }, [P.map_id]);
@@ -181,10 +186,10 @@ export function WorldPanel() {
     const X = x => view.x + x * k, Y = y => view.y + y * k; g.strokeStyle = 'rgba(255,255,255,.14)'; g.strokeRect(X(0), Y(0), P.width * k, P.height * k);
     const s = me.actor.see; g.strokeStyle = 'rgba(111,208,255,.95)'; g.lineWidth = 2; g.strokeRect(X(P.x - s - 0.5), Y(P.y - s - 0.5), (2 * s + 1) * k, (2 * s + 1) * k);
     for (const b of lm ?? []) { g.fillStyle = b.kind === 'door' ? '#b070ff' : '#ffd166'; g.fillRect(X(b.x) - 4, Y(b.y) - 4, 9, 9); g.strokeStyle = '#000'; g.lineWidth = 1; g.strokeRect(X(b.x) - 4, Y(b.y) - 4, 9, 9); }
-    for (const z of SAFE_ZONES) if (z.map === P.map_id) { g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.strokeRect(X(z.x - z.r - 0.5), Y(z.y - z.r - 0.5), (2 * z.r + 1) * k, (2 * z.r + 1) * k); g.setLineDash([]); }
+    for (const z of zones) { g.strokeStyle = 'rgba(255,255,255,.8)'; g.lineWidth = 1.5; g.setLineDash([5, 4]); g.strokeRect(X(z.x - z.r - 0.5), Y(z.y - z.r - 0.5), (2 * z.r + 1) * k, (2 * z.r + 1) * k); g.setLineDash([]); }
     g.font = '700 16px Cinzel, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.lineWidth = 4; g.strokeStyle = 'rgba(8,8,16,.92)';
     for (const [t, tx, ty, c] of [['N', S / 2, 16, '#f0d28a'], ['S', S / 2, S - 16, '#ffffff'], ['O', 16, S / 2, '#ffffff'], ['E', S - 16, S / 2, '#ffffff']]) { g.strokeText(t, tx, ty); g.fillStyle = c; g.fillText(t, tx, ty); }   // points cardinaux (carte fixe : Nord en haut)
-    g.fillStyle = '#ff4d4d'; g.beginPath(); g.arc(X(P.x), Y(P.y), 5, 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke(); }, [view, lm, P.x, P.y]);
+    g.fillStyle = '#ff4d4d'; g.beginPath(); g.arc(X(P.x), Y(P.y), 5, 0, 7); g.fill(); g.strokeStyle = '#fff'; g.lineWidth = 2; g.stroke(); }, [view, lm, zones, P.x, P.y]);
   const zoomAt = (f, px = S / 2, py = S / 2) => setView(v => { const z = Math.min(14, Math.max(0.5, v.z * f)), r = z / v.z; return { z, x: px - (px - v.x) * r, y: py - (py - v.y) * r }; });
   const pt = e => { const b = cv.current.getBoundingClientRect(); return [(e.clientX - b.left) * S / b.width, (e.clientY - b.top) * S / b.height]; };
   const onWheel = e => { e.preventDefault(); const [px, py] = pt(e); zoomAt(e.deltaY < 0 ? 1.25 : 0.8, px, py); };

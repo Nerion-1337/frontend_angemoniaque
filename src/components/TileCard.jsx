@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Dices, Ban, Info, X, Footprints, Swords, Hammer, Pickaxe, DoorOpen, Crosshair, PawPrint, Eye, Zap, MapPin } from 'lucide-react'; import Modal from './Modal'; import DoorModal from './DoorModal'; import { api } from '../lib/api'; import { pathEnergy } from '../lib/energy'; import { setTileCosts, spellLine } from '../lib/tiles'; import { inSafeZone } from '../lib/terrain'; import { A } from '../store'; import { useRefreshMe } from './GameCanvas'; import { levelAt, levelLabel } from '../lib/levels';
+import { useEffect, useRef, useState } from 'react'; import { useSelector, useDispatch } from 'react-redux'; import { Dices, Ban, Info, X, Footprints, Swords, Hammer, Pickaxe, DoorOpen, Crosshair, PawPrint, Eye, Zap, MapPin } from 'lucide-react'; import Modal from './Modal'; import StructureModal from './StructureModal'; import { api } from '../lib/api'; import { pathEnergy } from '../lib/energy'; import { setTileCosts, spellLine } from '../lib/tiles'; import { peaceBlock, peaceAt } from '../lib/peace'; import usePeaceZones from '../lib/usePeaceZones'; import { A } from '../store'; import { useRefreshMe } from './GameCanvas'; import { levelAt, levelLabel } from '../lib/levels';
 const cache = new Map(), HEALTH = { 'En pleine forme': '#5fd08a', 'Bon état': '#b6dd6a', 'Blessé': '#f2b84b', 'Souffrant': '#e5545a' }, KIND = { plain: 'Plaine', forest: 'Forêt', mountain: 'Massif rocheux', shallow: 'Eau peu profonde', deep: 'Eau profonde', arid: 'Terre aride', snow: 'Pics glacés', ether: 'Pics d’éther', volcano: 'Volcan (brûlure : 10/h)' };
 function useCell(t, mapId, extra = '') { const [c, set] = useState(null); useEffect(() => { if (!t) return set(null); const k = `${mapId}:${t.x},${t.y}${extra}`; if (cache.has(k) && Date.now() - cache.get(k).at < 3000) return set(cache.get(k).v);
   api(`/map/${mapId}/cell?x=${t.x}&y=${t.y}${extra}`).then(v => { cache.set(k, { v, at: Date.now() }); set(v); }).catch(() => {}); }, [t?.x, t?.y]); return c; }
@@ -25,6 +25,7 @@ function InfoModal({ cell, close }) {
 export default function TileCard() {
   const { hover, selected, me } = useSelector(s => s.game), d = useDispatch(), refresh = useRefreshMe(), mapId = me?.actor.pos.map_id;
   const hc = useCell(!selected && hover, mapId), sc = useCell(selected, mapId, `&characterId=${me?.id}`); /* + ce qui manque à CE personnage pour récolter */ const buildKind = useRef(null), [layer, setLayer] = useState(0), [building, setBuilding] = useState(false), [kind, setKind] = useState('wall'), [prev, setPrev] = useState(null), [info, setInfo] = useState(null), [door, setDoor] = useState(null);
+  const zones = usePeaceZones(mapId);   // zones de paix des structures du monde
   useEffect(() => { setBuilding(false); setLayer(0); }, [selected?.x, selected?.y]);
   // jusqu'à deux entités par case (une au sol, une dans les airs, migration 46) : `layer` = celle choisie
   const ents = sc?.entities ?? (sc?.entity ? [sc.entity] : []), cur = ents[Math.min(layer, ents.length - 1)] ?? null;
@@ -33,14 +34,15 @@ export default function TileCard() {
   if (!me) return null; const P = me.actor.pos, hero = me.actor.kind === 'hero', mount = hero ? me.mount : null, loco = mount ?? (hero ? null : me.actor.loco), fly = !!loco?.flying, aq = !!loco?.aquatic, land = loco ? loco.terrestrial ?? !aq : true,   /* créature contrôlée : sa locomotion (volante = 1/case) */ pe = (t, o = {}) => pathEnergy(P, t, { flying: fly, aquatic: aq, terrestrial: land, ...o }), kinds = Object.keys(me.scrolls ?? {}).filter(k => k !== 'ship' && me.scrolls[k] > 0),
     E = (mv, ac = 0) => mv === Infinity ? '∞' : mount && mv ? `⚡${mv} monture${ac ? ` + ⚡${ac}` : ''}` : `⚡${mv + ac}`;   // seuls les déplacements paient la monture
   if (selected) {
-    const e = cur, t = { x: selected.x, y: selected.y }, dist = Math.max(Math.abs(t.x - P.x), Math.abs(t.y - P.y)), range = me.attack_range ?? me.range_eff, attackable = e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id && !(e.kind !== 'monster' && (inSafeZone(P.map_id, P.x, P.y) || inSafeZone(P.map_id, t.x, t.y))), res = sc?.terrain;
+    const e = cur, t = { x: selected.x, y: selected.y }, dist = Math.max(Math.abs(t.x - P.x), Math.abs(t.y - P.y)), range = me.attack_range ?? me.range_eff, attackable = e && ['character', 'monster', 'summon'].includes(e.kind) && e.char_id !== me.id, res = sc?.terrain;
     const acts = [], myLayerFree = !ents.some(x => x.kind === 'building' || !!x.air === fly); if (myLayerFree && (t.x !== P.x || t.y !== P.y)) acts.push(['go', 'S\'y rendre', pe(t), 0]);
     if (e && dist > 1 && e.char_id !== me.id) acts.push(['approach', `S'approcher à côté de ${e.name}`, pe(t, { stopAt: 1 }), 0]);
-    const hitStructure = e?.kind === 'building' && !e.invulnerable && e.building_owner !== me.id && !(inSafeZone(P.map_id, P.x, P.y) || inSafeZone(P.map_id, t.x, t.y));   // structures attaquables (sauf invulnérables)
+    const hitStructure = e?.kind === 'building' && !e.invulnerable && e.building_owner !== me.id;   // structures attaquables (sauf invulnérables)
+    const peace = (attackable || hitStructure) ? peaceBlock(zones, P, t, e.kind === 'building' ? e.building_id : 0) : null;   // zone de paix : action affichée mais grisée
     if (attackable || hitStructure) { acts.push(['attack', `Attaquer ${e.name}`, pe(t, { stopAt: range }), 5]); }
     const ownMount = e?.kind === 'summon' && hero && !mount && me.summons.find(x => x.id === e.summon_id && x.mountable && !x.ridden);   // son invocation montable : monter dessus depuis la case voisine
     if (ownMount) acts.push(['ride', `Monter sur ${e.name}`, dist > 1 ? pe(t, { stopAt: 1 }) : 0, 0]);
-    if (e?.kind === 'building') acts.push(['interact', e.building_kind === 'door' ? `Porte : ${e.name} (activer / franchir)` : `Interagir avec ${e.name} (ou l'activer)`, 0, 0]);
+    if (e?.kind === 'building') acts.push(['interact', e.building_kind === 'door' ? `Porte : ${e.name} (activer / franchir)` : `Interagir avec ${e.name}`, 0, 0]);
     const dep = sc?.deposit, miss = sc?.harvestMissing, canTry = hero && !ents.some(x => !x.air) && (res?.resource || dep) && !(res?.kind === 'deep' && !fly && !aq), noTool = canTry && miss?.length > 0;   // pas équipé : pas d'action de récolte
     if (canTry && !noTool) acts.push(['harvest', dep ? `Récolter ${dep.resource} (gisement ${dep.stock}/${dep.stockMax})` : `Récolter ${res.resource}`, pe(t), 4]); if (!ents.length && kinds.length) acts.push(['build', 'Poser un élément', pe(t, { stopAt: 1 }), 10]);
     acts.push(['info', 'Plus d\'informations (état de forme & équipement)', 0, 0]);
@@ -52,7 +54,7 @@ export default function TileCard() {
       if (act === 'go') await api('/actions/move', { characterId: me.id, ...t }); if (act === 'approach') await api('/actions/approach', { characterId: me.id, ...t });
       if (act === 'build') await api('/buildings/place', { characterId: me.id, kind: buildKind.current ?? kinds[0], ...t }); if (act === 'harvest') await api('/actions/gather', { characterId: me.id, ...t });
       if (act === 'attack') { const r = await api('/combat/attack', ids); msg = r.missed ? `Raté ! (${r.hitChance}% de chances de toucher)` : `Touché : -${r.dmg} ${e.kind === 'building' ? 'de structure' : 'PV'}${r.killed ? (e.kind === 'building' ? ' — structure détruite !' : ' — cible vaincue !') : ''}${r.xp ? ` · +${r.xp} XP` : ''}`; }
-      if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door') { setDoor(r.id); return; } else if (r.kind === 'capital') d(A.setPanel('capital'));
+      if (act === 'interact') { const r = await api(`/buildings/${e.building_id}/interact`, { characterId: me.id }); if (r.kind === 'door' || r.activable) { setDoor(r.id); return; } else if (r.kind === 'capital') d(A.setPanel('capital'));
         else if (r.activation) { const x = await api(`/buildings/${r.id}/activate`, { characterId: me.id }); msg = `${r.name} activé${x.results?.length ? ` : ${x.results.map(y => `${y.spell} → ${y.effect}`).join(' ; ')}` : ''}`; }   // conditions d'activation (lot E)
         else msg = r.name; }
       if (msg) d(A.toast(msg)); await refresh(); d(A.setSelected(null)); } catch (er) { d(A.toast(er.message)); } };
@@ -76,12 +78,13 @@ export default function TileCard() {
       {prev?.range != null && <div className={`tc-reach${prev.reachable ? '' : ' no'}`}><Crosshair size={14} />{!prev.reachable ? <span>Hors d'atteinte : {prev.height} niveau(x) d'écart de hauteur, votre portée ({prev.range}) ne suffit pas</span>
         : <span>Distance <b>{prev.distance}</b>{prev.height ? ` (dont ${prev.height} de hauteur)` : ''} · portée {prev.range}{prev.inRange ? '' : ' · il faut s\'approcher'}{prev.power < 100 ? ` · puissance ${prev.power} %` : ''}</span>}</div>}
       <div className="tc-acts">{acts.map(a => { const [k, l, mv] = a, I = ICON[k] ?? Zap, c = costOf(a);
-        return <button key={k} className={`tc-act${k === 'attack' || k === 'breath' ? ' danger' : ''}${k === 'build' && building ? ' on' : ''}`} disabled={mv === Infinity} onClick={() => (k === 'build' ? setBuilding(!building) : run(k))}>
+        return <button key={k} className={`tc-act${k === 'attack' || k === 'breath' ? ' danger' : ''}${k === 'build' && building ? ' on' : ''}`} disabled={mv === Infinity || (k === 'attack' && !!peace)} title={k === 'attack' && peace ? peace : undefined} onClick={() => (k === 'build' ? setBuilding(!building) : run(k))}>
           <I size={15} /><span className="grow">{l}</span>{c && <em>{c}</em>}</button>; })}</div>
+      {peace && <div className="note peacenote" role="status">🕊 {peace}</div>}
       {building && <div className="tc-build">{[['wall', 'Muraille de pierre'], ['tower', 'Tour de garde'], ['factory', 'Usine de production'], ['totem', 'Totem de zone']].filter(([k]) => kinds.includes(k)).map(([k, l]) =>
         <button key={k} className="sm" onClick={() => { buildKind.current = k; setKind(k); run('build'); }}>{l} <small>×{me.scrolls[k]}</small></button>)}</div>}
     </div>{info && <InfoModal cell={info} close={() => setInfo(null)} />}
-      {door && <DoorModal id={door} me={me} toast={m => d(A.toast(m))} close={() => setDoor(null)} done={async () => { setDoor(null); await refresh(); d(A.setSelected(null)); }} />}</>;
+      {door && <StructureModal id={door} me={me} toast={m => d(A.toast(m))} close={() => setDoor(null)} done={async () => { setDoor(null); await refresh(); d(A.setSelected(null)); }} />}</>;
   }
-  return hover ? <div className="card hover" style={{ left: hover.sx + 14, top: hover.sy + 14 }}>{hc ? <><div><b>{hc.terrain.zone ?? hc.tile?.name ?? KIND[hc.terrain.kind]}</b> <small>({hc.x}, {hc.y}) · ⚡ {cellCost(hc) >= 99 ? '∞' : cellCost(hc)}{divCost(hc)}/case · {hc.terrain.resource ?? 'aucune ressource'}</small></div><Entity e={hc.entity} /><small>Trajet : {E(pe(hover))}</small></> : '…'}</div> : null;
+  return hover ? <div className="card hover" style={{ left: hover.sx + 14, top: hover.sy + 14 }}>{hc ? <><div><b>{hc.terrain.zone ?? hc.tile?.name ?? KIND[hc.terrain.kind]}</b> <small>({hc.x}, {hc.y}) · ⚡ {cellCost(hc) >= 99 ? '∞' : cellCost(hc)}{divCost(hc)}/case · {hc.terrain.resource ?? 'aucune ressource'}</small></div><Entity e={hc.entity} />{peaceAt(zones, hover.x, hover.y) && <div className="peacenote">🕊 Zone de paix de {peaceAt(zones, hover.x, hover.y).name} : aucune attaque possible</div>}<small>Trajet : {E(pe(hover))}</small></> : '…'}</div> : null;
 }

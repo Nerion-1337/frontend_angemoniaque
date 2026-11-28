@@ -7,7 +7,7 @@ import { api } from '../lib/api.js';
 import { Plus } from 'lucide-react';
 import Pick from './Pick.jsx';
 import { Empty, confirmDel } from './ui.jsx';
-import { fxSummary } from '../lib/spellFx.js'; import { groupDraft } from './building.js';
+import { fxSummary } from '../lib/spellFx.js'; import { groupDraft, ELEMENT_KIND, elementDraft } from './building.js';
 
 /** Bloc contrôlé : `draft.occupant_attack` et `draft.production` (fusionnés au corps par `buildingBody`). */
 export function BuildingExtras({ draft, set, resources }) {
@@ -89,5 +89,28 @@ export function ActivationEditor({ groups, set, cat, title = 'Activation de la c
       </div>
     </div>)}
     <button className="sm" onClick={() => set([...g, groupDraft()])}><Plus size={14} /> Ajouter une option</button>
+  </div>;
+}
+
+/** Éléments d'activation (migration 49) : chaque ligne est une façon d'activer la structure, avec sa durée (ou définitivement).
+ *  Objet / objet divin / XP : consommé(e) ou seulement possédé(e) (XP possédée = XP totale accumulée, dépensée comprise). */
+export function ActivationElements({ list, set, cat }) {
+  const l = list ?? [], up = (i, v) => set(l.map((x, j) => (j === i ? { ...x, ...v } : x)));
+  return <div className="bldextras"><h5>Activation : éléments (au choix)</h5>
+    <p className="note">Le joueur choisit UN élément ; la structure est activée pour sa durée (les durées s'ajoutent). Un élément consommé à durée limitée peut être payé plusieurs fois (durée multipliée).
+      Porte des mondes : activée seulement par un joueur de son monde, elle laisse venir l'autre monde. Structure à activer : ses sorts en continu ne valent que pendant l'activation.</p>
+    {!l.length && <Empty>Aucun élément : la structure ne s'active pas (sauf conditions supplémentaires seules).</Empty>}
+    {l.map((e, i) => <div key={i} className="row add actel">
+      <select aria-label="Type d'élément" value={e.kind} onChange={ev => up(i, { kind: ev.target.value, ref: '' })}>{Object.entries(ELEMENT_KIND).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
+      {e.kind === 'item' && <Pick options={cat?.items ?? []} value={e.ref} onPick={v => up(i, { ref: v })} labelOf={o => `${o.name} (n°${o.id})`} placeholder="— Objet —" />}
+      {e.kind === 'spell' && <Pick options={cat?.spells ?? []} value={e.ref} onPick={v => up(i, { ref: v })} labelOf={o => o.name} placeholder="— Sort —" />}
+      {e.kind === 'divine' && <select aria-label="Famille divine" value={e.ref} onChange={ev => up(i, { ref: ev.target.value })}><option value="">— Famille —</option>{(cat?.divineFamilies ?? []).map(f => <option key={f.key} value={f.key}>{f.name}</option>)}</select>}
+      {e.kind !== 'spell' && <label className="inlabel"><small>quantité</small><input type="number" min="1" className="nb" value={e.qty} onChange={ev => up(i, { qty: ev.target.value })} /></label>}
+      <label className="inlabel"><small>durée (h)</small><input type="number" min="0.1" step="0.5" className="nb" disabled={e.forever} value={e.hours} onChange={ev => up(i, { hours: ev.target.value })} /></label>
+      <label className="check"><input type="checkbox" checked={!!e.forever} onChange={ev => up(i, { forever: ev.target.checked })} /> définitif</label>
+      {['item', 'divine', 'xp'].includes(e.kind) && <select aria-label="Consommé ou possédé" value={e.consume ? '1' : '0'} onChange={ev => up(i, { consume: ev.target.value === '1' })}>
+        <option value="1">{e.kind === 'xp' ? 'consommée (XP libre)' : 'consommé'}</option><option value="0">{e.kind === 'xp' ? 'possédée (XP totale)' : 'possédé'}</option></select>}
+      <button className="sm danger" aria-label="Retirer" onClick={() => set(l.filter((_, j) => j !== i))}>×</button></div>)}
+    <button className="sm" onClick={() => set([...l, elementDraft(null)])}><Plus size={14} /> Ajouter un élément</button>
   </div>;
 }

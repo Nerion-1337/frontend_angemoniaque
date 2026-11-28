@@ -4,7 +4,7 @@ slug: gates-structures-ui
 status: done
 updated: 2026-11-28
 files:
-  - src/components/DoorModal.jsx
+  - src/components/StructureModal.jsx
   - src/lib/doors.js
   - src/lib/time.js
   - src/components/TileCard.jsx
@@ -28,7 +28,7 @@ tests:
 Interface du lot du 2026-11-28 (migration 48).
 
 ## Business rules
-- Porte (fiche de case ou panneau d'actions) : ouvre `DoorModal` (GET `/divine/door/{id}/{characterId}`) : monde, ouverture restante, portes en face (ouvertes / détruites), activation avec N objets divins (joueur de ce monde), « Franchir » ; plusieurs arrivées possibles → boutons de choix.
+- Porte (fiche de case ou panneau d'actions) : ouvre `StructureModal` (GET `/buildings/{id}/state/{characterId}`, card `struct-activation-ui`) : monde, ouverture restante, portes en face (ouvertes / détruites), activation avec N objets divins (joueur de ce monde), « Franchir » ; plusieurs arrivées possibles → boutons de choix.
 - Pactes : rôle par pacte (`i_propose`) au lieu de la race ; un demi-dieu choisit la composition des pactes qu'il propose ; pacte suspendu affiché et non activable.
 - Admin : « Bâtiments » renommé « Structures » ; champs zone de paix, zone sans construction, monde / destination de porte (listes), heures par objet ; réapparition de la structure (même panneau que les monstres, `kind="building"`) ; « Règles générales » (perte à la mort, bonus des portes ouvertes par camp) ; Pacte : onglets Anges·Démons / Demi-dieux et case « propose des pactes » par rang humain.
 

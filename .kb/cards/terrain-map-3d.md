@@ -2,7 +2,7 @@
 title: 3D map view: procedural terrain/relief mirrors, Three.js scene, tile interactions
 slug: terrain-map-3d
 status: done
-updated: 2026-11-26
+updated: 2026-11-28
 files:
   - src/lib/terrain.js
   - src/lib/humanMap.js
@@ -22,7 +22,6 @@ files:
 symbols:
   - src/lib/terrain.js:terrain
   - src/lib/terrain.js:noiseAt
-  - src/lib/terrain.js:inSafeZone
   - src/lib/resources.js:RES_BY_ID
   - src/components/MapLegend.jsx:MapLegend
   - src/components/Compass.jsx:Compass
@@ -49,7 +48,7 @@ et de l'invocation montée pour les estimations, scène 3D, carte de case, lége
 - Le miroir `terrain.js` / `humanMap.js` / `resources.js` est identique au back : même type, coût, ressource (nom affiché, id stocké) pour chaque case.
 - Estimation d'énergie (`pathEnergy`) : pas Chebyshev ; monture aérienne = 1 ; aquatique = 1 sur l'eau ; terre ferme impossible si l'invocation montée n'est pas terrestre (`terrestrial`, défaut : un aquatique ne l'est pas) — amphibie = les deux ; à pied = coût admin du type de case du monde (`costOf`), eau profonde impossible.
 - `pathEnergy` calcule toujours sur le monde COURANT (`setWorld`, appelé à chaque rafraîchissement du personnage).
-- L'option d'attaque est masquée dans la zone sacrée (drapeau `safe` de `/map/{id}/cell`), comme le refus 403 du back.
+- Plus de zone sacrée codée en dur (2026-11-28) : l'option d'attaque est grisée en zone de paix d'une structure (card `struct-activation-ui`).
 - La carte de case affiche le type réglé en admin (nom, description, effet continu, coût) ; jamais de PV exacts (état public).
 - Le serveur reste seul juge : le front ne fait que prévisualiser.
 - La carte de case affiche le gisement de la case et propose sa récolte (card `resources-ui`).

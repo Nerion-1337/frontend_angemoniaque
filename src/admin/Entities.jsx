@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux'; import { Ad } from '../store/admin.js
 import { Plus, Save, Trash2 } from 'lucide-react';
 import { FIELDS, jsonOr, jsonText, URL_KIND } from './entityFields.js';
 import { RuleForms, RulesList } from './EntityRules.jsx';
-import { BuildingExtras, BuildingSpells, ActivationEditor } from './BuildingExtras.jsx'; import { buildingBody, buildingDraft } from './building.js';
+import { BuildingExtras, BuildingSpells, ActivationEditor, ActivationElements } from './BuildingExtras.jsx'; import { buildingBody, buildingDraft } from './building.js';
 import { Search, matches, Empty, confirmDel } from './ui.jsx'; import { RespawnPanel } from './MonsterParts.jsx';
 /** Éditeur générique d'entités (structures) : liste filtrable à gauche + fiche à droite (caractéristiques, règles transverses). */
 export default function Entities({ kind }) {
@@ -31,7 +31,7 @@ export default function Entities({ kind }) {
     } catch (e) { d(Ad.msg(e.message)); }
   };
   const remove = async () => { if (!confirmDel(`« ${sel.name ?? sel.id} »`)) return; try { await api(`/admin/content/${url}/${sel.id}`, undefined, 'DELETE'); d(Ad.ok('Supprimé')); setSel(null); setDraft(null); setDirty(false); list(); } catch (e) { d(Ad.msg(e.message)); } };
-  const newOne = () => { if (!leave()) return; const o = {}; for (const [k, , t] of FIELDS[kind]) o[k] = t === 'check' ? false : ''; setSel(null); setDraft(o); setTab('data'); setDirty(false); };
+  const newOne = () => { if (!leave()) return; const o = {}; for (const [k, , t] of FIELDS[kind]) o[k] = t === 'check' ? k === 'visible' : ''; if (kind === 'building') { o.activationGroups = []; o.activations = []; } setSel(null); setDraft(o); setTab('data'); setDirty(false); };
   const F = FIELDS[kind], set = (k, v) => { setDraft({ ...draft, [k]: v }); setDirty(true); };
   const view = (rows ?? []).filter(r => matches(q, r.name, r.key, r.kind, r.id));
   return <section className="split">
@@ -52,7 +52,8 @@ export default function Entities({ kind }) {
             : t === 'json' ? <div key={k} className="cell span-all"><small>{label}</small><textarea className="mono" rows="4" value={typeof draft[k] === 'string' ? draft[k] : jsonText(draft[k] ?? null)} onChange={e => set(k, e.target.value)} /></div>
               : <div key={k} className="cell"><small>{label}</small><input type={t === 'number' ? 'number' : 'text'} value={draft[k] ?? ''} onChange={e => set(k, e.target.value)} /></div>)}</div>}
         {tab === 'data' && kind === 'building' && <BuildingExtras draft={draft} set={set} resources={cat.resources ?? []} />}
-        {tab === 'data' && kind === 'building' && <ActivationEditor groups={draft.activationGroups} set={v => set('activationGroups', v)} cat={cat} />}
+        {tab === 'data' && kind === 'building' && <ActivationElements list={draft.activations} set={v => set('activations', v)} cat={cat} />}
+        {tab === 'data' && kind === 'building' && <ActivationEditor groups={draft.activationGroups} set={v => set('activationGroups', v)} cat={cat} title="Conditions supplémentaires (facultatif)" note="Exigées en plus de l'élément choisi (ex. rang minimum, sort connu). Il suffit d'une option ; dans une option, tout ce qui est renseigné est exigé. Sans élément d'activation, ces conditions activent seules la structure (sans durée) ; porte sans monde : conditions pour la franchir." />}
         {tab === 'data' && kind === 'building' && sel?.id && <BuildingSpells id={sel.id} />}
         {tab === 'data' && kind === 'building' && sel?.id && <div className="bldextras"><h5>Réapparition (cette structure)</h5>
           {sel.destroyed_at && <p className="note">Détruite le {new Date(sel.destroyed_at).toLocaleString('fr-FR')}{sel.respawn_blockers?.length ? ` — bloquée : ${sel.respawn_blockers.join(', ')}` : ''}.</p>}

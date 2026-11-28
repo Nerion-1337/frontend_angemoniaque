@@ -8,7 +8,7 @@ test('useRefreshMe lit le personnage actif au moment de l’appel et ignore une 
   expect(g).toMatch(/\}, \[charId\]\);/);   // intervalle relancé au changement de personnage
 });
 test('Hôtel de ville, Actions, Pactes en onglets ; Invocations = les créatures invoquées (montables ou non)', () => {
-  expect(src('Capital.jsx')).toMatch(/useTab\('capital', \['shop', 'spells', 'market', 'chest'\]\)/);
+  expect(src('Capital.jsx')).toMatch(/useTab\('capital', \['shop', 'market', 'chest'\]\)/);
   const p = src('Panels.jsx');
   for (const k of ["useTab('faith'", "useTab('actions'"]) expect(p).toContain(k);
   expect(p).toContain('<Panel title="Invocations" wide>');
