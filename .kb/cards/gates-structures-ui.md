@@ -12,7 +12,7 @@ files:
   - src/admin/RulesTab.jsx
   - src/admin/rules.js
   - src/admin/PactTab.jsx
-  - src/admin/Entities.jsx
+  - src/admin/StructuresTab.jsx
   - src/admin/entityFields.js
   - src/admin/MonsterParts.jsx
   - src/admin/building.js

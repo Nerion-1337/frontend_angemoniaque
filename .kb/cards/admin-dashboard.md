@@ -6,7 +6,7 @@ updated: 2026-11-26
 files:
   - src/admin/index.jsx
   - src/admin/Dashboard.jsx
-  - src/admin/Entities.jsx
+  - src/admin/StructuresTab.jsx
   - src/admin/EntityRules.jsx
   - src/admin/Races.jsx
   - src/admin/Divine.jsx
@@ -17,7 +17,7 @@ files:
 symbols:
   - src/admin/entityFields.js:FIELDS
   - src/admin/entityFields.js:URL_KIND
-  - src/admin/Entities.jsx:Entities
+  - src/admin/StructuresTab.jsx:StructuresTab
   - src/store/admin.js:Ad
 tests:
   - test/admin.test.js

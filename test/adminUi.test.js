@@ -16,7 +16,7 @@ test('recherche locale : insensible à la casse et aux accents, vide = tout', ()
   expect(matches('loup', 'Ours')).toBe(false);
 });
 test('suppressions : chaque panneau demande confirmation avant DELETE', () => {
-  for (const f of ['Entities', 'ItemsTab', 'SpellsTab', 'Races', 'MonsterDetails']) {
+  for (const f of ['StructuresTab', 'ItemsTab', 'SpellsTab', 'Races', 'MonsterDetails']) {
     const s = fs.readFileSync(`src/admin/${f}.jsx`, 'utf8');
     expect(s.includes('confirmDel('), f).toBe(true);
   }

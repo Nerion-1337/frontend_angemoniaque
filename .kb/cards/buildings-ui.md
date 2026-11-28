@@ -7,7 +7,7 @@ files:
   - src/admin/BuildingExtras.jsx
   - src/admin/building.js
   - src/admin/entityFields.js
-  - src/admin/Entities.jsx
+  - src/admin/StructuresTab.jsx
   - src/components/TileCard.jsx
 symbols:
   - src/admin/building.js:buildingBody

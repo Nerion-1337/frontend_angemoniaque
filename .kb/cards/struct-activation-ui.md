@@ -15,7 +15,7 @@ files:
   - src/components/TopBar.jsx
   - src/admin/BuildingExtras.jsx
   - src/admin/building.js
-  - src/admin/Entities.jsx
+  - src/admin/StructuresTab.jsx
   - src/admin/entityFields.js
 symbols:
   - src/lib/peace.js:peaceBlock
